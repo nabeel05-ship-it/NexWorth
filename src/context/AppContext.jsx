@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import { DEMO_EXPENSES, DEMO_GOALS, DEFAULT_USER } from '../utils/demoData';
+import { fetchDbStatus, fetchExpensesFromDb, saveExpenseToDb, deleteExpenseFromDb, syncExpensesToDb } from '../utils/api';
 
 const AppContext = createContext();
 
@@ -8,7 +9,7 @@ const initialState = {
   expenses: DEMO_EXPENSES,
   goals: DEMO_GOALS,
   currentPage: 'dashboard',
-  isOnboarded: true, // Start with demo data loaded
+  isOnboarded: true,
   darkMode: true,
 };
 
@@ -17,22 +18,28 @@ function appReducer(state, action) {
     case 'SET_PAGE':
       return { ...state, currentPage: action.payload };
 
+    case 'SET_EXPENSES':
+      return {
+        ...state,
+        expenses: action.payload,
+      };
+
     case 'ADD_EXPENSE':
       return {
         ...state,
-        expenses: [{ id: Date.now(), ...action.payload }, ...state.expenses],
+        expenses: [{ id: action.payload._id || action.payload.id || Date.now(), ...action.payload }, ...state.expenses],
       };
 
     case 'UPDATE_EXPENSE':
       return {
         ...state,
-        expenses: state.expenses.map(e => (e.id === action.payload.id ? action.payload : e)),
+        expenses: state.expenses.map(e => ((e._id && e._id === action.payload._id) || e.id === action.payload.id ? action.payload : e)),
       };
 
     case 'DELETE_EXPENSE':
       return {
         ...state,
-        expenses: state.expenses.filter(e => e.id !== action.payload),
+        expenses: state.expenses.filter(e => e._id !== action.payload && e.id !== action.payload),
       };
 
     case 'IMPORT_EXPENSES':
@@ -83,6 +90,14 @@ function appReducer(state, action) {
 }
 
 export function AppProvider({ children }) {
+  const [mongoStatus, setMongoStatus] = useState({
+    connected: false,
+    checking: true,
+    cluster: 'Cluster0',
+    database: 'nexworth',
+    host: 'cluster0.2fmepzy.mongodb.net',
+  });
+
   const [state, dispatch] = useReducer(appReducer, initialState, (initial) => {
     try {
       const saved = localStorage.getItem('nexworth_state');
@@ -91,18 +106,73 @@ export function AppProvider({ children }) {
         return { ...initial, ...parsed };
       }
     } catch (e) {
-      // Use initial state if localStorage is corrupted
+      // Local storage fallback
     }
     return initial;
   });
 
+  // Sync to localStorage
   useEffect(() => {
     const toSave = { ...state };
     localStorage.setItem('nexworth_state', JSON.stringify(toSave));
   }, [state]);
 
+  // Connect & Sync with MongoDB on mount
+  useEffect(() => {
+    let isMounted = true;
+
+    async function initMongo() {
+      const status = await fetchDbStatus();
+      if (!isMounted) return;
+
+      if (status && status.connected) {
+        setMongoStatus({
+          connected: true,
+          checking: false,
+          cluster: status.cluster || 'Cluster0',
+          database: status.database || 'nexworth',
+          host: status.host,
+          user: status.user,
+        });
+
+        // Fetch records from MongoDB
+        const dbExpenses = await fetchExpensesFromDb();
+        if (dbExpenses && Array.isArray(dbExpenses)) {
+          if (dbExpenses.length === 0) {
+            // Seed initial demo expenses to MongoDB
+            const syncResult = await syncExpensesToDb(state.expenses);
+            if (syncResult && syncResult.items && syncResult.items.length > 0) {
+              dispatch({ type: 'SET_EXPENSES', payload: syncResult.items });
+            }
+          } else {
+            // Use live MongoDB expenses
+            dispatch({ type: 'SET_EXPENSES', payload: dbExpenses });
+          }
+        }
+      } else {
+        setMongoStatus(prev => ({ ...prev, connected: false, checking: false }));
+      }
+    }
+
+    initMongo();
+    return () => { isMounted = false; };
+  }, []);
+
+  // Enhanced dispatch that syncs to MongoDB asynchronously
+  const enhancedDispatch = (action) => {
+    dispatch(action);
+
+    if (mongoStatus.connected) {
+      if (action.type === 'ADD_EXPENSE') {
+        saveExpenseToDb(action.payload).catch(console.error);
+      } else if (action.type === 'DELETE_EXPENSE') {
+        deleteExpenseFromDb(action.payload).catch(console.error);
+      }
+    }
+  };
+
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
+    <AppContext.Provider value={{ state, dispatch: enhancedDispatch, mongoStatus }}>
       {children}
     </AppContext.Provider>
   );

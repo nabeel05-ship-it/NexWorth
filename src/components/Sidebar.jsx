@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import {
   LayoutDashboard, PlusCircle, Smartphone, Brain, Sparkles,
   GitCompareArrows, Target, Calculator, TrendingUp,
-  MessageCircle, Shield, Menu, X, Zap
+  MessageCircle, Shield, Menu, X, Zap, Database
 } from 'lucide-react';
 
 const navItems = [
@@ -31,7 +31,7 @@ const navItems = [
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
-  const { state, dispatch } = useApp();
+  const { state, dispatch, mongoStatus } = useApp();
 
   const handleNav = (pageId) => {
     dispatch({ type: 'SET_PAGE', payload: pageId });
@@ -78,9 +78,37 @@ export default function Sidebar({ isOpen, onClose }) {
         </nav>
 
         <div className="sidebar-footer">
+          {/* Live MongoDB Status Card */}
+          <div style={{
+            padding: '10px 12px',
+            borderRadius: 12,
+            background: mongoStatus?.connected ? 'rgba(34, 197, 94, 0.08)' : 'rgba(252, 108, 38, 0.08)',
+            border: `1px solid ${mongoStatus?.connected ? 'rgba(34, 197, 94, 0.25)' : 'rgba(252, 108, 38, 0.25)'}`,
+            marginBottom: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: mongoStatus?.connected ? '#16A34A' : '#D95000' }}>
+              <Database size={13} />
+              <span>MongoDB Cloud</span>
+              <span style={{
+                marginLeft: 'auto',
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                background: mongoStatus?.connected ? '#22C55E' : '#F59E0B',
+                boxShadow: mongoStatus?.connected ? '0 0 6px #22C55E' : 'none'
+              }} />
+            </div>
+            <div style={{ fontSize: 10, color: '#6B6B8D', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {mongoStatus?.connected ? `${mongoStatus.cluster} • ${mongoStatus.database}` : 'Connecting to Cluster0...'}
+            </div>
+          </div>
+
           <div className="privacy-badge">
             <Shield size={14} />
-            <span>Your data stays private</span>
+            <span>Encrypted & private</span>
           </div>
         </div>
       </aside>
