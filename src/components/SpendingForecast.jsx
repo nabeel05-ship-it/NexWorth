@@ -39,7 +39,7 @@ export default function SpendingForecast() {
         label: 'Actual Spending',
         data: [...forecast.historical, null, null, null],
         borderColor: '#FC6C26',
-        backgroundColor: 'rgba(252, 108, 38, 0.12)',
+        backgroundColor: 'rgba(252, 108, 38, 0.15)',
         fill: true,
         tension: 0.4,
         pointRadius: 5,
@@ -51,13 +51,13 @@ export default function SpendingForecast() {
       {
         label: 'Estimated Spending',
         data: [null, null, forecast.historical[2], ...forecast.forecasted],
-        borderColor: '#FFF4D6',
-        backgroundColor: 'rgba(255, 244, 214, 0.08)',
+        borderColor: '#D97706',
+        backgroundColor: 'rgba(217, 119, 6, 0.08)',
         fill: true,
         borderDash: [8, 4],
         tension: 0.4,
         pointRadius: 5,
-        pointBackgroundColor: '#FFF4D6',
+        pointBackgroundColor: '#D97706',
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
         pointHoverRadius: 8,
@@ -70,23 +70,26 @@ export default function SpendingForecast() {
     maintainAspectRatio: false,
     interaction: { intersect: false, mode: 'index' },
     scales: {
-      x: { grid: { display: false }, ticks: { color: '#6B6B8D', font: { size: 11 } } },
+      x: { grid: { display: false }, ticks: { color: '#8E877F', font: { size: 11 } } },
       y: {
-        grid: { color: 'rgba(255,255,255,0.03)' },
-        ticks: { color: '#6B6B8D', font: { size: 11 }, callback: v => `₹${(v / 1000).toFixed(0)}k` },
+        grid: { color: 'rgba(0, 0, 0, 0.04)' },
+        ticks: { color: '#8E877F', font: { size: 11 }, callback: v => `₹${(v / 1000).toFixed(0)}k` },
       },
     },
     plugins: {
       legend: {
         position: 'bottom',
-        labels: { color: '#A0A0C0', font: { size: 12 }, usePointStyle: true, pointStyleWidth: 8, padding: 16 },
+        labels: { color: '#655E57', font: { size: 12, weight: '500' }, usePointStyle: true, pointStyleWidth: 8, padding: 16 },
       },
       tooltip: {
-        backgroundColor: '#1E1A17',
-        borderColor: 'rgba(252, 108, 38, 0.3)',
+        backgroundColor: '#FFFFFF',
+        borderColor: 'rgba(252, 108, 38, 0.25)',
         borderWidth: 1,
+        titleColor: '#1A1714',
+        bodyColor: '#655E57',
         padding: 12,
-        cornerRadius: 8,
+        cornerRadius: 10,
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
         callbacks: { label: (ctx) => ctx.parsed.y !== null ? `${ctx.dataset.label}: ₹${ctx.parsed.y.toLocaleString('en-IN')}` : '' },
       },
     },
@@ -113,7 +116,7 @@ export default function SpendingForecast() {
         </div>
         <div className="stat-card">
           <div className="stat-label">Next Month (est.)</div>
-          <div className="stat-value" style={{ color: 'var(--accent)' }}>₹{forecast.forecasted[0]?.toLocaleString('en-IN') || '0'}</div>
+          <div className="stat-value" style={{ color: 'var(--primary)' }}>₹{forecast.forecasted[0]?.toLocaleString('en-IN') || '0'}</div>
           <div className="stat-change" style={{ color: 'var(--text-muted)' }}>Estimated</div>
         </div>
         <div className="stat-card">
@@ -151,7 +154,7 @@ export default function SpendingForecast() {
             const d = new Date(now.getFullYear(), now.getMonth() - (2 - i), 1);
             const isCurrentMonth = i === 2;
             return (
-              <div key={i} className="scenario-box" style={isCurrentMonth ? { background: 'rgba(252,108,38,0.1)', borderColor: 'rgba(252,108,38,0.25)' } : {}}>
+              <div key={i} className="scenario-box" style={isCurrentMonth ? { background: '#FFF5EC', borderColor: 'rgba(252,108,38,0.3)' } : { background: '#FFFFFF', borderColor: 'rgba(0,0,0,0.06)' }}>
                 <div className="scenario-label">{MONTH_NAMES[d.getMonth()]}</div>
                 <div className="scenario-value" style={{ fontSize: 20 }}>₹{amount.toLocaleString('en-IN')}</div>
                 <div className="scenario-note">{isCurrentMonth ? 'Current' : 'Actual'}</div>
@@ -161,9 +164,9 @@ export default function SpendingForecast() {
           {forecast.forecasted.map((amount, i) => {
             const d = new Date(now.getFullYear(), now.getMonth() + i + 1, 1);
             return (
-              <div key={`f${i}`} className="scenario-box" style={{ background: 'rgba(255,244,214,0.08)', borderColor: 'rgba(255,244,214,0.2)' }}>
+              <div key={`f${i}`} className="scenario-box" style={{ background: '#FFFDF9', borderColor: 'rgba(217,119,6,0.2)' }}>
                 <div className="scenario-label">{MONTH_NAMES[d.getMonth()]}</div>
-                <div className="scenario-value" style={{ fontSize: 20, color: 'var(--accent)' }}>₹{amount.toLocaleString('en-IN')}</div>
+                <div className="scenario-value" style={{ fontSize: 20, color: '#D97706' }}>₹{amount.toLocaleString('en-IN')}</div>
                 <div className="scenario-note">Estimated</div>
               </div>
             );

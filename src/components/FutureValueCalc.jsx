@@ -23,8 +23,8 @@ export default function FutureValueCalc() {
       {
         label: 'Total Invested',
         data: result.yearlyData.map(d => d.invested),
-        borderColor: 'rgba(255, 244, 214, 0.8)',
-        backgroundColor: 'rgba(255, 244, 214, 0.1)',
+        borderColor: '#D97706',
+        backgroundColor: 'rgba(217, 119, 6, 0.08)',
         fill: true,
         tension: 0.3,
         pointRadius: 3,
@@ -33,8 +33,8 @@ export default function FutureValueCalc() {
       {
         label: 'Illustrative Value',
         data: result.yearlyData.map(d => d.value),
-        borderColor: 'rgba(252, 108, 38, 0.9)',
-        backgroundColor: 'rgba(252, 108, 38, 0.1)',
+        borderColor: '#FC6C26',
+        backgroundColor: 'rgba(252, 108, 38, 0.12)',
         fill: true,
         tension: 0.3,
         pointRadius: 3,
@@ -48,11 +48,11 @@ export default function FutureValueCalc() {
     maintainAspectRatio: false,
     interaction: { intersect: false, mode: 'index' },
     scales: {
-      x: { grid: { display: false }, ticks: { color: '#6B6B8D', font: { size: 11 } } },
+      x: { grid: { display: false }, ticks: { color: '#8E877F', font: { size: 11 } } },
       y: {
-        grid: { color: 'rgba(255,255,255,0.03)' },
+        grid: { color: 'rgba(0, 0, 0, 0.04)' },
         ticks: {
-          color: '#6B6B8D', font: { size: 11 },
+          color: '#8E877F', font: { size: 11 },
           callback: v => v >= 100000 ? `₹${(v / 100000).toFixed(1)}L` : `₹${(v / 1000).toFixed(0)}k`
         },
       },
@@ -60,14 +60,17 @@ export default function FutureValueCalc() {
     plugins: {
       legend: {
         position: 'bottom',
-        labels: { color: '#A0A0C0', font: { size: 11 }, usePointStyle: true, pointStyleWidth: 8, padding: 16 },
+        labels: { color: '#655E57', font: { size: 11, weight: '500' }, usePointStyle: true, pointStyleWidth: 8, padding: 16 },
       },
       tooltip: {
-        backgroundColor: '#1E1A17',
-        borderColor: 'rgba(252, 108, 38, 0.3)',
+        backgroundColor: '#FFFFFF',
+        borderColor: 'rgba(252, 108, 38, 0.25)',
         borderWidth: 1,
+        titleColor: '#1A1714',
+        bodyColor: '#655E57',
         padding: 12,
-        cornerRadius: 8,
+        cornerRadius: 10,
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
         callbacks: { label: (ctx) => `${ctx.dataset.label}: ₹${ctx.parsed.y.toLocaleString('en-IN')}` },
       },
     },
@@ -128,13 +131,13 @@ export default function FutureValueCalc() {
             </div>
             <div className="scenario-box">
               <div className="scenario-label">Total Contributions</div>
-              <div className="scenario-value" style={{ fontSize: 18, color: 'var(--accent)' }}>₹{(monthlyContribution * years * 12).toLocaleString('en-IN')}</div>
+              <div className="scenario-value" style={{ fontSize: 18, color: 'var(--primary)' }}>₹{(monthlyContribution * years * 12).toLocaleString('en-IN')}</div>
             </div>
             <div className="scenario-box">
               <div className="scenario-label">Total Invested</div>
               <div className="scenario-value" style={{ fontSize: 18 }}>₹{result.totalInvested.toLocaleString('en-IN')}</div>
             </div>
-            <div className="scenario-box" style={{ background: 'rgba(0,214,143,0.08)', borderColor: 'rgba(0,214,143,0.2)' }}>
+            <div className="scenario-box" style={{ background: 'rgba(5, 150, 105, 0.06)', borderColor: 'rgba(5, 150, 105, 0.2)' }}>
               <div className="scenario-label">Est. Growth</div>
               <div className="scenario-value" style={{ color: 'var(--success)' }}>₹{result.estimatedGrowth.toLocaleString('en-IN')}</div>
               <div className="scenario-note">Illustrative</div>
@@ -144,11 +147,11 @@ export default function FutureValueCalc() {
           {/* Final value highlight */}
           <div style={{
             marginTop: 20, padding: '24px', textAlign: 'center',
-            background: 'linear-gradient(135deg, rgba(252,108,38,0.15), rgba(252,108,38,0.05))',
-            borderRadius: 'var(--radius-lg)', border: '1px solid rgba(252,108,38,0.2)',
+            background: 'linear-gradient(135deg, #FFF7F0 0%, #FFF1E3 100%)',
+            borderRadius: 'var(--radius-lg)', border: '1px solid rgba(252, 108, 38, 0.25)',
           }}>
             <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>Estimated Future Value</div>
-            <div style={{ fontFamily: "'Space Grotesk'", fontSize: 36, fontWeight: 800, color: 'var(--accent)' }}>
+            <div style={{ fontFamily: "'Space Grotesk'", fontSize: 36, fontWeight: 800, color: 'var(--primary)' }}>
               ₹{result.totalValue.toLocaleString('en-IN')}
             </div>
             <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 8 }}>

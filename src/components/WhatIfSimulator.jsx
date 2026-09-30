@@ -53,21 +53,21 @@ export default function WhatIfSimulator() {
         {
           label: 'Total Saved',
           data: savedData,
-          backgroundColor: 'rgba(160, 160, 192, 0.3)',
+          backgroundColor: 'rgba(215, 206, 195, 0.65)',
           borderRadius: 4,
           borderSkipped: false,
         },
         {
           label: 'Illustrative FD Value',
           data: fdData,
-          backgroundColor: 'rgba(255, 244, 214, 0.5)',
+          backgroundColor: 'rgba(217, 119, 6, 0.75)',
           borderRadius: 4,
           borderSkipped: false,
         },
         {
           label: 'Illustrative Investment Value',
           data: investedData,
-          backgroundColor: 'rgba(252, 108, 38, 0.75)',
+          backgroundColor: '#FC6C26',
           borderRadius: 4,
           borderSkipped: false,
         },
@@ -79,23 +79,26 @@ export default function WhatIfSimulator() {
     responsive: true,
     maintainAspectRatio: false,
     scales: {
-      x: { grid: { display: false }, ticks: { color: '#6B6B8D', font: { size: 11 } } },
+      x: { grid: { display: false }, ticks: { color: '#8E877F', font: { size: 11 } } },
       y: {
-        grid: { color: 'rgba(255,255,255,0.03)' },
-        ticks: { color: '#6B6B8D', font: { size: 11 }, callback: v => `₹${(v/1000).toFixed(0)}k` },
+        grid: { color: 'rgba(0, 0, 0, 0.04)' },
+        ticks: { color: '#8E877F', font: { size: 11 }, callback: v => `₹${(v/1000).toFixed(0)}k` },
       },
     },
     plugins: {
       legend: {
         position: 'bottom',
-        labels: { color: '#A0A0C0', font: { size: 11 }, usePointStyle: true, pointStyleWidth: 8, padding: 16 },
+        labels: { color: '#655E57', font: { size: 11, weight: '500' }, usePointStyle: true, pointStyleWidth: 8, padding: 16 },
       },
       tooltip: {
-        backgroundColor: '#1E1A17',
-        borderColor: 'rgba(252, 108, 38, 0.3)',
+        backgroundColor: '#FFFFFF',
+        borderColor: 'rgba(252, 108, 38, 0.25)',
         borderWidth: 1,
+        titleColor: '#1A1714',
+        bodyColor: '#655E57',
         padding: 12,
-        cornerRadius: 8,
+        cornerRadius: 10,
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
         callbacks: {
           label: (ctx) => `${ctx.dataset.label}: ₹${ctx.parsed.y.toLocaleString('en-IN')}`,
         },
@@ -211,12 +214,12 @@ export default function WhatIfSimulator() {
               <div className="scenario-value">₹{result.totalSaved.toLocaleString('en-IN')}</div>
               <div className="scenario-note">in {months} months</div>
             </div>
-            <div className="scenario-box" style={{ background: 'rgba(255,244,214,0.08)', borderColor: 'rgba(255,244,214,0.2)' }}>
+            <div className="scenario-box" style={{ background: '#FFFDF9', borderColor: 'rgba(217, 119, 6, 0.25)' }}>
               <div className="scenario-label">FD Value (est.)</div>
               <div className="scenario-value" style={{ color: 'var(--accent-dark)' }}>₹{result.fdValue.toLocaleString('en-IN')}</div>
               <div className="scenario-note">@7% p.a. assumed</div>
             </div>
-            <div className="scenario-box" style={{ background: 'rgba(0,214,143,0.08)', borderColor: 'rgba(0,214,143,0.2)' }}>
+            <div className="scenario-box" style={{ background: 'rgba(5, 150, 105, 0.06)', borderColor: 'rgba(5, 150, 105, 0.2)' }}>
               <div className="scenario-label">Investment (est.)</div>
               <div className="scenario-value" style={{ color: 'var(--success)' }}>₹{result.investedValue.toLocaleString('en-IN')}</div>
               <div className="scenario-note">@{annualReturn}% p.a. assumed</div>
@@ -225,8 +228,8 @@ export default function WhatIfSimulator() {
 
           {result.estimatedGrowth > 0 && (
             <div style={{
-              marginTop: 16, padding: '14px 18px', background: 'rgba(252,108,38,0.08)',
-              borderRadius: 'var(--radius-md)', border: '1px solid rgba(252,108,38,0.15)'
+              marginTop: 16, padding: '14px 18px', background: '#FFF7F0',
+              borderRadius: 'var(--radius-md)', border: '1px solid rgba(252,108,38,0.2)'
             }}>
               <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
                 💡 By saving ₹{amount.toLocaleString('en-IN')}/month for {months} months, your total saved amount of ₹{result.totalSaved.toLocaleString('en-IN')} could illustratively grow to ₹{result.investedValue.toLocaleString('en-IN')} — an estimated gain of <span style={{ color: 'var(--success)', fontWeight: 600 }}>₹{result.estimatedGrowth.toLocaleString('en-IN')}</span> under the assumed {annualReturn}% annual return.

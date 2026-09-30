@@ -222,7 +222,7 @@ export default function GoalPlanner() {
                 </div>
 
                 {!isComplete && (
-                  <div style={{ marginTop: 14, padding: '10px 14px', background: 'rgba(252,108,38,0.06)', borderRadius: 'var(--radius-sm)', fontSize: 13, color: 'var(--text-secondary)' }}>
+                  <div style={{ marginTop: 14, padding: '10px 14px', background: '#FFF7EE', border: '1px solid rgba(252, 108, 38, 0.15)', borderRadius: 'var(--radius-sm)', fontSize: 13, color: 'var(--text-secondary)' }}>
                     Need ~₹{monthlyNeeded.toLocaleString('en-IN')}/month for {monthsLeft} months
                   </div>
                 )}

@@ -33,21 +33,21 @@ export default function SpendSaveInvest() {
       {
         label: 'Savings Account (est. 4%)',
         data: comparisons.map(c => c.savings),
-        backgroundColor: 'rgba(160, 160, 192, 0.4)',
+        backgroundColor: 'rgba(215, 206, 195, 0.75)',
         borderRadius: 6,
         borderSkipped: false,
       },
       {
         label: 'FD (est. 7%)',
         data: comparisons.map(c => c.fd),
-        backgroundColor: 'rgba(255, 244, 214, 0.6)',
+        backgroundColor: 'rgba(217, 119, 6, 0.75)',
         borderRadius: 6,
         borderSkipped: false,
       },
       {
         label: 'SIP/Investment (est. 12%)',
         data: comparisons.map(c => c.sip),
-        backgroundColor: 'rgba(252, 108, 38, 0.75)',
+        backgroundColor: '#FC6C26',
         borderRadius: 6,
         borderSkipped: false,
       },
@@ -58,23 +58,26 @@ export default function SpendSaveInvest() {
     responsive: true,
     maintainAspectRatio: false,
     scales: {
-      x: { grid: { display: false }, ticks: { color: '#6B6B8D', font: { size: 12 } } },
+      x: { grid: { display: false }, ticks: { color: '#8E877F', font: { size: 12 } } },
       y: {
-        grid: { color: 'rgba(255,255,255,0.03)' },
-        ticks: { color: '#6B6B8D', font: { size: 11 }, callback: v => v >= 100000 ? `₹${(v / 100000).toFixed(1)}L` : `₹${(v / 1000).toFixed(0)}k` },
+        grid: { color: 'rgba(0, 0, 0, 0.04)' },
+        ticks: { color: '#8E877F', font: { size: 11 }, callback: v => v >= 100000 ? `₹${(v / 100000).toFixed(1)}L` : `₹${(v / 1000).toFixed(0)}k` },
       },
     },
     plugins: {
       legend: {
         position: 'bottom',
-        labels: { color: '#A0A0C0', font: { size: 11 }, usePointStyle: true, pointStyleWidth: 8, padding: 16 },
+        labels: { color: '#655E57', font: { size: 11, weight: '500' }, usePointStyle: true, pointStyleWidth: 8, padding: 16 },
       },
       tooltip: {
-        backgroundColor: '#1E1A17',
-        borderColor: 'rgba(252, 108, 38, 0.3)',
+        backgroundColor: '#FFFFFF',
+        borderColor: 'rgba(252, 108, 38, 0.25)',
         borderWidth: 1,
+        titleColor: '#1A1714',
+        bodyColor: '#655E57',
         padding: 12,
-        cornerRadius: 8,
+        cornerRadius: 10,
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
         callbacks: { label: (ctx) => `${ctx.dataset.label}: ₹${ctx.parsed.y.toLocaleString('en-IN')}` },
       },
     },
@@ -118,7 +121,7 @@ export default function SpendSaveInvest() {
         </div>
       </div>
 
-      <div style={{ padding: '12px 16px', background: 'rgba(252,108,38,0.06)', borderRadius: 'var(--radius-md)', marginBottom: 20, fontSize: 14, color: 'var(--text-secondary)' }}>
+      <div style={{ padding: '14px 18px', background: '#FFF7EE', border: '1px solid rgba(252, 108, 38, 0.2)', borderRadius: 'var(--radius-md)', marginBottom: 20, fontSize: 14, color: 'var(--text-secondary)' }}>
         💡 You have ₹{amount.toLocaleString('en-IN')}. Here's what could happen depending on how you use it — for your awareness and consideration.
       </div>
 

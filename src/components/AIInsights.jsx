@@ -31,14 +31,14 @@ export default function AIInsights() {
         {
           label: 'Last Month',
           data: categories.map(id => overview.previousCategories[id] || 0),
-          backgroundColor: 'rgba(160, 160, 192, 0.25)',
+          backgroundColor: 'rgba(215, 206, 195, 0.65)',
           borderRadius: 6,
           borderSkipped: false,
         },
         {
           label: 'This Month',
           data: categories.map(id => overview.currentCategories[id] || 0),
-          backgroundColor: 'rgba(252, 108, 38, 0.75)',
+          backgroundColor: '#FC6C26',
           borderRadius: 6,
           borderSkipped: false,
         },
@@ -52,25 +52,28 @@ export default function AIInsights() {
     indexAxis: 'y',
     scales: {
       x: {
-        grid: { color: 'rgba(255,255,255,0.03)' },
-        ticks: { color: '#6B6B8D', font: { size: 11 }, callback: v => `₹${(v/1000).toFixed(1)}k` },
+        grid: { color: 'rgba(0, 0, 0, 0.04)' },
+        ticks: { color: '#8E877F', font: { size: 11 }, callback: v => `₹${(v/1000).toFixed(1)}k` },
       },
       y: {
         grid: { display: false },
-        ticks: { color: '#A0A0C0', font: { size: 12 } },
+        ticks: { color: '#1A1714', font: { size: 12, weight: '500' } },
       },
     },
     plugins: {
       legend: {
         position: 'top',
-        labels: { color: '#A0A0C0', font: { size: 11 }, usePointStyle: true, pointStyleWidth: 8 },
+        labels: { color: '#655E57', font: { size: 11, weight: '500' }, usePointStyle: true, pointStyleWidth: 8 },
       },
       tooltip: {
-        backgroundColor: '#1E1A17',
-        borderColor: 'rgba(252, 108, 38, 0.3)',
+        backgroundColor: '#FFFFFF',
+        borderColor: 'rgba(252, 108, 38, 0.25)',
         borderWidth: 1,
+        titleColor: '#1A1714',
+        bodyColor: '#655E57',
         padding: 12,
-        cornerRadius: 8,
+        cornerRadius: 10,
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
         callbacks: {
           label: (ctx) => `${ctx.dataset.label}: ₹${ctx.parsed.x.toLocaleString('en-IN')}`,
         },
@@ -101,9 +104,9 @@ export default function AIInsights() {
       </div>
 
       {/* AI Expense Story */}
-      <div className="card card-glow mb-3" style={{ background: 'linear-gradient(135deg, rgba(252,108,38,0.15) 0%, rgba(30,26,23,0.95) 50%)' }}>
+      <div className="card card-glow mb-3" style={{ background: 'linear-gradient(135deg, #FFF7F0 0%, #FFF1E3 100%)', border: '1px solid rgba(252, 108, 38, 0.25)' }}>
         <div className="flex items-center gap-1 mb-2">
-          <Sparkles size={18} color="var(--accent)" />
+          <Sparkles size={18} color="var(--primary)" />
           <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 18 }}>Your {monthName} Expense Story</h3>
         </div>
         <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.8, maxWidth: 700 }}>{story}</p>

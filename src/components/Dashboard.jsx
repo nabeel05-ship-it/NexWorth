@@ -58,14 +58,14 @@ export default function Dashboard() {
         {
           label: MONTH_NAMES[prevMonth],
           data: CATEGORIES.slice(0, 7).map(c => overview.previousCategories[c.id] || 0),
-          backgroundColor: 'rgba(160, 160, 192, 0.3)',
+          backgroundColor: 'rgba(215, 206, 195, 0.65)',
           borderRadius: 6,
           borderSkipped: false,
         },
         {
           label: monthName,
           data: CATEGORIES.slice(0, 7).map(c => overview.currentCategories[c.id] || 0),
-          backgroundColor: 'rgba(252, 108, 38, 0.75)',
+          backgroundColor: '#FC6C26',
           borderRadius: 6,
           borderSkipped: false,
         },
@@ -79,16 +79,19 @@ export default function Dashboard() {
     plugins: {
       legend: {
         position: 'bottom',
-        labels: { color: '#C4BFB8', font: { size: 11 }, padding: 16, usePointStyle: true, pointStyleWidth: 8 },
+        labels: { color: '#655E57', font: { size: 12, weight: '500' }, padding: 16, usePointStyle: true, pointStyleWidth: 8 },
       },
       tooltip: {
-        backgroundColor: '#1E1A17',
-        borderColor: 'rgba(252, 108, 38, 0.3)',
+        backgroundColor: '#FFFFFF',
+        borderColor: 'rgba(252, 108, 38, 0.25)',
         borderWidth: 1,
+        titleColor: '#1A1714',
+        bodyColor: '#655E57',
         titleFont: { size: 13, weight: '600' },
         bodyFont: { size: 12 },
         padding: 12,
-        cornerRadius: 8,
+        cornerRadius: 10,
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
         callbacks: {
           label: function (ctx) {
             return `₹${ctx.parsed.toLocaleString('en-IN')}`;
@@ -101,11 +104,11 @@ export default function Dashboard() {
   const barOptions = {
     ...chartOptions,
     scales: {
-      x: { grid: { display: false }, ticks: { color: '#6B6B8D', font: { size: 11 } } },
+      x: { grid: { display: false }, ticks: { color: '#8E877F', font: { size: 11 } } },
       y: {
-        grid: { color: 'rgba(255,255,255,0.03)' },
+        grid: { color: 'rgba(0, 0, 0, 0.04)' },
         ticks: {
-          color: '#6B6B8D', font: { size: 11 },
+          color: '#8E877F', font: { size: 11 },
           callback: (v) => `₹${(v / 1000).toFixed(0)}k`
         }
       },
@@ -165,7 +168,7 @@ export default function Dashboard() {
       </div>
 
       {/* AI Story Card */}
-      <div className="card card-glow mb-3" style={{ background: 'linear-gradient(135deg, rgba(252,108,38,0.12) 0%, rgba(30,26,23,0.95) 40%)' }}>
+      <div className="card card-glow mb-3" style={{ background: 'linear-gradient(135deg, #FFF7F0 0%, #FFF1E3 100%)', border: '1px solid rgba(252, 108, 38, 0.25)' }}>
         <div className="flex items-center gap-1 mb-1">
           <span className="ai-badge"><Sparkles size={12} /> AI Expense Story</span>
         </div>
