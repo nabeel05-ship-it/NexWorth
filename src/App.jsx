@@ -3,7 +3,7 @@ import { AppProvider, useApp } from './context/AppContext';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import ExpenseForm from './components/ExpenseForm';
-import CSVImport from './components/CSVImport';
+import AITransactionCapture from './components/AITransactionCapture';
 import AIInsights from './components/AIInsights';
 import WhatIfSimulator from './components/WhatIfSimulator';
 import GoalPlanner from './components/GoalPlanner';
@@ -20,8 +20,9 @@ function AppContent() {
   const renderPage = () => {
     switch (state.currentPage) {
       case 'dashboard': return <Dashboard />;
+      case 'capture': return <AITransactionCapture />;
+      case 'import': return <AITransactionCapture />;
       case 'add-expense': return <ExpenseForm />;
-      case 'import': return <CSVImport />;
       case 'insights': return <AIInsights />;
       case 'what-if': return <WhatIfSimulator />;
       case 'goals': return <GoalPlanner />;

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { CATEGORIES, MONTH_NAMES } from '../utils/demoData';
-import { PlusCircle, Edit3, Trash2, Search, Filter } from 'lucide-react';
+import { PlusCircle, Edit3, Trash2, Search, Filter, Banknote, Smartphone } from 'lucide-react';
 
 export default function ExpenseForm() {
   const { state, dispatch } = useApp();
@@ -13,7 +13,13 @@ export default function ExpenseForm() {
   const [filterCategory, setFilterCategory] = useState('all');
 
   const [formData, setFormData] = useState({
-    name: '', amount: '', category: 'food', date: new Date().toISOString().split('T')[0], note: '',
+    name: '',
+    amount: '',
+    category: 'food',
+    date: new Date().toISOString().split('T')[0],
+    note: '',
+    paymentMethod: 'UPI',
+    source: 'Manual',
   });
 
   const now = new Date();
@@ -34,6 +40,20 @@ export default function ExpenseForm() {
 
   const totalShown = filteredExpenses.reduce((s, e) => s + e.amount, 0);
 
+  const openAddModal = (isCash = false) => {
+    setEditId(null);
+    setFormData({
+      name: isCash ? 'Cash Payment' : '',
+      amount: '',
+      category: 'food',
+      date: new Date().toISOString().split('T')[0],
+      note: isCash ? 'Cash transaction' : '',
+      paymentMethod: isCash ? 'Cash' : 'UPI',
+      source: isCash ? 'Cash' : 'Manual',
+    });
+    setShowForm(true);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name || !formData.amount) return;
@@ -44,6 +64,8 @@ export default function ExpenseForm() {
       category: formData.category,
       date: new Date(formData.date).toISOString(),
       note: formData.note,
+      paymentMethod: formData.paymentMethod || 'UPI',
+      source: formData.source || 'Manual',
     };
 
     if (editId) {
@@ -53,7 +75,6 @@ export default function ExpenseForm() {
       dispatch({ type: 'ADD_EXPENSE', payload: expense });
     }
 
-    setFormData({ name: '', amount: '', category: 'food', date: new Date().toISOString().split('T')[0], note: '' });
     setShowForm(false);
   };
 
@@ -64,6 +85,8 @@ export default function ExpenseForm() {
       category: exp.category,
       date: new Date(exp.date).toISOString().split('T')[0],
       note: exp.note || '',
+      paymentMethod: exp.paymentMethod || 'UPI',
+      source: exp.source || 'Manual',
     });
     setEditId(exp.id);
     setShowForm(true);
@@ -78,14 +101,19 @@ export default function ExpenseForm() {
   return (
     <div>
       <div className="page-header">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center" style={{ flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h2>Expenses</h2>
             <p className="subtitle">{MONTH_NAMES[now.getMonth()]} {now.getFullYear()} — Manage your expenses</p>
           </div>
-          <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditId(null); setFormData({ name: '', amount: '', category: 'food', date: new Date().toISOString().split('T')[0], note: '' }); }}>
-            <PlusCircle size={16} /> Add Expense
-          </button>
+          <div className="btn-group">
+            <button className="btn btn-outline" onClick={() => openAddModal(true)}>
+              <Banknote size={16} /> + Cash Expense
+            </button>
+            <button className="btn btn-primary" onClick={() => openAddModal(false)}>
+              <PlusCircle size={16} /> Add Expense
+            </button>
+          </div>
         </div>
       </div>
 
@@ -139,14 +167,31 @@ export default function ExpenseForm() {
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">Date</label>
-                  <input
-                    className="form-input"
-                    type="date"
-                    value={formData.date}
-                    onChange={e => setFormData({ ...formData, date: e.target.value })}
-                  />
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Payment Method</label>
+                    <select
+                      className="form-select"
+                      value={formData.paymentMethod}
+                      onChange={e => setFormData({ ...formData, paymentMethod: e.target.value })}
+                    >
+                      <option value="UPI">UPI (GPay / PhonePe / Paytm)</option>
+                      <option value="Cash">Cash</option>
+                      <option value="Credit Card">Credit Card</option>
+                      <option value="Debit Card">Debit Card</option>
+                      <option value="NetBanking">NetBanking</option>
+                      <option value="AutoPay">AutoPay</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Date</label>
+                    <input
+                      className="form-input"
+                      type="date"
+                      value={formData.date}
+                      onChange={e => setFormData({ ...formData, date: e.target.value })}
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group">
@@ -218,16 +263,29 @@ export default function ExpenseForm() {
           <ul className="expense-list">
             {filteredExpenses.map(exp => {
               const cat = CATEGORIES.find(c => c.id === exp.category);
+              const isCash = exp.paymentMethod === 'Cash' || exp.source === 'Cash';
               return (
                 <li key={exp.id} className="expense-item">
                   <div className="expense-cat-icon" style={{ background: `${cat?.color}20` }}>
                     {cat?.icon}
                   </div>
                   <div className="expense-info">
-                    <div className="expense-name">{exp.name}</div>
+                    <div className="expense-name" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span>{exp.name}</span>
+                      {isCash ? (
+                        <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: '#E6F4EA', color: '#137333', fontWeight: 600 }}>
+                          💵 Cash
+                        </span>
+                      ) : exp.source ? (
+                        <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: '#FFF4D6', color: '#D97706', fontWeight: 600 }}>
+                          {exp.source === 'SMS' ? '💬 SMS' : exp.source === 'Notification' ? '🔔 Alert' : exp.source === 'Email' ? '📧 Email' : exp.paymentMethod || 'UPI'}
+                        </span>
+                      ) : null}
+                    </div>
                     <div className="expense-meta">
                       <span>{cat?.name}</span>
                       <span>{new Date(exp.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                      {exp.paymentMethod && !isCash && <span>• {exp.paymentMethod}</span>}
                       {exp.note && <span style={{ fontStyle: 'italic' }}>"{exp.note}"</span>}
                     </div>
                   </div>

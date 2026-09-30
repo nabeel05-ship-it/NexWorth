@@ -1,9 +1,9 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import {
-  LayoutDashboard, PlusCircle, Upload, Brain, Sparkles,
+  LayoutDashboard, PlusCircle, Smartphone, Brain, Sparkles,
   GitCompareArrows, Target, Calculator, TrendingUp,
-  MessageCircle, Shield, Menu, X
+  MessageCircle, Shield, Menu, X, Zap
 } from 'lucide-react';
 
 const navItems = [
@@ -11,9 +11,9 @@ const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'insights', label: 'AI Insights', icon: Sparkles },
   ]},
-  { section: 'Manage', items: [
-    { id: 'add-expense', label: 'Add Expense', icon: PlusCircle },
-    { id: 'import', label: 'Import Statement', icon: Upload },
+  { section: 'Capture & Manage', items: [
+    { id: 'capture', label: 'AI Capture (SMS/Notif)', icon: Zap },
+    { id: 'add-expense', label: 'Expenses & Cash', icon: PlusCircle },
   ]},
   { section: 'Simulate', items: [
     { id: 'what-if', label: 'What-If Simulator', icon: GitCompareArrows },

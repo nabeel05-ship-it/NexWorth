@@ -65,12 +65,12 @@ export default function Privacy() {
           <div className="privacy-card">
             <div className="privacy-icon"><Server size={28} color="var(--success)" /></div>
             <h4>No Direct Bank Access</h4>
-            <p>This application does not directly connect to Google Pay, PhonePe, or any banking service. Data is entered manually or via CSV.</p>
+            <p>NexWorth never accesses Google Pay, PhonePe, or bank accounts directly. Data is parsed from user-authorized notifications, SMS, or manual cash logs.</p>
           </div>
           <div className="privacy-card">
             <div className="privacy-icon"><Fingerprint size={28} color="var(--info)" /></div>
-            <h4>Browser Processing</h4>
-            <p>CSV files are parsed entirely within your browser. No file data is uploaded to any server during import.</p>
+            <h4>Client-Side AI Parsing</h4>
+            <p>SMS & notification texts are parsed locally in your browser. No messages, credentials, or personal identification are uploaded or stored externally.</p>
           </div>
         </div>
       </div>
@@ -82,40 +82,45 @@ export default function Privacy() {
           padding: 20, background: 'var(--bg-input)', borderRadius: 'var(--radius-md)',
           fontFamily: 'monospace', fontSize: 13, color: 'var(--text-secondary)', lineHeight: 2,
         }}>
-          <div><span style={{ color: 'var(--text-muted)' }}>Date:</span> <span style={{ color: 'var(--accent)' }}>30 September 2026</span></div>
-          <div><span style={{ color: 'var(--text-muted)' }}>Amount:</span> <span style={{ color: 'var(--accent)' }}>₹500</span></div>
-          <div><span style={{ color: 'var(--text-muted)' }}>Merchant:</span> <span style={{ color: 'var(--accent)' }}>Swiggy</span></div>
-          <div><span style={{ color: 'var(--text-muted)' }}>Category:</span> <span style={{ color: 'var(--accent)' }}>Food</span></div>
+          <div><span style={{ color: 'var(--text-muted)' }}>Date:</span> <span style={{ color: 'var(--primary)' }}>30 September 2026</span></div>
+          <div><span style={{ color: 'var(--text-muted)' }}>Amount:</span> <span style={{ color: 'var(--primary)' }}>₹450</span></div>
+          <div><span style={{ color: 'var(--text-muted)' }}>Merchant:</span> <span style={{ color: 'var(--primary)' }}>Swiggy</span></div>
+          <div><span style={{ color: 'var(--text-muted)' }}>Category:</span> <span style={{ color: 'var(--primary)' }}>Food</span></div>
+          <div><span style={{ color: 'var(--text-muted)' }}>Source:</span> <span style={{ color: 'var(--primary)' }}>SMS (User Confirmed)</span></div>
         </div>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 12 }}>
-          This is the maximum level of information used for analysis. No passwords, PINs, account numbers, or personal identification is ever required.
+          This is the maximum level of information used for analysis. No passwords, PINs, OTPs, or personal identification is ever requested.
         </p>
       </div>
 
       {/* Future Architecture */}
       <div className="card">
         <div className="card-header">
-          <div className="card-title">🚀 Future Integration — Account Aggregator</div>
+          <div className="card-title">🚀 Future Integration Roadmap</div>
           <span className="badge badge-primary">Future Scope</span>
         </div>
         <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.6 }}>
-          Future production versions of NexWorth could integrate with India's regulated Account Aggregator framework for secure, consent-based financial data access through compliant partners.
+          NexWorth is designed for future-ready, consent-based integrations including authorized email receipt parsing and RBI-regulated Account Aggregators:
         </p>
 
-        <div className="architecture-flow">
-          <div className="arch-node default">🏦 Your Bank</div>
+        <div className="architecture-flow" style={{ background: '#FAF8F4', borderRadius: 'var(--radius-lg)' }}>
+          <div className="arch-node default">📧 Authorized Email Provider / Bank SMS Gateway</div>
           <div className="arch-arrow">↓</div>
-          <div className="arch-node accent">🔗 Account Aggregator (RBI Regulated)</div>
+          <div className="arch-node default" style={{ borderColor: 'var(--primary)' }}>
+            🔑 OAuth Permission / User Consent (Zero Password Storage)
+          </div>
           <div className="arch-arrow">↓</div>
-          <div className="arch-node default">✅ Consent-Based Secure Data Flow</div>
+          <div className="arch-node accent">🤖 AI Transaction Parser (Extracts Amount & Payee)</div>
           <div className="arch-arrow">↓</div>
-          <div className="arch-node primary">💜 NexWorth Application</div>
+          <div className="arch-node default">✅ User Confirmation Prompt</div>
           <div className="arch-arrow">↓</div>
-          <div className="arch-node accent">🤖 AI Analysis & Insights</div>
+          <div className="arch-node primary">💾 Confirmed Expense Database</div>
+          <div className="arch-arrow">↓</div>
+          <div className="arch-node accent">💡 AI Insights & Simulation</div>
         </div>
 
         <div className="disclaimer mt-2">
-          ℹ️ Account Aggregator integration is shown as future architecture only. The current prototype does NOT access any banking systems directly. This feature would be implemented with proper regulatory compliance and user consent.
+          ℹ️ Future integrations adhere to strict zero-password and explicit-confirmation principles. The current prototype operates safely in client-side sandbox mode.
         </div>
       </div>
     </div>
