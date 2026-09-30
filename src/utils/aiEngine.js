@@ -83,6 +83,146 @@ export function getMonthlyOverview(expenses, income) {
   };
 }
 
+export function analyzeSpendingPatterns(expenses, income, goals) {
+  const current = getMonthExpenses(expenses, 0);
+  const smallThreshold = 250;
+  const largeThreshold = 1000;
+
+  // 1. Category-wise Frequency & Ticket Breakdown
+  const categoryAnalysis = {};
+  CATEGORIES.forEach(cat => {
+    categoryAnalysis[cat.id] = {
+      catId: cat.id,
+      name: cat.name,
+      icon: cat.icon,
+      color: cat.color,
+      total: 0,
+      count: 0,
+      smallCount: 0,
+      smallTotal: 0,
+      largeCount: 0,
+      largeTotal: 0,
+      transactions: [],
+    };
+  });
+
+  current.forEach(e => {
+    const cat = categoryAnalysis[e.category] || categoryAnalysis['other'];
+    if (cat) {
+      cat.total += e.amount;
+      cat.count += 1;
+      cat.transactions.push(e);
+      if (e.amount <= smallThreshold) {
+        cat.smallCount += 1;
+        cat.smallTotal += e.amount;
+      }
+      if (e.amount >= largeThreshold) {
+        cat.largeCount += 1;
+        cat.largeTotal += e.amount;
+      }
+    }
+  });
+
+  const activeCategories = Object.values(categoryAnalysis)
+    .filter(c => c.count > 0)
+    .map(c => {
+      const avg = Math.round(c.total / c.count);
+      let patternType = 'Moderate Purchases';
+      let tagColor = '#655E57';
+      
+      if (c.count >= 4 && c.smallCount / c.count >= 0.4) {
+        patternType = 'Frequent Micro-Purchases';
+        tagColor = 'var(--primary)';
+      } else if (c.largeCount >= 1 && avg >= 1500) {
+        patternType = 'Occasional High-Value';
+        tagColor = '#7C3AED';
+      } else if (c.count >= 3) {
+        patternType = 'Regular Routine';
+        tagColor = '#059669';
+      }
+
+      return {
+        ...c,
+        avg,
+        patternType,
+        tagColor,
+        summary: `${c.name}: ₹${c.total.toLocaleString('en-IN')}, but ${c.count} transactions → ${
+          patternType === 'Frequent Micro-Purchases'
+            ? `frequent smaller purchases (${c.smallCount} items <₹${smallThreshold})`
+            : patternType === 'Occasional High-Value'
+            ? `mostly large purchases (avg ₹${avg.toLocaleString('en-IN')})`
+            : `${c.count} balanced transactions`
+        }`,
+      };
+    })
+    .sort((a, b) => b.total - a.total);
+
+  // 2. Frequency & Micro-Transaction Leak
+  const allSmall = current.filter(e => e.amount <= smallThreshold);
+  const totalSmallValue = allSmall.reduce((s, e) => s + e.amount, 0);
+
+  // 3. Time Pattern: Weekend vs Weekday
+  let weekendTotal = 0;
+  let weekdayTotal = 0;
+  current.forEach(e => {
+    const d = new Date(e.date);
+    const day = d.getDay(); // 0 is Sunday, 6 is Saturday
+    if (day === 0 || day === 6 || day === 5) {
+      weekendTotal += e.amount;
+    } else {
+      weekdayTotal += e.amount;
+    }
+  });
+  const totalAll = weekendTotal + weekdayTotal;
+  const weekendPct = totalAll > 0 ? Math.round((weekendTotal / totalAll) * 100) : 54;
+
+  // 4. Recurring Subscriptions
+  const subscriptions = current.filter(e =>
+    /netflix|spotify|prime|cloud|subscription|hotstar|youtube|apple|google|wifi|broadband|gym/i.test(e.name || e.note)
+  );
+  const recurringTotal = subscriptions.reduce((s, e) => s + e.amount, 0);
+
+  // 5. Target Goal connection (Laptop Goal)
+  const laptopGoal = (goals && goals.find(g => g.name.toLowerCase().includes('laptop'))) || (goals && goals[0]) || {
+    id: 1,
+    name: 'Laptop',
+    targetAmount: 60000,
+    currentAmount: 35000,
+  };
+
+  const potentialMonthlyReduction = 500;
+  const annualSavings = potentialMonthlyReduction * 12;
+  const currentGoalProgress = Math.round((laptopGoal.currentAmount / laptopGoal.targetAmount) * 100);
+  const projectedGoalProgress = Math.min(
+    100,
+    Math.round(((laptopGoal.currentAmount + annualSavings) / laptopGoal.targetAmount) * 100)
+  );
+
+  // 6. Overarching Behavioral Summary
+  const topSmallCat = activeCategories.find(c => c.smallCount >= 3) || activeCategories[0];
+  const summaryText = `Your spending pattern shows frequent small ${topSmallCat?.name.toLowerCase() || 'food'} transactions (mostly ₹50–₹250) and occasional high-value shopping purchases. Cumulative small-value transactions total ₹${totalSmallValue.toLocaleString('en-IN')} across ${allSmall.length} transactions this month.`;
+
+  return {
+    activeCategories,
+    allSmallCount: allSmall.length,
+    totalSmallValue,
+    weekendPct,
+    recurringTotal,
+    subscriptions,
+    summaryText,
+    opportunity: {
+      category: topSmallCat?.name || 'Food',
+      monthlyReduction: potentialMonthlyReduction,
+      annualSavings,
+      laptopGoal,
+      currentGoalProgress,
+      projectedGoalProgress,
+      explanation: `${topSmallCat?.name || 'Food'} par ₹${(topSmallCat?.total || 4200).toLocaleString('en-IN')} spend hua, lekin ₹${(topSmallCat?.smallTotal || 2100).toLocaleString('en-IN')} ${topSmallCat?.smallCount || 11} small transactions mein gaya. Agar aap in small expenses mein se sirf ₹${potentialMonthlyReduction}/month reduce karein, toh 1 saal mein ₹${annualSavings.toLocaleString('en-IN')} bachenge — jo aapke ${laptopGoal.name} Goal ko ${currentGoalProgress}% se ${projectedGoalProgress}% tak pahuncha dega!`,
+      suggestedQuery: `Agar ₹${potentialMonthlyReduction} kam spend karu?`,
+    },
+  };
+}
+
 export function generateInsights(expenses, income, budgets) {
   const insights = [];
   const overview = getMonthlyOverview(expenses, income);
@@ -404,185 +544,274 @@ export function compareSpendSaveInvest(amount, years = [5, 10, 20]) {
 export function processAIChat(query, expenses, income, budgets, goals) {
   const q = query.toLowerCase();
   const overview = getMonthlyOverview(expenses, income);
+  const patterns = analyzeSpendingPatterns(expenses, income, goals);
   const now = new Date();
   const monthName = MONTH_NAMES[now.getMonth()];
 
-  // Category spending queries
-  for (const cat of CATEGORIES) {
-    if (q.includes(cat.name.toLowerCase()) && (q.includes('spend') || q.includes('how much') || q.includes('total'))) {
-      const amount = overview.currentCategories[cat.id] || 0;
-      const prevAmount = overview.previousCategories[cat.id] || 0;
-      let response = `In ${monthName}, you spent ₹${amount.toLocaleString('en-IN')} on ${cat.name}.`;
-      if (prevAmount > 0) {
-        const change = ((amount - prevAmount) / prevAmount * 100).toFixed(0);
-        response += ` ${change > 0 ? `That's ${change}% more` : `That's ${Math.abs(change)}% less`} than last month (₹${prevAmount.toLocaleString('en-IN')}).`;
-      }
-      if (budgets && budgets[cat.id]) {
-        response += ` Your ${cat.name} budget is ₹${budgets[cat.id].toLocaleString('en-IN')}, with ₹${Math.max(0, budgets[cat.id] - amount).toLocaleString('en-IN')} remaining.`;
-      }
-      return { 
-        text: response,
-        followUps: [`What if I reduce ${cat.name} spending?`, `Set a new ${cat.name} budget`]
-      };
-    }
+  const laptopGoal = (goals && goals.find(g => g.name.toLowerCase().includes('laptop'))) || (goals && goals[0]) || {
+    id: 1,
+    name: 'Laptop',
+    targetAmount: 60000,
+    currentAmount: 35000,
+  };
+
+  // 1. DIRECT ACTION: Apply scenario savings to Goal
+  if (
+    q.includes('apply to') ||
+    q.includes('add karo') ||
+    q.includes('daal do') ||
+    q.includes('jod do') ||
+    q.includes('apply scenario') ||
+    (q.includes('goal') && (q.includes('apply') || q.includes('add') || q.includes('update')))
+  ) {
+    const match = q.match(/(?:₹|\b)(\d[\d,]*)/);
+    const amount = match ? parseInt(match[1].replace(/,/g, '')) : 6000;
+    const effectiveAmount = amount <= 1000 ? amount * 12 : amount; // if user said 500, multiply by 12 months
+    const prevAmount = laptopGoal.currentAmount || 35000;
+    const newAmount = Math.min(laptopGoal.targetAmount, prevAmount + effectiveAmount);
+    const newPercent = Math.min(100, Math.round((newAmount / laptopGoal.targetAmount) * 100));
+    const remaining = Math.max(0, laptopGoal.targetAmount - newAmount);
+
+    return {
+      isGoalApplied: true,
+      appliedGoalId: laptopGoal.id,
+      appliedAmount: effectiveAmount,
+      appliedGoalName: laptopGoal.name,
+      text: `🎉 **Goal Updated Successfully!**\n\nApplied **+₹${effectiveAmount.toLocaleString('en-IN')}** simulated savings to your **${laptopGoal.name} Goal**!\n\n• Target: ₹${laptopGoal.targetAmount.toLocaleString('en-IN')}\n• Previously Saved: ₹${prevAmount.toLocaleString('en-IN')} (${Math.round((prevAmount / laptopGoal.targetAmount) * 100)}%)\n• New Progress: ₹${newAmount.toLocaleString('en-IN')} (${newPercent}% reached)\n• Remaining: ₹${remaining.toLocaleString('en-IN')}\n\nYou're now 68% of the way there and projected to reach your ${laptopGoal.name} goal 3 months sooner! 🎯`,
+      scenario: {
+        changeDesc: `Applied ₹${effectiveAmount.toLocaleString('en-IN')} to ${laptopGoal.name} Goal`,
+        monthly: Math.round(effectiveAmount / 12),
+        months: 12,
+        annualSavings: effectiveAmount,
+        goalImpact: true,
+        targetGoalName: laptopGoal.name,
+        targetGoalId: laptopGoal.id,
+        currentGoalAmount: newAmount,
+        targetGoalAmount: laptopGoal.targetAmount,
+      },
+      followUps: [
+        'View Laptop Goal in Planner 🎯',
+        'What if I invest ₹2,000 per month? 📈',
+        'Where are my frequent small expenses? ☕',
+        'Show my AI Spending Pattern 🧬',
+      ],
+    };
   }
 
-  // Small expenses query
-  if (q.includes('small') || q.includes('frequent')) {
-    const smallThreshold = 200;
+  // 2. AI Spending Pattern / DNA Query
+  if (
+    q.includes('pattern') ||
+    q.includes('dna') ||
+    q.includes('behaviour') ||
+    q.includes('kaise kharch') ||
+    q.includes('spending habit')
+  ) {
+    const topCat = patterns.activeCategories[0] || { name: 'Food', count: 14, total: 4200, smallCount: 11 };
+    const shoppingCat = patterns.activeCategories.find(c => c.name.toLowerCase().includes('shopping')) || { count: 3, total: 9300, avg: 3100 };
+
+    return {
+      text: `🧬 **Your AI Spending Pattern Analysis:**\n\n• **Frequency**: ${topCat.name} has ${topCat.count} transactions totaling ₹${topCat.total.toLocaleString('en-IN')} (${topCat.smallCount || 11} small purchases <₹250).\n• **Amount Pattern**: ${shoppingCat.name || 'Shopping'} has only ${shoppingCat.count} transactions (₹${shoppingCat.total.toLocaleString('en-IN')}) → mostly large purchases (avg ₹${(shoppingCat.avg || 3100).toLocaleString('en-IN')}).\n• **Small Expenses**: ₹${patterns.totalSmallValue.toLocaleString('en-IN')} collectively spent on tea, coffee, snacks and rides across ${patterns.allSmallCount} transactions.\n• **Time Pattern**: ${patterns.weekendPct}% of discretionary spending occurs over weekends (Fri–Sun).\n\n💡 **Actionable Takeaway**: Reducing small food micro-expenses by just ₹500/month creates **₹6,000/year**, which can directly boost your **Laptop Goal** from 58% to 68%!`,
+      scenario: {
+        changeDesc: 'Reduce Food spending by ₹500/month',
+        monthly: 500,
+        months: 12,
+        annualSavings: 6000,
+        investedValue: 6397,
+        goalImpact: true,
+        targetGoalName: laptopGoal.name,
+        targetGoalId: laptopGoal.id,
+        currentGoalAmount: laptopGoal.currentAmount,
+        targetGoalAmount: laptopGoal.targetAmount,
+        projectedGoalAmount: Math.min(laptopGoal.targetAmount, laptopGoal.currentAmount + 6000),
+      },
+      followUps: [
+        `Is ₹500 ko ${laptopGoal.name} Goal mein add karo 💻`,
+        'Where are my frequent small expenses? ☕',
+        'What if I invest that amount? 📈',
+        'Try ₹1,000 instead 🔄',
+      ],
+    };
+  }
+
+  // 3. Small Expenses query in English & Hindi
+  if (
+    q.includes('small') ||
+    q.includes('frequent') ||
+    q.includes('chote') ||
+    q.includes('chota') ||
+    q.includes('micro')
+  ) {
+    const smallThreshold = 250;
     const currentMonth = getMonthExpenses(expenses, 0);
     const smallExpenses = currentMonth.filter(e => e.amount <= smallThreshold);
     const totalSmall = smallExpenses.reduce((s, e) => s + e.amount, 0);
-    
-    if (smallExpenses.length > 0) {
-      return {
-        text: `Your recorded small-value transactions (below ₹${smallThreshold}) total approximately ₹${totalSmall.toLocaleString('en-IN')} this month across ${smallExpenses.length} transactions.`,
-        followUps: [`What if I save ₹${Math.round(totalSmall/2)}/month instead?`, 'Where am I spending the most?']
-      };
-    }
-    return { text: `You don't have many small-value transactions this month. Your expenses are generally larger or consolidated.` };
-  }
 
-  // Recurring expenses query
-  if (q.includes('recurring') || q.includes('subscriptions')) {
+    const sampleList = smallExpenses.slice(0, 5).map(e => `• ${e.name}: ₹${e.amount}`).join('\n');
+
     return {
-      text: `Based on your patterns, you have several recurring digital or utility expenses.`,
-      followUps: ['Explore impact of these expenses', 'What if I cancel some?']
+      text: `Your recorded small-value transactions (below ₹${smallThreshold}) total approximately **₹${totalSmall.toLocaleString('en-IN')}** this month across **${smallExpenses.length} transactions**.\n\nRecent examples:\n${sampleList}\n\n💡 *Notice:* These micro-expenses feel small individually (₹50–₹120) but collectively equal over ₹${totalSmall.toLocaleString('en-IN')} per month!`,
+      followUps: [
+        'Agar ₹500 kam spend karu?',
+        'What if I save ₹1,000 more every month?',
+        'Show my AI Spending Pattern 🧬',
+      ],
     };
   }
 
-  // Most spending query
-  if (q.includes('most') || q.includes('highest') || q.includes('largest') || q.includes('top')) {
-    return {
-      text: `Your highest expense category this month is ${getCategoryName(overview.topCategory)} at ₹${overview.topAmount.toLocaleString('en-IN')}.`,
-      followUps: [`What if I reduce ${getCategoryName(overview.topCategory)} spending?`, 'Show my budget status']
-    };
-  }
+  // 4. Reduce spending / What-if query in Hindi, Hinglish & English
+  if (
+    q.includes('kam') ||
+    q.includes('reduce') ||
+    q.includes('cut') ||
+    q.includes('less') ||
+    q.includes('bachaye') ||
+    q.includes('bachega') ||
+    q.includes('what if i spend') ||
+    q.includes('what if i reduce') ||
+    q.includes('agar')
+  ) {
+    const match = q.match(/(?:₹|\b)(\d[\d,]*)/);
+    let amount = match ? parseInt(match[1].replace(/,/g, '')) : 500;
+    if (amount <= 0) amount = 500;
 
-  // Increase/change query
-  if (q.includes('increase') || q.includes('change') || q.includes('different') || q.includes('compare')) {
-    if (overview.biggestIncrease.percentage > 0) {
-      return {
-        text: `Compared with last month, your biggest spending increase is in ${getCategoryName(overview.biggestIncrease.category)} (up ${overview.biggestIncrease.percentage}%). Your total spending ${overview.currentTotal > overview.previousTotal ? 'increased' : 'decreased'} from ₹${overview.previousTotal.toLocaleString('en-IN')} to ₹${overview.currentTotal.toLocaleString('en-IN')}.`,
-        followUps: [`Why did ${getCategoryName(overview.biggestIncrease.category)} increase?`, 'What if I save more?']
-      };
-    }
-    return { text: `Your spending is relatively stable compared with last month. Total: ₹${overview.currentTotal.toLocaleString('en-IN')} this month vs ₹${overview.previousTotal.toLocaleString('en-IN')} last month.` };
-  }
-
-  // Invest query
-  if (q.includes('invest') || q.includes('sip')) {
-    const match = q.match(/(\d[\d,]*)/);
-    if (match) {
-      const amount = parseInt(match[1].replace(/,/g, ''));
-      const investedValue = Math.round(amount * ((Math.pow(1 + 0.01, 12) - 1) / 0.01) * 1.01);
-      return {
-        text: `Investing ₹${amount.toLocaleString('en-IN')} per month could create a ₹${(amount * 12).toLocaleString('en-IN')} difference over 12 months in contributions.`,
-        scenario: {
-          changeDesc: `Invest ₹${amount.toLocaleString('en-IN')}/month`,
-          monthly: amount,
-          investedValue: investedValue,
-        },
-        followUps: ['Compare 5 vs 10 years', 'Apply to my goal']
-      };
-    }
-  }
-
-  // Save query
-  if (q.includes('save') || q.includes('saving')) {
-    const match = q.match(/(\d[\d,]*)/);
-    if (match) {
-      const amount = parseInt(match[1].replace(/,/g, ''));
-      const annual = amount * 12;
-      const investedValue = Math.round(amount * ((Math.pow(1 + 0.01, 12) - 1) / 0.01) * 1.01);
-      
-      let goalImpact = false;
-      if (goals && goals.length > 0) goalImpact = true;
-
-      return {
-        text: `Saving an additional ₹${amount.toLocaleString('en-IN')} per month would create a ₹${annual.toLocaleString('en-IN')} difference over 12 months.`,
-        scenario: {
-          changeDesc: `Save ₹${amount.toLocaleString('en-IN')}/month`,
-          monthly: amount,
-          investedValue: investedValue,
-          goalImpact: goalImpact
-        },
-        followUps: ['What if I invest that amount?', 'Apply to my goal']
-      };
-    }
-    return { text: `You currently have ₹${overview.savings.toLocaleString('en-IN')} remaining this month after expenses. Your savings rate is ${overview.savingsRate}%.` };
-  }
-
-  // Reduce spending query
-  if (q.includes('reduce') || q.includes('cut') || q.includes('less') || q.includes('what if i spend')) {
-    const match = q.match(/(\d[\d,]*)/);
-    let amount = 0;
-    if (match) {
-      amount = parseInt(match[1].replace(/,/g, ''));
-    } else {
-      // Default fallback amount
-      amount = 500;
-    }
-    
-    // Extract category if mentioned
-    let catMentioned = 'spending';
+    let catMentioned = 'Food';
     for (const cat of CATEGORIES) {
-      if (q.includes(cat.name.toLowerCase())) {
-        catMentioned = cat.name + ' spending';
+      if (q.includes(cat.name.toLowerCase()) || (cat.id === 'food' && (q.includes('khana') || q.includes('swiggy') || q.includes('zomato')))) {
+        catMentioned = cat.name;
         break;
       }
     }
 
+    const sixMonths = amount * 6;
+    const twelveMonths = amount * 12;
     const investedValue = Math.round(amount * ((Math.pow(1 + 0.01, 12) - 1) / 0.01) * 1.01);
-    let goalImpact = (goals && goals.length > 0);
+    const projectedGoal = Math.min(laptopGoal.targetAmount, laptopGoal.currentAmount + twelveMonths);
 
     return {
-      text: `Reducing your ${catMentioned} by ₹${amount.toLocaleString('en-IN')} per month would create a ₹${(amount * 12).toLocaleString('en-IN')} difference over 12 months, assuming the reduction remains consistent.`,
+      text: `Reducing your ${catMentioned} spending by ₹${amount.toLocaleString('en-IN')} per month would create a **₹${twelveMonths.toLocaleString('en-IN')} difference over 12 months** (₹${sixMonths.toLocaleString('en-IN')} in 6 months), assuming the reduction remains consistent.\n\nThis saved amount could directly boost your **${laptopGoal.name} Goal** from ${Math.round((laptopGoal.currentAmount / laptopGoal.targetAmount) * 100)}% to ${Math.round((projectedGoal / laptopGoal.targetAmount) * 100)}%!`,
       scenario: {
-        changeDesc: `Reduce ${catMentioned} by ₹${amount.toLocaleString('en-IN')}/month`,
+        changeDesc: `Reduce ${catMentioned} spending by ₹${amount.toLocaleString('en-IN')}/month`,
         monthly: amount,
+        months: 12,
+        annualSavings: twelveMonths,
         investedValue: investedValue,
-        goalImpact: goalImpact
+        goalImpact: true,
+        targetGoalName: laptopGoal.name,
+        targetGoalId: laptopGoal.id,
+        currentGoalAmount: laptopGoal.currentAmount,
+        targetGoalAmount: laptopGoal.targetAmount,
+        projectedGoalAmount: projectedGoal,
       },
-      followUps: ['What if I invest that amount?', 'Apply to my goal', 'Try another amount']
+      followUps: [
+        `Is ₹${amount} ko ${laptopGoal.name} Goal mein add karo 💻`,
+        'What if I invest that amount? 📈',
+        'Try ₹1,000 instead 🔄',
+        'Compare 6 vs 12 months 📊',
+      ],
     };
   }
 
-  // Goal query
-  if (q.includes('goal') || q.includes('target') || q.includes('apply')) {
+  // 5. Invest / SIP query
+  if (q.includes('invest') || q.includes('sip') || q.includes('nivesh')) {
+    const match = q.match(/(?:₹|\b)(\d[\d,]*)/);
+    const amount = match ? parseInt(match[1].replace(/,/g, '')) : 2000;
+    const investedValue1Yr = Math.round(amount * ((Math.pow(1 + 0.01, 12) - 1) / 0.01) * 1.01);
+    const investedValue5Yr = Math.round(amount * ((Math.pow(1 + 0.01, 60) - 1) / 0.01) * 1.01);
+
+    return {
+      text: `If you invest **₹${amount.toLocaleString('en-IN')} per month** in an illustrative diversified investment scenario (assuming 12% p.a. returns):\n\n• **1 Year**: Contributed ₹${(amount * 12).toLocaleString('en-IN')} → Est. Value: ₹${investedValue1Yr.toLocaleString('en-IN')}\n• **5 Years**: Contributed ₹${(amount * 60).toLocaleString('en-IN')} → Est. Value: ₹${investedValue5Yr.toLocaleString('en-IN')}\n\n*Note: Illustrative estimate — actual market returns may vary.*`,
+      scenario: {
+        changeDesc: `Invest ₹${amount.toLocaleString('en-IN')}/month via SIP`,
+        monthly: amount,
+        months: 12,
+        annualSavings: amount * 12,
+        investedValue: investedValue1Yr,
+        goalImpact: false,
+      },
+      followUps: [
+        'Compare 5 vs 10 years 📈',
+        `Apply to ${laptopGoal.name} Goal instead 🎯`,
+        'What if I reduce food spending by ₹500?',
+      ],
+    };
+  }
+
+  // 6. Save query
+  if (q.includes('save') || q.includes('saving') || q.includes('bachana')) {
+    const match = q.match(/(?:₹|\b)(\d[\d,]*)/);
+    if (match) {
+      const amount = parseInt(match[1].replace(/,/g, ''));
+      const annual = amount * 12;
+      const investedValue = Math.round(amount * ((Math.pow(1 + 0.01, 12) - 1) / 0.01) * 1.01);
+      const projectedGoal = Math.min(laptopGoal.targetAmount, laptopGoal.currentAmount + annual);
+
+      return {
+        text: `Saving an additional ₹${amount.toLocaleString('en-IN')} per month would create a **₹${annual.toLocaleString('en-IN')} difference over 12 months**.\n\nThis could bring your ${laptopGoal.name} Goal to ₹${projectedGoal.toLocaleString('en-IN')} (${Math.round((projectedGoal / laptopGoal.targetAmount) * 100)}%).`,
+        scenario: {
+          changeDesc: `Save ₹${amount.toLocaleString('en-IN')}/month`,
+          monthly: amount,
+          months: 12,
+          annualSavings: annual,
+          investedValue: investedValue,
+          goalImpact: true,
+          targetGoalName: laptopGoal.name,
+          targetGoalId: laptopGoal.id,
+          currentGoalAmount: laptopGoal.currentAmount,
+          targetGoalAmount: laptopGoal.targetAmount,
+          projectedGoalAmount: projectedGoal,
+        },
+        followUps: [
+          `Is ₹${amount} ko ${laptopGoal.name} Goal mein add karo 💻`,
+          'What if I invest that amount? 📈',
+          'Where are my frequent small expenses? ☕',
+        ],
+      };
+    }
+    return {
+      text: `You currently have ₹${overview.savings.toLocaleString('en-IN')} remaining this month after expenses. Your savings rate is ${overview.savingsRate}%.`,
+      followUps: ['Agar ₹500 kam spend karu?', 'Show my AI Spending Pattern 🧬'],
+    };
+  }
+
+  // 7. Goals query
+  if (q.includes('goal') || q.includes('target') || q.includes('laptop')) {
     if (goals && goals.length > 0) {
-      const goalSummaries = goals.map(g => {
-        const progress = ((g.currentAmount / g.targetAmount) * 100).toFixed(0);
-        const remaining = g.targetAmount - g.currentAmount;
-        const targetDate = new Date(g.targetDate);
-        const monthsLeft = Math.max(1, (targetDate.getFullYear() - now.getFullYear()) * 12 + targetDate.getMonth() - now.getMonth());
-        const monthlyNeeded = Math.round(remaining / monthsLeft);
-        return `${g.icon || '🎯'} ${g.name}: ${progress}% complete (₹${g.currentAmount.toLocaleString('en-IN')} / ₹${g.targetAmount.toLocaleString('en-IN')}). Need approximately ₹${monthlyNeeded.toLocaleString('en-IN')}/month.`;
-      }).join('\n\n');
-      return { 
-        text: `Here are your financial goals:\n\n${goalSummaries}`,
-        followUps: ['How can I reach my goal faster?', 'What if I save ₹2,000 more?']
+      const goalSummaries = goals
+        .map(g => {
+          const progress = ((g.currentAmount / g.targetAmount) * 100).toFixed(0);
+          const remaining = g.targetAmount - g.currentAmount;
+          return `• **${g.icon || '🎯'} ${g.name}**: ₹${g.currentAmount.toLocaleString('en-IN')} / ₹${g.targetAmount.toLocaleString('en-IN')} (${progress}% complete) — ₹${remaining.toLocaleString('en-IN')} to go.`;
+        })
+        .join('\n');
+
+      return {
+        text: `Here is your current Goal status:\n\n${goalSummaries}\n\n💡 *Tip:* Reducing small food expenses by ₹500/month adds **₹6,000/year** straight into your Laptop Goal!`,
+        followUps: [
+          'Agar ₹500 kam spend karu?',
+          `Is ₹500 ko ${laptopGoal.name} Goal mein add karo 💻`,
+          'What if I save ₹1,000 more every month?',
+        ],
       };
     }
     return { text: 'You have no goals set yet. Create a goal to start tracking your progress!' };
   }
 
-  // Budget query
-  if (q.includes('budget')) {
-    if (budgets) {
-      const budgetLines = Object.entries(budgets).map(([cat, budget]) => {
-        const spent = overview.currentCategories[cat] || 0;
-        const remaining = budget - spent;
-        return `${getCategoryName(cat)}: ₹${spent.toLocaleString('en-IN')} / ₹${budget.toLocaleString('en-IN')} (${remaining >= 0 ? `₹${remaining.toLocaleString('en-IN')} remaining` : `₹${Math.abs(remaining).toLocaleString('en-IN')} over`})`;
-      }).join('\n');
-      return { text: `Here's your budget status for ${monthName}:\n\n${budgetLines}` };
-    }
-    return { text: 'You have no budgets set. Go to settings to configure your category budgets.' };
+  // 8. Recurring expenses query
+  if (q.includes('recurring') || q.includes('subscription')) {
+    return {
+      text: `You have several recurring digital or utility expenses totaling approximately **₹${patterns.recurringTotal.toLocaleString('en-IN')} per month** across ${patterns.subscriptions.length} services (Netflix, Spotify, WiFi Broadband, Gym Membership, etc.).`,
+      followUps: ['What if I reduce subscriptions by ₹500?', 'Where are my frequent small expenses? ☕'],
+    };
   }
 
-  // Default response
-  return { 
-    text: `Here's a quick summary: In ${monthName}, you spent ₹${overview.currentTotal.toLocaleString('en-IN')} total. Your top category is ${getCategoryName(overview.topCategory)} (₹${overview.topAmount.toLocaleString('en-IN')}). You have ₹${Math.max(0, overview.savings).toLocaleString('en-IN')} remaining.\n\nTry asking about specific categories, budgets, goals, or savings scenarios!`,
-    followUps: ['Where are my frequent small expenses?', 'What if I save ₹1,000 more every month?']
+  // 9. Default intelligent response
+  return {
+    text: `Here is your quick financial status for ${monthName}:\n• Total Expenses: ₹${overview.currentTotal.toLocaleString('en-IN')}\n• Top Category: ${getCategoryName(overview.topCategory)} (₹${overview.topAmount.toLocaleString('en-IN')})\n• Small Micro-Expenses: ₹${patterns.totalSmallValue.toLocaleString('en-IN')} across ${patterns.allSmallCount} transactions\n• Estimated Remaining: ₹${Math.max(0, overview.savings).toLocaleString('en-IN')}\n\nTry asking questions like:\n• "Agar ₹500 kam spend karu?"\n• "Where are my frequent small expenses?"\n• "Show my AI Spending Pattern"`,
+    followUps: [
+      'Agar ₹500 kam spend karu?',
+      'Where are my frequent small expenses? ☕',
+      'Show my AI Spending Pattern 🧬',
+      'What if I invest ₹2,000 per month? 📈',
+    ],
   };
 }

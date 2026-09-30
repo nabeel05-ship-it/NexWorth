@@ -169,10 +169,44 @@ export default function Dashboard() {
 
       {/* AI Story Card */}
       <div className="card card-glow mb-3" style={{ background: 'linear-gradient(135deg, #FFF7F0 0%, #FFF1E3 100%)', border: '1px solid rgba(252, 108, 38, 0.25)' }}>
-        <div className="flex items-center gap-1 mb-1">
-          <span className="ai-badge"><Sparkles size={12} /> AI Expense Story</span>
+        <div className="flex justify-between items-center mb-1" style={{ flexWrap: 'wrap', gap: 8 }}>
+          <div className="flex items-center gap-1">
+            <span className="ai-badge"><Sparkles size={12} /> AI Expense Story</span>
+          </div>
+          <button 
+            className="btn btn-ghost btn-sm" 
+            style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600 }}
+            onClick={() => dispatch({ type: 'SET_PAGE', payload: 'insights' })}
+          >
+            Explore AI Spending Pattern 🧬 →
+          </button>
         </div>
-        <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7 }}>{story}</p>
+        <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 12 }}>{story}</p>
+        
+        {/* Quick Actionable Opportunity Bar */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.85)',
+          padding: '10px 14px',
+          borderRadius: 8,
+          border: '1px solid rgba(252, 108, 38, 0.2)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 10
+        }}>
+          <div style={{ fontSize: 13, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span>💡</span>
+            <span><strong>Pattern Leak:</strong> ₹2,100 spent in frequent micro-transactions. Reducing just ₹500/mo saves <strong>₹6,000/yr</strong> for your Laptop Goal.</span>
+          </div>
+          <button
+            className="btn btn-primary btn-sm"
+            style={{ fontSize: 12, padding: '6px 12px' }}
+            onClick={() => dispatch({ type: 'SET_CHAT_QUERY', payload: 'Agar ₹500 kam spend karu?' })}
+          >
+            Ask Your Money 💬
+          </button>
+        </div>
       </div>
 
       {/* Stat Cards */}

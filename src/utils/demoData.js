@@ -42,30 +42,49 @@ function generateDemoExpenses() {
   const expenses = [];
   let id = 1;
 
-  // Current month expenses
+  // Current month expenses (incorporating realistic frequent small purchases)
   const currentMonthExpenses = [
-    { name: 'Swiggy Order', amount: 450, category: 'food', day: 2, note: 'Dinner' },
-    { name: 'Zomato Order', amount: 380, category: 'food', day: 5, note: 'Lunch with friends' },
-    { name: 'Grocery Store', amount: 1200, category: 'food', day: 8, note: 'Weekly groceries' },
-    { name: 'Restaurant', amount: 850, category: 'food', day: 14, note: 'Birthday dinner' },
-    { name: 'Cafe Coffee Day', amount: 320, category: 'food', day: 18, note: 'Coffee meeting' },
-    { name: 'Grocery Store', amount: 1000, category: 'food', day: 22, note: 'Monthly supplies' },
-    { name: 'Amazon', amount: 2500, category: 'shopping', day: 3, note: 'Phone case + charger' },
-    { name: 'Nike Store', amount: 5000, category: 'shopping', day: 10, note: 'Running shoes' },
-    { name: 'Myntra', amount: 1800, category: 'shopping', day: 16, note: 'T-shirts' },
-    { name: 'Uber', amount: 350, category: 'travel', day: 4, note: 'Office commute' },
-    { name: 'Ola', amount: 280, category: 'travel', day: 9, note: 'Market trip' },
-    { name: 'Metro Card', amount: 500, category: 'travel', day: 12, note: 'Monthly recharge' },
-    { name: 'Petrol', amount: 800, category: 'travel', day: 20, note: 'Bike fuel' },
-    { name: 'Electricity Bill', amount: 1200, category: 'bills', day: 5, note: 'Monthly bill' },
-    { name: 'Mobile Recharge', amount: 599, category: 'bills', day: 7, note: 'Monthly plan' },
-    { name: 'WiFi Bill', amount: 700, category: 'bills', day: 7, note: 'Internet' },
-    { name: 'Udemy Course', amount: 499, category: 'education', day: 6, note: 'React course' },
-    { name: 'Books', amount: 800, category: 'education', day: 15, note: 'Programming books' },
-    { name: 'Netflix', amount: 649, category: 'entertainment', day: 1, note: 'Monthly subscription' },
-    { name: 'Movie Tickets', amount: 600, category: 'entertainment', day: 11, note: 'Weekend movie' },
-    { name: 'Pharmacy', amount: 350, category: 'health', day: 13, note: 'Medicines' },
-    { name: 'Gym Membership', amount: 1500, category: 'health', day: 1, note: 'Monthly fee' },
+    { name: 'Swiggy Order', amount: 450, category: 'food', day: 2, note: 'Dinner', paymentMethod: 'UPI', source: 'Notification' },
+    { name: 'Tea & Chai Tapri', amount: 50, category: 'food', day: 3, note: 'Morning tea', paymentMethod: 'Cash', source: 'Cash' },
+    { name: 'Zomato Order', amount: 380, category: 'food', day: 5, note: 'Lunch with friends', paymentMethod: 'UPI', source: 'Notification' },
+    { name: 'Coffee & Snacks', amount: 80, category: 'food', day: 6, note: 'Evening break', paymentMethod: 'UPI', source: 'Notification' },
+    { name: 'Grocery Store', amount: 1200, category: 'food', day: 8, note: 'Weekly groceries', paymentMethod: 'Debit Card', source: 'Manual' },
+    { name: 'Evening Snacks', amount: 70, category: 'food', day: 9, note: 'Samosa & tea', paymentMethod: 'Cash', source: 'Cash' },
+    { name: 'Restaurant Dinner', amount: 850, category: 'food', day: 14, note: 'Birthday dinner', paymentMethod: 'Credit Card', source: 'Manual' },
+    { name: 'Chai & Biscuits', amount: 60, category: 'food', day: 16, note: 'Tea break', paymentMethod: 'Cash', source: 'Cash' },
+    { name: 'Cafe Coffee Day', amount: 320, category: 'food', day: 18, note: 'Coffee meeting', paymentMethod: 'UPI', source: 'Notification' },
+    { name: 'Fruit Juice', amount: 70, category: 'food', day: 19, note: 'Fresh orange juice', paymentMethod: 'UPI', source: 'Notification' },
+    { name: 'Grocery Store', amount: 1000, category: 'food', day: 22, note: 'Monthly supplies', paymentMethod: 'UPI', source: 'Manual' },
+    { name: 'Quick Samosa & Tea', amount: 90, category: 'food', day: 23, note: 'Snack break', paymentMethod: 'Cash', source: 'Cash' },
+    { name: 'Bakery Pastry', amount: 120, category: 'food', day: 25, note: 'Sweet treat', paymentMethod: 'UPI', source: 'Notification' },
+    { name: 'Tea & Cookies', amount: 50, category: 'food', day: 27, note: 'Office tea', paymentMethod: 'Cash', source: 'Cash' },
+    
+    // Shopping: few large transactions
+    { name: 'Amazon Order', amount: 2500, category: 'shopping', day: 3, note: 'Phone case + charger', paymentMethod: 'UPI', source: 'Notification' },
+    { name: 'Nike Store', amount: 5000, category: 'shopping', day: 10, note: 'Running shoes', paymentMethod: 'Credit Card', source: 'Manual' },
+    { name: 'Myntra Fashion', amount: 1800, category: 'shopping', day: 16, note: 'T-shirts & jeans', paymentMethod: 'UPI', source: 'Notification' },
+    
+    // Travel: commute and micro trips
+    { name: 'Uber Commute', amount: 350, category: 'travel', day: 4, note: 'Office commute', paymentMethod: 'UPI', source: 'Notification' },
+    { name: 'Auto Rickshaw', amount: 120, category: 'travel', day: 7, note: 'Station ride', paymentMethod: 'Cash', source: 'Cash' },
+    { name: 'Ola Cab', amount: 280, category: 'travel', day: 9, note: 'Market trip', paymentMethod: 'UPI', source: 'Notification' },
+    { name: 'Metro Card Recharge', amount: 500, category: 'travel', day: 12, note: 'Monthly recharge', paymentMethod: 'UPI', source: 'Manual' },
+    { name: 'Petrol Fuel', amount: 800, category: 'travel', day: 20, note: 'Bike fuel', paymentMethod: 'UPI', source: 'Notification' },
+    
+    // Bills & Utilities
+    { name: 'Electricity Bill', amount: 1200, category: 'bills', day: 5, note: 'Monthly bill', paymentMethod: 'Bank Transfer', source: 'Manual' },
+    { name: 'Mobile Recharge', amount: 599, category: 'bills', day: 7, note: 'Monthly plan', paymentMethod: 'UPI', source: 'Notification' },
+    { name: 'WiFi Broadband', amount: 700, category: 'bills', day: 7, note: 'Fiber internet', paymentMethod: 'UPI', source: 'Notification' },
+    
+    // Education & Entertainment
+    { name: 'Udemy Course', amount: 499, category: 'education', day: 6, note: 'React course', paymentMethod: 'Debit Card', source: 'Manual' },
+    { name: 'Books', amount: 800, category: 'education', day: 15, note: 'Programming books', paymentMethod: 'UPI', source: 'Notification' },
+    { name: 'Netflix Subscription', amount: 649, category: 'entertainment', day: 1, note: 'Monthly subscription', paymentMethod: 'Credit Card', source: 'Manual' },
+    { name: 'Movie Tickets', amount: 600, category: 'entertainment', day: 11, note: 'Weekend movie', paymentMethod: 'UPI', source: 'Notification' },
+    
+    // Health
+    { name: 'Pharmacy Meds', amount: 350, category: 'health', day: 13, note: 'Medicines', paymentMethod: 'UPI', source: 'Notification' },
+    { name: 'Gym Membership', amount: 1500, category: 'health', day: 1, note: 'Monthly fee', paymentMethod: 'UPI', source: 'Manual' },
   ];
 
   currentMonthExpenses.forEach(exp => {
@@ -76,6 +95,8 @@ function generateDemoExpenses() {
       category: exp.category,
       date: new Date(currentYear, currentMonth, exp.day).toISOString(),
       note: exp.note || '',
+      paymentMethod: exp.paymentMethod || 'UPI',
+      source: exp.source || 'Manual',
     });
   });
 

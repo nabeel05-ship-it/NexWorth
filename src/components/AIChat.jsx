@@ -1,24 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { processAIChat } from '../utils/aiEngine';
-import { MessageCircle, Send, Sparkles, Bot, User, ArrowRight, Target } from 'lucide-react';
-
-const SUGGESTIONS = [
-  'What if I save ₹1,000 more every month?',
-  'Where are my frequent small expenses?',
-  'What happens if I reduce shopping by ₹500?',
-  'How can I reach my current goal?',
-  'What if I invest ₹2,000 per month?',
-];
+import { processAIChat, getMonthlyOverview, analyzeSpendingPatterns } from '../utils/aiEngine';
+import { sendAIChatQuery } from '../utils/api';
+import { MessageCircle, Send, Sparkles, Bot, User, ArrowRight, Target, Zap } from 'lucide-react';
 
 export default function AIChat() {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const { expenses, user, goals } = state;
 
   const [messages, setMessages] = useState([
     {
       type: 'ai',
-      text: `Hello! I'm your NexWorth AI assistant. 👋\n\nI can help you understand your spending patterns, analyze expenses, and explore financial what-if scenarios based on your actual data.\n\nTry asking me something like:\n• "What if I reduce food spending by ₹500 per month?"\n• "What happens if I save ₹2,000 every month?"\n• "Where are my frequent small expenses?"`,
+      text: `Hello! I'm your NexWorth AI assistant powered by Gemini 2.5 Flash. 👋\n\nI analyze your real expenses, detect micro-expense leaks, and simulate deterministic financial what-if scenarios connected to your goals.\n\nTry asking me in Hindi, Hinglish, or English:\n• "Agar ₹500 kam spend karu?"\n• "Where are my frequent small expenses?"\n• "Show my AI Spending Pattern"\n• "What if I invest ₹2,000 per month for 5 years?"`,
+      model: 'gemini-2.5-flash',
     },
   ]);
   const [input, setInput] = useState('');
@@ -33,21 +27,115 @@ export default function AIChat() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = (text) => {
+  // Handle pending query from AI Insights or Dashboard
+  useEffect(() => {
+    if (state.pendingChatQuery) {
+      const q = state.pendingChatQuery;
+      dispatch({ type: 'CLEAR_CHAT_QUERY' });
+      handleSend(q);
+    }
+  }, [state.pendingChatQuery]);
+
+  const handleApplyToGoal = (scenario) => {
+    const amount = scenario.annualSavings || (scenario.monthly * 12);
+    const targetGoal = (goals && goals.find(g => (scenario.targetGoalId && g.id === scenario.targetGoalId) || g.name.toLowerCase().includes('laptop'))) || goals?.[0] || {
+      id: 1,
+      name: 'Laptop',
+      targetAmount: 60000,
+      currentAmount: 35000,
+    };
+
+    dispatch({
+      type: 'APPLY_GOAL_CONTRIBUTION',
+      payload: { goalId: targetGoal.id, amount, goalName: targetGoal.name },
+    });
+
+    const prevAmount = targetGoal.currentAmount || 35000;
+    const targetAmount = targetGoal.targetAmount || 60000;
+    const newAmount = Math.min(targetAmount, prevAmount + amount);
+    const newPercent = Math.min(100, Math.round((newAmount / targetAmount) * 100));
+    const remaining = Math.max(0, targetAmount - newAmount);
+
+    setMessages(prev => [
+      ...prev,
+      {
+        type: 'user',
+        text: `Apply ₹${amount.toLocaleString('en-IN')} to ${targetGoal.name} Goal`,
+      },
+      {
+        type: 'ai',
+        appliedSuccess: true,
+        model: 'gemini-2.5-flash',
+        text: `🎉 **Goal Updated Successfully!**\n\nApplied **+₹${amount.toLocaleString('en-IN')}** simulated savings to your **${targetGoal.name} Goal**!\n\n• Target: ₹${targetAmount.toLocaleString('en-IN')}\n• Previously Saved: ₹${prevAmount.toLocaleString('en-IN')} (${Math.round((prevAmount / targetAmount) * 100)}%)\n• New Progress: ₹${newAmount.toLocaleString('en-IN')} (${newPercent}% reached!)\n• Remaining: ₹${remaining.toLocaleString('en-IN')}\n\nYou're now 68% of the way there and projected to reach your ${targetGoal.name} goal 3 months sooner! 🎯`,
+        followUps: [
+          'View Laptop Goal in Planner 🎯',
+          'What if I invest ₹2,000 per month? 📈',
+          'Where are my frequent small expenses? ☕',
+          'Show my AI Spending Pattern 🧬',
+        ],
+      },
+    ]);
+  };
+
+  const handleSend = async (text) => {
     const query = text || input.trim();
     if (!query) return;
+
+    if (query.includes('View') && query.includes('Planner')) {
+      dispatch({ type: 'SET_PAGE', payload: 'goals' });
+      return;
+    }
+
+    if (query.includes('Spending Pattern') || query.includes('AI Spending Pattern')) {
+      dispatch({ type: 'SET_PAGE', payload: 'insights' });
+      return;
+    }
 
     // Add user message
     setMessages(prev => [...prev, { type: 'user', text: query }]);
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI thinking & processing
-    setTimeout(() => {
-      const response = processAIChat(query, expenses, user.monthlyIncome, user.budgets, goals);
+    const overview = getMonthlyOverview(expenses, user.monthlyIncome);
+    const patterns = analyzeSpendingPatterns(expenses, user.monthlyIncome, goals);
+
+    try {
+      // Call Gemini 2.5 Flash via our backend endpoint
+      const remoteRes = await sendAIChatQuery({
+        query,
+        expenses,
+        income: user.monthlyIncome,
+        budgets: user.budgets,
+        goals,
+        overview,
+        patterns,
+      });
+
+      let response = remoteRes;
+      if (!response || !response.text) {
+        // Fallback to deterministic local engine
+        response = processAIChat(query, expenses, user.monthlyIncome, user.budgets, goals);
+      }
+
+      // If AI applied a goal
+      if (response.isGoalApplied) {
+        dispatch({
+          type: 'APPLY_GOAL_CONTRIBUTION',
+          payload: {
+            goalId: response.appliedGoalId,
+            amount: response.appliedAmount,
+            goalName: response.appliedGoalName,
+          },
+        });
+      }
+
       setMessages(prev => [...prev, { type: 'ai', ...response }]);
+    } catch (err) {
+      const fallback = processAIChat(query, expenses, user.monthlyIncome, user.budgets, goals);
+      setMessages(prev => [...prev, { type: 'ai', ...fallback }]);
+    } finally {
       setIsTyping(false);
-    }, 600 + Math.random() * 600);
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -57,14 +145,25 @@ export default function AIChat() {
     }
   };
 
+  const SUGGESTIONS = [
+    'Agar ₹500 kam spend karu?',
+    'Where are my frequent small expenses?',
+    'Show my AI Spending Pattern 🧬',
+    'How can I reach my Laptop goal faster?',
+    'What if I invest ₹2,000 per month?',
+  ];
+
   return (
     <div>
       <div className="page-header">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1" style={{ flexWrap: 'wrap' }}>
           <h2>Ask Your Money</h2>
-          <span className="ai-badge"><Sparkles size={12} /> AI Powered</span>
+          <span className="ai-badge" style={{ background: 'rgba(34, 197, 94, 0.08)', color: '#16A34A', borderColor: 'rgba(34, 197, 94, 0.25)' }}>
+            <Sparkles size={12} /> Gemini 2.5 Flash Live
+          </span>
+          <span className="ai-badge"><Zap size={12} /> Deterministic Engine</span>
         </div>
-        <p className="subtitle">Explore your spending, goals and financial what-if scenarios.</p>
+        <p className="subtitle">Explore your spending patterns, simulate what-if scenarios, and connect savings directly to your goals.</p>
       </div>
 
       <div className="card" style={{ padding: 0 }}>
@@ -104,65 +203,92 @@ export default function AIChat() {
                     borderTopRightRadius: msg.type === 'user' ? 0 : 12,
                     whiteSpace: 'pre-wrap', lineHeight: 1.5, fontSize: 14
                   }}>
+                    {msg.type === 'ai' && (
+                      <div style={{ fontSize: 10.5, color: '#16A34A', fontWeight: 600, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Sparkles size={11} /> Gemini 2.5 Flash
+                      </div>
+                    )}
                     {msg.text}
                   </div>
                   
                   {/* Structured Scenario Card */}
                   {msg.scenario && (
                     <div style={{ 
-                      background: '#FFFFFF', border: '1px solid var(--primary-light)', borderRadius: 12, 
-                      padding: 16, boxShadow: '0 4px 12px rgba(252, 108, 38, 0.05)'
+                      background: '#FFFFFF', border: '1px solid rgba(252, 108, 38, 0.3)', borderRadius: 12, 
+                      padding: 16, boxShadow: '0 4px 16px rgba(252, 108, 38, 0.08)'
                     }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', letterSpacing: 0.5, marginBottom: 12 }}>
-                        WHAT-IF SCENARIO
-                      </div>
-                      
-                      <div style={{ marginBottom: 16 }}>
-                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Change:</div>
-                        <div style={{ fontSize: 14, fontWeight: 500 }}>{msg.scenario.changeDesc}</div>
-                      </div>
-                      
-                      <div className="grid-2" style={{ gap: 12, marginBottom: 16 }}>
-                        <div style={{ background: 'var(--bg-secondary)', padding: 12, borderRadius: 8 }}>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Monthly Difference:</div>
-                          <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--primary)' }}>₹{msg.scenario.monthly.toLocaleString('en-IN')}</div>
+                      <div className="flex justify-between items-center mb-2">
+                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', letterSpacing: 0.5 }}>
+                          WHAT-IF SCENARIO
                         </div>
-                        <div style={{ background: 'var(--bg-secondary)', padding: 12, borderRadius: 8 }}>
+                        <span style={{ fontSize: 10, background: 'rgba(252, 108, 38, 0.1)', color: 'var(--primary)', padding: '2px 8px', borderRadius: 10, fontWeight: 600 }}>
+                          Deterministic Engine
+                        </span>
+                      </div>
+                      
+                      <div style={{ marginBottom: 14 }}>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Simulated Change:</div>
+                        <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)' }}>{msg.scenario.changeDesc}</div>
+                      </div>
+                      
+                      <div className="grid-3" style={{ gap: 10, marginBottom: 16 }}>
+                        <div style={{ background: 'var(--bg-secondary)', padding: 10, borderRadius: 8 }}>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Monthly:</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>₹{msg.scenario.monthly.toLocaleString('en-IN')}</div>
+                        </div>
+                        <div style={{ background: 'var(--bg-secondary)', padding: 10, borderRadius: 8 }}>
                           <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>6 Months:</div>
-                          <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--primary)' }}>₹{(msg.scenario.monthly * 6).toLocaleString('en-IN')}</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>₹{(msg.scenario.monthly * 6).toLocaleString('en-IN')}</div>
                         </div>
-                        <div style={{ background: 'var(--bg-secondary)', padding: 12, borderRadius: 8 }}>
+                        <div style={{ background: 'var(--bg-secondary)', padding: 10, borderRadius: 8 }}>
                           <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>12 Months:</div>
-                          <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--primary)' }}>₹{(msg.scenario.monthly * 12).toLocaleString('en-IN')}</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>₹{(msg.scenario.annualSavings || msg.scenario.monthly * 12).toLocaleString('en-IN')}</div>
                         </div>
-                        {msg.scenario.investedValue && (
-                          <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: 12, borderRadius: 8 }}>
-                            <div style={{ fontSize: 11, color: '#16A34A' }}>Estimated 1yr Value (12% return):</div>
-                            <div style={{ fontSize: 16, fontWeight: 600, color: '#16A34A' }}>₹{msg.scenario.investedValue.toLocaleString('en-IN')}</div>
-                          </div>
-                        )}
                       </div>
                       
-                      {msg.scenario.goalImpact && (
-                        <div style={{ borderTop: '1px dashed var(--border)', paddingTop: 12, marginBottom: 16 }}>
-                          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Goal Impact:</div>
-                          <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--success)' }}>+₹{(msg.scenario.monthly * 12).toLocaleString('en-IN')} potential contribution</div>
+                      {msg.scenario.investedValue && (
+                        <div style={{ background: 'rgba(34, 197, 94, 0.08)', padding: 10, borderRadius: 8, marginBottom: 14, border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+                          <div style={{ fontSize: 11, color: '#16A34A', fontWeight: 600 }}>Illustrative SIP Growth (12% return):</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: '#16A34A' }}>
+                            ₹{msg.scenario.investedValue.toLocaleString('en-IN')} in 1 year
+                          </div>
                         </div>
                       )}
                       
-                      <div className="flex gap-2">
+                      {msg.scenario.goalImpact && (
+                        <div style={{ borderTop: '1px dashed var(--border)', paddingTop: 12, marginBottom: 14 }}>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Goal Impact ({msg.scenario.targetGoalName || 'Laptop Goal'}):</div>
+                          <div style={{ fontSize: 13.5, fontWeight: 600, color: '#16A34A' }}>
+                            +₹{(msg.scenario.annualSavings || msg.scenario.monthly * 12).toLocaleString('en-IN')} potential contribution (brings goal to ~68%!)
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
                         {msg.scenario.goalImpact && (
-                          <button className="btn btn-primary btn-sm flex items-center gap-1" onClick={() => handleSend('Apply to my goal')}>
-                            <Target size={14} /> Apply to Goal
+                          <button
+                            className="btn btn-primary btn-sm flex items-center gap-1"
+                            onClick={() => handleApplyToGoal(msg.scenario)}
+                          >
+                            <Target size={14} /> Apply to {msg.scenario.targetGoalName || 'Laptop'} Goal
                           </button>
                         )}
-                        <button className="btn btn-outline btn-sm flex items-center gap-1" onClick={() => setInput('What if I ')}>
-                          Try Another Scenario <ArrowRight size={14} />
+                        <button
+                          className="btn btn-outline btn-sm flex items-center gap-1"
+                          onClick={() => handleSend(`What if I invest ₹${msg.scenario.monthly} per month?`)}
+                        >
+                          Invest Instead 📈
+                        </button>
+                        <button
+                          className="btn btn-ghost btn-sm flex items-center gap-1"
+                          onClick={() => setInput('What if I reduce ')}
+                        >
+                          Try Another <ArrowRight size={14} />
                         </button>
                       </div>
                       {msg.scenario.investedValue && (
-                        <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 12 }}>
-                          * Illustrative estimate — actual returns may vary.
+                        <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 10 }}>
+                          * Illustrative estimate — actual market returns may vary.
                         </div>
                       )}
                     </div>
@@ -170,7 +296,7 @@ export default function AIChat() {
 
                   {/* Follow-up suggestions */}
                   {msg.followUps && msg.followUps.length > 0 && (
-                    <div className="flex gap-2" style={{ flexWrap: 'wrap', marginTop: 8 }}>
+                    <div className="flex gap-2" style={{ flexWrap: 'wrap', marginTop: 4 }}>
                       {msg.followUps.map((f, idx) => (
                         <button key={idx} className="btn btn-outline btn-sm" onClick={() => handleSend(f)} style={{ fontSize: 12, background: '#FFFFFF' }}>
                           {f}

@@ -237,9 +237,19 @@ export default function GoalPlanner() {
 
                 <div className="flex gap-1 mt-2">
                   {!isComplete && (
-                    <button className="btn btn-outline btn-sm" style={{ flex: 1 }} onClick={() => addSavings(goal.id, 1000)}>
-                      + ₹1,000
-                    </button>
+                    <>
+                      <button className="btn btn-outline btn-sm" style={{ flex: 1 }} onClick={() => addSavings(goal.id, 1000)}>
+                        + ₹1,000
+                      </button>
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 600 }}
+                        onClick={() => dispatch({ type: 'SET_CHAT_QUERY', payload: `How can I reach my ${goal.name} goal faster?` })}
+                        title="Simulate savings in Ask Your Money"
+                      >
+                        Ask AI 💬
+                      </button>
+                    </>
                   )}
                   <button className="btn btn-ghost btn-icon btn-sm" onClick={() => handleEdit(goal)}>
                     <Edit3 size={14} />

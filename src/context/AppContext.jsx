@@ -11,12 +11,38 @@ const initialState = {
   currentPage: 'dashboard',
   isOnboarded: true,
   darkMode: true,
+  pendingChatQuery: null,
 };
 
 function appReducer(state, action) {
   switch (action.type) {
     case 'SET_PAGE':
       return { ...state, currentPage: action.payload };
+
+    case 'SET_CHAT_QUERY':
+      return { ...state, pendingChatQuery: action.payload, currentPage: 'ai-chat' };
+
+    case 'CLEAR_CHAT_QUERY':
+      return { ...state, pendingChatQuery: null };
+
+    case 'APPLY_GOAL_CONTRIBUTION': {
+      const { goalId, amount, goalName } = action.payload;
+      return {
+        ...state,
+        goals: state.goals.map(g => {
+          const matchById = goalId && g.id === goalId;
+          const matchByName = goalName && g.name.toLowerCase().includes(goalName.toLowerCase());
+          const matchDefault = !goalId && !goalName && g.name.toLowerCase().includes('laptop');
+          if (matchById || matchByName || matchDefault) {
+            return {
+              ...g,
+              currentAmount: Math.min(g.targetAmount, (g.currentAmount || 0) + amount),
+            };
+          }
+          return g;
+        }),
+      };
+    }
 
     case 'SET_EXPENSES':
       return {

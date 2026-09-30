@@ -62,3 +62,59 @@ export async function syncExpensesToDb(expenses) {
     return null;
   }
 }
+
+export async function sendAIChatQuery(data) {
+  try {
+    const res = await fetch(`${API_BASE}/ai/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) throw new Error('API request failed');
+    return await res.json();
+  } catch (err) {
+    console.warn('AI API error, fallback to local engine:', err.message);
+    return null;
+  }
+}
+
+export async function fetchEmailStatus() {
+  try {
+    const res = await fetch(`${API_BASE}/email/status`, { signal: AbortSignal.timeout(4000) });
+    if (!res.ok) throw new Error('Failed to fetch email status');
+    return await res.json();
+  } catch (err) {
+    return { configured: false, error: err.message };
+  }
+}
+
+export async function sendTestEmail(recipient) {
+  try {
+    const res = await fetch(`${API_BASE}/email/send-test`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipient }),
+      signal: AbortSignal.timeout(15000),
+    });
+    return await res.json();
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function checkOverbudgetAlert({ currentTotal, monthlyIncome, recipient, force = false, monthName }) {
+  try {
+    const res = await fetch(`${API_BASE}/email/check-overbudget-alert`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentTotal, monthlyIncome, recipient, force, monthName }),
+      signal: AbortSignal.timeout(15000),
+    });
+    return await res.json();
+  } catch (err) {
+    return { alertNeeded: false, error: err.message };
+  }
+}
+
+
