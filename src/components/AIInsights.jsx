@@ -38,7 +38,7 @@ export default function AIInsights() {
         {
           label: 'This Month',
           data: categories.map(id => overview.currentCategories[id] || 0),
-          backgroundColor: 'rgba(106, 0, 244, 0.65)',
+          backgroundColor: 'rgba(252, 108, 38, 0.75)',
           borderRadius: 6,
           borderSkipped: false,
         },
@@ -66,8 +66,8 @@ export default function AIInsights() {
         labels: { color: '#A0A0C0', font: { size: 11 }, usePointStyle: true, pointStyleWidth: 8 },
       },
       tooltip: {
-        backgroundColor: '#1A1A2E',
-        borderColor: 'rgba(106, 0, 244, 0.3)',
+        backgroundColor: '#1E1A17',
+        borderColor: 'rgba(252, 108, 38, 0.3)',
         borderWidth: 1,
         padding: 12,
         cornerRadius: 8,
@@ -101,7 +101,7 @@ export default function AIInsights() {
       </div>
 
       {/* AI Expense Story */}
-      <div className="card card-glow mb-3" style={{ background: 'linear-gradient(135deg, rgba(106,0,244,0.15) 0%, rgba(26,26,46,0.95) 50%)' }}>
+      <div className="card card-glow mb-3" style={{ background: 'linear-gradient(135deg, rgba(252,108,38,0.15) 0%, rgba(30,26,23,0.95) 50%)' }}>
         <div className="flex items-center gap-1 mb-2">
           <Sparkles size={18} color="var(--accent)" />
           <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 18 }}>Your {monthName} Expense Story</h3>

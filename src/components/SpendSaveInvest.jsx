@@ -40,14 +40,14 @@ export default function SpendSaveInvest() {
       {
         label: 'FD (est. 7%)',
         data: comparisons.map(c => c.fd),
-        backgroundColor: 'rgba(255, 214, 165, 0.6)',
+        backgroundColor: 'rgba(255, 244, 214, 0.6)',
         borderRadius: 6,
         borderSkipped: false,
       },
       {
         label: 'SIP/Investment (est. 12%)',
         data: comparisons.map(c => c.sip),
-        backgroundColor: 'rgba(106, 0, 244, 0.6)',
+        backgroundColor: 'rgba(252, 108, 38, 0.75)',
         borderRadius: 6,
         borderSkipped: false,
       },
@@ -70,8 +70,8 @@ export default function SpendSaveInvest() {
         labels: { color: '#A0A0C0', font: { size: 11 }, usePointStyle: true, pointStyleWidth: 8, padding: 16 },
       },
       tooltip: {
-        backgroundColor: '#1A1A2E',
-        borderColor: 'rgba(106, 0, 244, 0.3)',
+        backgroundColor: '#1E1A17',
+        borderColor: 'rgba(252, 108, 38, 0.3)',
         borderWidth: 1,
         padding: 12,
         cornerRadius: 8,
@@ -118,7 +118,7 @@ export default function SpendSaveInvest() {
         </div>
       </div>
 
-      <div style={{ padding: '12px 16px', background: 'rgba(106,0,244,0.05)', borderRadius: 'var(--radius-md)', marginBottom: 20, fontSize: 14, color: 'var(--text-secondary)' }}>
+      <div style={{ padding: '12px 16px', background: 'rgba(252,108,38,0.06)', borderRadius: 'var(--radius-md)', marginBottom: 20, fontSize: 14, color: 'var(--text-secondary)' }}>
         💡 You have ₹{amount.toLocaleString('en-IN')}. Here's what could happen depending on how you use it — for your awareness and consideration.
       </div>
 

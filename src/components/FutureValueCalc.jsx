@@ -23,8 +23,8 @@ export default function FutureValueCalc() {
       {
         label: 'Total Invested',
         data: result.yearlyData.map(d => d.invested),
-        borderColor: 'rgba(255, 214, 165, 0.8)',
-        backgroundColor: 'rgba(255, 214, 165, 0.1)',
+        borderColor: 'rgba(255, 244, 214, 0.8)',
+        backgroundColor: 'rgba(255, 244, 214, 0.1)',
         fill: true,
         tension: 0.3,
         pointRadius: 3,
@@ -33,8 +33,8 @@ export default function FutureValueCalc() {
       {
         label: 'Illustrative Value',
         data: result.yearlyData.map(d => d.value),
-        borderColor: 'rgba(106, 0, 244, 0.9)',
-        backgroundColor: 'rgba(106, 0, 244, 0.1)',
+        borderColor: 'rgba(252, 108, 38, 0.9)',
+        backgroundColor: 'rgba(252, 108, 38, 0.1)',
         fill: true,
         tension: 0.3,
         pointRadius: 3,
@@ -63,8 +63,8 @@ export default function FutureValueCalc() {
         labels: { color: '#A0A0C0', font: { size: 11 }, usePointStyle: true, pointStyleWidth: 8, padding: 16 },
       },
       tooltip: {
-        backgroundColor: '#1A1A2E',
-        borderColor: 'rgba(106, 0, 244, 0.3)',
+        backgroundColor: '#1E1A17',
+        borderColor: 'rgba(252, 108, 38, 0.3)',
         borderWidth: 1,
         padding: 12,
         cornerRadius: 8,
@@ -92,13 +92,13 @@ export default function FutureValueCalc() {
 
           <div className="form-group">
             <label className="form-label">Monthly Contribution (₹): ₹{monthlyContribution.toLocaleString('en-IN')}</label>
-            <input type="range" min="0" max="50000" step="500" value={monthlyContribution} onChange={e => setMonthlyContribution(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#6A00F4' }} />
+            <input type="range" min="0" max="50000" step="500" value={monthlyContribution} onChange={e => setMonthlyContribution(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#FC6C26' }} />
             <input className="form-input mt-1" type="number" value={monthlyContribution} onChange={e => setMonthlyContribution(parseInt(e.target.value) || 0)} min="0" />
           </div>
 
           <div className="form-group">
             <label className="form-label">Expected Annual Return (%): {annualReturn}%</label>
-            <input type="range" min="0" max="25" step="0.5" value={annualReturn} onChange={e => setAnnualReturn(parseFloat(e.target.value))} style={{ width: '100%', accentColor: '#FFD6A5' }} />
+            <input type="range" min="0" max="25" step="0.5" value={annualReturn} onChange={e => setAnnualReturn(parseFloat(e.target.value))} style={{ width: '100%', accentColor: '#FFF4D6' }} />
             <div className="flex justify-between" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
               <span>0%</span>
               <span>FD ~7%</span>
@@ -109,7 +109,7 @@ export default function FutureValueCalc() {
 
           <div className="form-group">
             <label className="form-label">Time Period: {years} {years === 1 ? 'Year' : 'Years'}</label>
-            <input type="range" min="1" max="30" value={years} onChange={e => setYears(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#6A00F4' }} />
+            <input type="range" min="1" max="30" value={years} onChange={e => setYears(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#FC6C26' }} />
             <div className="flex justify-between" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
               <span>1 year</span>
               <span>30 years</span>
@@ -144,8 +144,8 @@ export default function FutureValueCalc() {
           {/* Final value highlight */}
           <div style={{
             marginTop: 20, padding: '24px', textAlign: 'center',
-            background: 'linear-gradient(135deg, rgba(106,0,244,0.15), rgba(106,0,244,0.05))',
-            borderRadius: 'var(--radius-lg)', border: '1px solid rgba(106,0,244,0.2)',
+            background: 'linear-gradient(135deg, rgba(252,108,38,0.15), rgba(252,108,38,0.05))',
+            borderRadius: 'var(--radius-lg)', border: '1px solid rgba(252,108,38,0.2)',
           }}>
             <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>Estimated Future Value</div>
             <div style={{ fontFamily: "'Space Grotesk'", fontSize: 36, fontWeight: 800, color: 'var(--accent)' }}>

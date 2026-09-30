@@ -65,7 +65,7 @@ export default function Dashboard() {
         {
           label: monthName,
           data: CATEGORIES.slice(0, 7).map(c => overview.currentCategories[c.id] || 0),
-          backgroundColor: 'rgba(106, 0, 244, 0.7)',
+          backgroundColor: 'rgba(252, 108, 38, 0.75)',
           borderRadius: 6,
           borderSkipped: false,
         },
@@ -79,11 +79,11 @@ export default function Dashboard() {
     plugins: {
       legend: {
         position: 'bottom',
-        labels: { color: '#A0A0C0', font: { size: 11 }, padding: 16, usePointStyle: true, pointStyleWidth: 8 },
+        labels: { color: '#C4BFB8', font: { size: 11 }, padding: 16, usePointStyle: true, pointStyleWidth: 8 },
       },
       tooltip: {
-        backgroundColor: '#1A1A2E',
-        borderColor: 'rgba(106, 0, 244, 0.3)',
+        backgroundColor: '#1E1A17',
+        borderColor: 'rgba(252, 108, 38, 0.3)',
         borderWidth: 1,
         titleFont: { size: 13, weight: '600' },
         bodyFont: { size: 12 },
@@ -165,7 +165,7 @@ export default function Dashboard() {
       </div>
 
       {/* AI Story Card */}
-      <div className="card card-glow mb-3" style={{ background: 'linear-gradient(135deg, rgba(106,0,244,0.12) 0%, rgba(26,26,46,0.95) 40%)' }}>
+      <div className="card card-glow mb-3" style={{ background: 'linear-gradient(135deg, rgba(252,108,38,0.12) 0%, rgba(30,26,23,0.95) 40%)' }}>
         <div className="flex items-center gap-1 mb-1">
           <span className="ai-badge"><Sparkles size={12} /> AI Expense Story</span>
         </div>

@@ -2,9 +2,9 @@
 
 export const CATEGORIES = [
   { id: 'food', name: 'Food', icon: '🍕', color: '#FF6B6B' },
-  { id: 'shopping', name: 'Shopping', icon: '🛍️', color: '#6A00F4' },
+  { id: 'shopping', name: 'Shopping', icon: '🛍️', color: '#FC6C26' },
   { id: 'travel', name: 'Travel', icon: '✈️', color: '#4ECDC4' },
-  { id: 'bills', name: 'Bills', icon: '📄', color: '#FFD6A5' },
+  { id: 'bills', name: 'Bills', icon: '📄', color: '#FFF4D6' },
   { id: 'education', name: 'Education', icon: '📚', color: '#45B7D1' },
   { id: 'entertainment', name: 'Entertainment', icon: '🎬', color: '#FF9FF3' },
   { id: 'health', name: 'Health', icon: '💊', color: '#54A0FF' },

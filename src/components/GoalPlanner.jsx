@@ -101,7 +101,7 @@ export default function GoalPlanner() {
                         className={`btn btn-ghost btn-icon`}
                         style={{
                           fontSize: 22,
-                          background: formData.icon === icon ? 'rgba(106,0,244,0.15)' : 'transparent',
+                          background: formData.icon === icon ? 'rgba(252,108,38,0.15)' : 'transparent',
                           border: formData.icon === icon ? '1px solid var(--primary)' : '1px solid transparent',
                         }}
                         onClick={() => setFormData({ ...formData, icon })}
@@ -222,7 +222,7 @@ export default function GoalPlanner() {
                 </div>
 
                 {!isComplete && (
-                  <div style={{ marginTop: 14, padding: '10px 14px', background: 'rgba(106,0,244,0.06)', borderRadius: 'var(--radius-sm)', fontSize: 13, color: 'var(--text-secondary)' }}>
+                  <div style={{ marginTop: 14, padding: '10px 14px', background: 'rgba(252,108,38,0.06)', borderRadius: 'var(--radius-sm)', fontSize: 13, color: 'var(--text-secondary)' }}>
                     Need ~₹{monthlyNeeded.toLocaleString('en-IN')}/month for {monthsLeft} months
                   </div>
                 )}

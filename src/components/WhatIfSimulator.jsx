@@ -60,14 +60,14 @@ export default function WhatIfSimulator() {
         {
           label: 'Illustrative FD Value',
           data: fdData,
-          backgroundColor: 'rgba(255, 214, 165, 0.5)',
+          backgroundColor: 'rgba(255, 244, 214, 0.5)',
           borderRadius: 4,
           borderSkipped: false,
         },
         {
           label: 'Illustrative Investment Value',
           data: investedData,
-          backgroundColor: 'rgba(106, 0, 244, 0.6)',
+          backgroundColor: 'rgba(252, 108, 38, 0.75)',
           borderRadius: 4,
           borderSkipped: false,
         },
@@ -91,8 +91,8 @@ export default function WhatIfSimulator() {
         labels: { color: '#A0A0C0', font: { size: 11 }, usePointStyle: true, pointStyleWidth: 8, padding: 16 },
       },
       tooltip: {
-        backgroundColor: '#1A1A2E',
-        borderColor: 'rgba(106, 0, 244, 0.3)',
+        backgroundColor: '#1E1A17',
+        borderColor: 'rgba(252, 108, 38, 0.3)',
         borderWidth: 1,
         padding: 12,
         cornerRadius: 8,
@@ -151,7 +151,7 @@ export default function WhatIfSimulator() {
               step="100"
               value={amount}
               onChange={e => { setAmount(parseInt(e.target.value)); setActivePreset(null); }}
-              style={{ width: '100%', marginTop: 8, accentColor: '#6A00F4' }}
+              style={{ width: '100%', marginTop: 8, accentColor: '#FC6C26' }}
             />
           </div>
 
@@ -163,7 +163,7 @@ export default function WhatIfSimulator() {
               max="60"
               value={months}
               onChange={e => setMonths(parseInt(e.target.value))}
-              style={{ width: '100%', accentColor: '#6A00F4' }}
+              style={{ width: '100%', accentColor: '#FC6C26' }}
             />
             <div className="flex justify-between" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
               <span>1 month</span>
@@ -180,7 +180,7 @@ export default function WhatIfSimulator() {
               step="0.5"
               value={annualReturn}
               onChange={e => setAnnualReturn(parseFloat(e.target.value))}
-              style={{ width: '100%', accentColor: '#FFD6A5' }}
+              style={{ width: '100%', accentColor: '#FFF4D6' }}
             />
             <div className="flex justify-between" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
               <span>0%</span>
@@ -211,7 +211,7 @@ export default function WhatIfSimulator() {
               <div className="scenario-value">₹{result.totalSaved.toLocaleString('en-IN')}</div>
               <div className="scenario-note">in {months} months</div>
             </div>
-            <div className="scenario-box" style={{ background: 'rgba(255,214,165,0.08)', borderColor: 'rgba(255,214,165,0.2)' }}>
+            <div className="scenario-box" style={{ background: 'rgba(255,244,214,0.08)', borderColor: 'rgba(255,244,214,0.2)' }}>
               <div className="scenario-label">FD Value (est.)</div>
               <div className="scenario-value" style={{ color: 'var(--accent-dark)' }}>₹{result.fdValue.toLocaleString('en-IN')}</div>
               <div className="scenario-note">@7% p.a. assumed</div>
@@ -225,8 +225,8 @@ export default function WhatIfSimulator() {
 
           {result.estimatedGrowth > 0 && (
             <div style={{
-              marginTop: 16, padding: '14px 18px', background: 'rgba(106,0,244,0.08)',
-              borderRadius: 'var(--radius-md)', border: '1px solid rgba(106,0,244,0.15)'
+              marginTop: 16, padding: '14px 18px', background: 'rgba(252,108,38,0.08)',
+              borderRadius: 'var(--radius-md)', border: '1px solid rgba(252,108,38,0.15)'
             }}>
               <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
                 💡 By saving ₹{amount.toLocaleString('en-IN')}/month for {months} months, your total saved amount of ₹{result.totalSaved.toLocaleString('en-IN')} could illustratively grow to ₹{result.investedValue.toLocaleString('en-IN')} — an estimated gain of <span style={{ color: 'var(--success)', fontWeight: 600 }}>₹{result.estimatedGrowth.toLocaleString('en-IN')}</span> under the assumed {annualReturn}% annual return.

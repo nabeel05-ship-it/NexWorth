@@ -38,12 +38,12 @@ export default function SpendingForecast() {
       {
         label: 'Actual Spending',
         data: [...forecast.historical, null, null, null],
-        borderColor: '#6A00F4',
-        backgroundColor: 'rgba(106, 0, 244, 0.1)',
+        borderColor: '#FC6C26',
+        backgroundColor: 'rgba(252, 108, 38, 0.12)',
         fill: true,
         tension: 0.4,
         pointRadius: 5,
-        pointBackgroundColor: '#6A00F4',
+        pointBackgroundColor: '#FC6C26',
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
         pointHoverRadius: 8,
@@ -51,13 +51,13 @@ export default function SpendingForecast() {
       {
         label: 'Estimated Spending',
         data: [null, null, forecast.historical[2], ...forecast.forecasted],
-        borderColor: '#FFD6A5',
-        backgroundColor: 'rgba(255, 214, 165, 0.08)',
+        borderColor: '#FFF4D6',
+        backgroundColor: 'rgba(255, 244, 214, 0.08)',
         fill: true,
         borderDash: [8, 4],
         tension: 0.4,
         pointRadius: 5,
-        pointBackgroundColor: '#FFD6A5',
+        pointBackgroundColor: '#FFF4D6',
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
         pointHoverRadius: 8,
@@ -82,8 +82,8 @@ export default function SpendingForecast() {
         labels: { color: '#A0A0C0', font: { size: 12 }, usePointStyle: true, pointStyleWidth: 8, padding: 16 },
       },
       tooltip: {
-        backgroundColor: '#1A1A2E',
-        borderColor: 'rgba(106, 0, 244, 0.3)',
+        backgroundColor: '#1E1A17',
+        borderColor: 'rgba(252, 108, 38, 0.3)',
         borderWidth: 1,
         padding: 12,
         cornerRadius: 8,
@@ -151,7 +151,7 @@ export default function SpendingForecast() {
             const d = new Date(now.getFullYear(), now.getMonth() - (2 - i), 1);
             const isCurrentMonth = i === 2;
             return (
-              <div key={i} className="scenario-box" style={isCurrentMonth ? { background: 'rgba(106,0,244,0.1)', borderColor: 'rgba(106,0,244,0.25)' } : {}}>
+              <div key={i} className="scenario-box" style={isCurrentMonth ? { background: 'rgba(252,108,38,0.1)', borderColor: 'rgba(252,108,38,0.25)' } : {}}>
                 <div className="scenario-label">{MONTH_NAMES[d.getMonth()]}</div>
                 <div className="scenario-value" style={{ fontSize: 20 }}>₹{amount.toLocaleString('en-IN')}</div>
                 <div className="scenario-note">{isCurrentMonth ? 'Current' : 'Actual'}</div>
@@ -161,7 +161,7 @@ export default function SpendingForecast() {
           {forecast.forecasted.map((amount, i) => {
             const d = new Date(now.getFullYear(), now.getMonth() + i + 1, 1);
             return (
-              <div key={`f${i}`} className="scenario-box" style={{ background: 'rgba(255,214,165,0.08)', borderColor: 'rgba(255,214,165,0.2)' }}>
+              <div key={`f${i}`} className="scenario-box" style={{ background: 'rgba(255,244,214,0.08)', borderColor: 'rgba(255,244,214,0.2)' }}>
                 <div className="scenario-label">{MONTH_NAMES[d.getMonth()]}</div>
                 <div className="scenario-value" style={{ fontSize: 20, color: 'var(--accent)' }}>₹{amount.toLocaleString('en-IN')}</div>
                 <div className="scenario-note">Estimated</div>
