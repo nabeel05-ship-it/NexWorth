@@ -25,7 +25,7 @@ const navItems = [
     { id: 'goals', label: 'Goals', icon: Target },
   ]},
   { section: 'Help', items: [
-    { id: 'ai-chat', label: 'AI Assistant', icon: MessageCircle },
+    { id: 'ai-chat', label: 'Ask Your Money', icon: MessageCircle },
     { id: 'privacy', label: 'Privacy & Security', icon: Shield },
   ]},
 ];

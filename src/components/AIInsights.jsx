@@ -93,6 +93,13 @@ export default function AIInsights() {
       .sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
   }, [overview]);
 
+  const handleInsightAction = (query) => {
+    // Navigate to chat and optionally pass query
+    dispatch({ type: 'SET_PAGE', payload: 'ai-chat' });
+    // Since we don't have a direct query prop to AIChat, navigating is sufficient for now
+    // The user can type it or click a suggestion there.
+  };
+
   return (
     <div>
       <div className="page-header">
@@ -147,11 +154,23 @@ export default function AIInsights() {
             <div className="card-title"><Sparkles size={16} /> AI Analysis</div>
           </div>
           {insights.map((insight, i) => (
-            <div key={i} className={`insight-card ${insight.type}`}>
-              <span className="insight-icon">{insight.icon}</span>
-              <div className="insight-content">
-                <h4>{insight.title}</h4>
-                <p>{insight.text}</p>
+            <div key={i} className={`insight-card ${insight.type}`} style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex' }}>
+                <span className="insight-icon">{insight.icon}</span>
+                <div className="insight-content">
+                  <h4>{insight.title}</h4>
+                  <p>{insight.text}</p>
+                  
+                  {insight.action && (
+                    <button 
+                      className="btn btn-outline btn-sm" 
+                      style={{ marginTop: 12, fontSize: 12, display: 'inline-flex', alignSelf: 'flex-start', background: '#FFFFFF' }}
+                      onClick={() => handleInsightAction(insight.actionQuery)}
+                    >
+                      {insight.action}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
