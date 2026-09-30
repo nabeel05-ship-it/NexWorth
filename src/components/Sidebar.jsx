@@ -1,37 +1,53 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
+import LanguageSwitcher from './LanguageSwitcher';
 import {
-  LayoutDashboard, PlusCircle, Smartphone, Brain, Sparkles,
+  LayoutDashboard, PlusCircle, Brain, Sparkles,
   GitCompareArrows, Target, Calculator, TrendingUp,
   MessageCircle, Shield, Menu, X, Zap, Database
 } from 'lucide-react';
 
-const navItems = [
-  { section: 'Overview', items: [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'insights', label: 'AI Insights', icon: Sparkles },
-  ]},
-  { section: 'Capture & Manage', items: [
-    { id: 'capture', label: 'AI Capture (SMS/Notif)', icon: Zap },
-    { id: 'add-expense', label: 'Expenses & Cash', icon: PlusCircle },
-  ]},
-  { section: 'Simulate', items: [
-    { id: 'what-if', label: 'What-If Simulator', icon: GitCompareArrows },
-    { id: 'compare', label: 'Spend vs Save', icon: TrendingUp },
-    { id: 'calculator', label: 'Future Value', icon: Calculator },
-    { id: 'forecast', label: 'Spending Forecast', icon: Brain },
-  ]},
-  { section: 'Plan', items: [
-    { id: 'goals', label: 'Goals', icon: Target },
-  ]},
-  { section: 'Help', items: [
-    { id: 'ai-chat', label: 'Ask Your Money', icon: MessageCircle },
-    { id: 'privacy', label: 'Privacy & Security', icon: Shield },
-  ]},
-];
-
 export default function Sidebar({ isOpen, onClose }) {
-  const { state, dispatch, mongoStatus } = useApp();
+  const { state, dispatch, mongoStatus, t } = useApp();
+
+  const navSections = [
+    {
+      titleKey: 'nav_overview',
+      items: [
+        { id: 'dashboard', labelKey: 'nav_dashboard', icon: LayoutDashboard },
+        { id: 'insights', labelKey: 'nav_insights', icon: Sparkles },
+      ],
+    },
+    {
+      titleKey: 'nav_capture_manage',
+      items: [
+        { id: 'capture', labelKey: 'nav_capture', icon: Zap },
+        { id: 'add-expense', labelKey: 'nav_expenses', icon: PlusCircle },
+      ],
+    },
+    {
+      titleKey: 'nav_simulate',
+      items: [
+        { id: 'what-if', labelKey: 'nav_what_if', icon: GitCompareArrows },
+        { id: 'compare', labelKey: 'nav_compare', icon: TrendingUp },
+        { id: 'calculator', labelKey: 'nav_calculator', icon: Calculator },
+        { id: 'forecast', labelKey: 'nav_forecast', icon: Brain },
+      ],
+    },
+    {
+      titleKey: 'nav_plan',
+      items: [
+        { id: 'goals', labelKey: 'nav_goals', icon: Target },
+      ],
+    },
+    {
+      titleKey: 'nav_help',
+      items: [
+        { id: 'ai-chat', labelKey: 'nav_ai_chat', icon: MessageCircle },
+        { id: 'privacy', labelKey: 'nav_privacy', icon: Shield },
+      ],
+    },
+  ];
 
   const handleNav = (pageId) => {
     dispatch({ type: 'SET_PAGE', payload: pageId });
@@ -48,15 +64,23 @@ export default function Sidebar({ isOpen, onClose }) {
         <div className="sidebar-logo">
           <div className="logo-icon">N</div>
           <div>
-            <h1>NexWorth</h1>
-            <div className="logo-tagline">AI Financial Intelligence</div>
+            <h1>{t('brand_name')}</h1>
+            <div className="logo-tagline">{t('brand_tagline')}</div>
           </div>
         </div>
 
+        {/* Language Switcher Bar */}
+        <div style={{ padding: '0 12px 14px', borderBottom: '1px solid var(--border)' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 6, letterSpacing: 0.5 }}>
+            {t('lang_select')} / Language
+          </div>
+          <LanguageSwitcher compact={false} style={{ width: '100%', justifyContent: 'space-between' }} />
+        </div>
+
         <nav className="sidebar-nav">
-          {navItems.map(section => (
-            <div key={section.section} className="sidebar-section">
-              <div className="sidebar-section-title">{section.section}</div>
+          {navSections.map(section => (
+            <div key={section.titleKey} className="sidebar-section">
+              <div className="sidebar-section-title">{t(section.titleKey)}</div>
               {section.items.map(item => {
                 const Icon = item.icon;
                 return (
@@ -66,7 +90,7 @@ export default function Sidebar({ isOpen, onClose }) {
                     onClick={() => handleNav(item.id)}
                   >
                     <Icon className="nav-icon" size={18} />
-                    <span>{item.label}</span>
+                    <span>{t(item.labelKey)}</span>
                     {item.id === 'ai-chat' && (
                       <span className="ai-badge" style={{ marginLeft: 'auto', fontSize: 9 }}>AI</span>
                     )}
@@ -98,17 +122,18 @@ export default function Sidebar({ isOpen, onClose }) {
                 height: 7,
                 borderRadius: '50%',
                 background: mongoStatus?.connected ? '#22C55E' : '#F59E0B',
-                boxShadow: mongoStatus?.connected ? '0 0 6px #22C55E' : 'none'
               }} />
             </div>
-            <div style={{ fontSize: 10, color: '#6B6B8D', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {mongoStatus?.connected ? `${mongoStatus.cluster} • ${mongoStatus.database}` : 'Connecting to Cluster0...'}
+            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+              {mongoStatus?.connected
+                ? `Active: ${mongoStatus.cluster}`
+                : `Connecting to ${mongoStatus.cluster}...`}
             </div>
           </div>
 
-          <div className="privacy-badge">
-            <Shield size={14} />
-            <span>Encrypted & private</span>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, padding: '4px 6px' }}>
+            <Shield size={13} color="var(--success)" />
+            <span>{t('nav_privacy')}</span>
           </div>
         </div>
       </aside>

@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import LanguageSwitcher from './LanguageSwitcher';
 import { CATEGORIES, MONTH_NAMES } from '../utils/demoData';
 import { generateInsights, generateExpenseStory, getMonthlyOverview, analyzeSpendingPatterns } from '../utils/aiEngine';
 import { fetchEmailStatus, sendTestEmail, checkOverbudgetAlert } from '../utils/api';
@@ -14,7 +15,7 @@ import { Bar } from 'react-chartjs-2';
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Filler);
 
 export default function AIInsights() {
-  const { state, dispatch } = useApp();
+  const { state, dispatch, t } = useApp();
   const { expenses, user, goals } = state;
 
   const overview = useMemo(() => getMonthlyOverview(expenses, user.monthlyIncome), [expenses, user.monthlyIncome]);
@@ -156,11 +157,16 @@ export default function AIInsights() {
   return (
     <div>
       <div className="page-header">
-        <div className="flex items-center gap-1">
-          <h2>AI Insights & Spending Pattern</h2>
-          <span className="ai-badge"><Sparkles size={12} /> Powered by AI</span>
+        <div className="flex justify-between items-center" style={{ flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <div className="flex items-center gap-1">
+              <h2>{t('ins_title')}</h2>
+              <span className="ai-badge"><Sparkles size={12} /> Powered by AI</span>
+            </div>
+            <p className="subtitle">{t('ins_subtitle')}</p>
+          </div>
+          <LanguageSwitcher compact={false} />
         </div>
-        <p className="subtitle">Not just how much you spent, but how, when, and why you spend — and what to do next.</p>
       </div>
 
       {/* AI SPENDING PATTERN SECTION */}
@@ -169,7 +175,7 @@ export default function AIInsights() {
           <div className="flex items-center gap-2">
             <span style={{ fontSize: 22 }}>🧬</span>
             <div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text)' }}>AI Spending Pattern</h3>
+              <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text)' }}>{t('ins_pattern_title')}</h3>
               <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                 Frequency • Category • Amount Size • Time Distribution • Recurring Subscriptions
               </div>
@@ -197,7 +203,7 @@ export default function AIInsights() {
           <div style={{ background: 'var(--bg-secondary)', padding: 14, borderRadius: 12, border: '1px solid var(--border)' }}>
             <div className="flex items-center gap-1 mb-2">
               <Zap size={16} color="var(--primary)" />
-              <div style={{ fontSize: 13, fontWeight: 600 }}>Frequency & Ticket Size</div>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>{t('ins_frequency_title')}</div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {patterns.activeCategories.slice(0, 3).map(cat => (
@@ -220,16 +226,16 @@ export default function AIInsights() {
           <div style={{ background: 'var(--bg-secondary)', padding: 14, borderRadius: 12, border: '1px solid var(--border)' }}>
             <div className="flex items-center gap-1 mb-2">
               <Coffee size={16} color="#D97706" />
-              <div style={{ fontSize: 13, fontWeight: 600 }}>Cumulative Micro-Spends</div>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>{t('ins_micro_title')}</div>
             </div>
             <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
               ₹{patterns.totalSmallValue.toLocaleString('en-IN')}
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
-              Across {patterns.allSmallCount} transactions below ₹250 (Tea, snacks, auto, coffee)
+              {t('ins_micro_desc')} ({patterns.allSmallCount} txns)
             </div>
             <div style={{ fontSize: 11, color: '#78350F', background: '#FEF3C7', padding: '6px 10px', borderRadius: 6, lineHeight: 1.4 }}>
-              ⚠️ Micro-expenses feel small individually but create the largest invisible monthly outflow.
+              ⚠️ {t('ins_micro_warning')}
             </div>
           </div>
 
@@ -237,11 +243,11 @@ export default function AIInsights() {
           <div style={{ background: 'var(--bg-secondary)', padding: 14, borderRadius: 12, border: '1px solid var(--border)' }}>
             <div className="flex items-center gap-1 mb-2">
               <Clock size={16} color="#4F46E5" />
-              <div style={{ fontSize: 13, fontWeight: 600 }}>Time & Recurring Commitments</div>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>{t('ins_time_title')}</div>
             </div>
             <div style={{ marginBottom: 10 }}>
               <div className="flex justify-between items-center mb-1">
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Weekend Concentration</span>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('ins_weekend_leakage')}</span>
                 <span style={{ fontSize: 13, fontWeight: 700, color: '#4F46E5' }}>{patterns.weekendPct}%</span>
               </div>
               <div className="progress-bar" style={{ height: 6 }}>
@@ -250,7 +256,7 @@ export default function AIInsights() {
             </div>
             <div style={{ borderTop: '1px dashed var(--border)', paddingTop: 8 }}>
               <div className="flex justify-between items-center">
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Recurring Subscriptions</span>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('ins_recurring')}</span>
                 <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>₹{patterns.recurringTotal.toLocaleString('en-IN')}/mo</span>
               </div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
@@ -276,7 +282,7 @@ export default function AIInsights() {
             <div className="flex items-center gap-1 mb-1">
               <Target size={18} color="#FC6C26" />
               <span style={{ fontSize: 13, fontWeight: 700, color: '#FC6C26', letterSpacing: 0.5 }}>
-                ACTIONABLE USER BENEFIT (WHAT THIS MEANS FOR YOU)
+                {t('ins_benefit_title')}
               </span>
             </div>
             <div style={{ fontSize: 14, lineHeight: 1.6, color: '#E7E5E4' }}>
@@ -288,7 +294,7 @@ export default function AIInsights() {
             style={{ padding: '12px 20px', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 16px rgba(252, 108, 38, 0.4)' }}
             onClick={() => handleInsightAction(patterns.opportunity.suggestedQuery)}
           >
-            <span>Ask Your Money: "{patterns.opportunity.suggestedQuery}"</span>
+            <span>{t('ins_ask_money_btn')}: "{patterns.opportunity.suggestedQuery}"</span>
             <ArrowRight size={16} />
           </button>
         </div>
@@ -298,7 +304,7 @@ export default function AIInsights() {
       <div className="card card-glow mb-3" style={{ background: 'linear-gradient(135deg, #FFF7F0 0%, #FFF1E3 100%)', border: '1px solid rgba(252, 108, 38, 0.25)' }}>
         <div className="flex items-center gap-1 mb-2">
           <Sparkles size={18} color="var(--primary)" />
-          <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 18 }}>Your {monthName} Expense Story</h3>
+          <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 18 }}>{t('ins_story_title')} ({monthName})</h3>
         </div>
         <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.8, maxWidth: 700 }}>{story}</p>
       </div>
@@ -343,10 +349,10 @@ export default function AIInsights() {
             </div>
             <div>
               <h3 style={{ fontSize: 17, fontWeight: 700, margin: 0, color: 'var(--text)' }}>
-                Automated Email Alerts (Gmail SMTP)
+                {t('email_title')}
               </h3>
               <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                Powered by Node.js + Nodemailer • Dispatches instant alerts when expenses exceed income
+                {t('email_subtitle')}
               </div>
             </div>
           </div>
@@ -354,11 +360,11 @@ export default function AIInsights() {
           <div>
             {emailStatus.configured ? (
               <span className="ai-badge" style={{ background: '#DCFCE7', color: '#16A34A', borderColor: '#86EFAC' }}>
-                <CheckCircle2 size={12} /> Gmail SMTP Active ({emailStatus.emailUser})
+                <CheckCircle2 size={12} /> {t('email_active_badge')} ({emailStatus.emailUser})
               </span>
             ) : (
               <span className="ai-badge" style={{ background: '#FEF3C7', color: '#D97706', borderColor: '#FDE68A' }}>
-                <AlertTriangle size={12} /> Set EMAIL_USER & EMAIL_PASS in .env
+                <AlertTriangle size={12} /> {t('email_unconfigured_badge')}
               </span>
             )}
           </div>
@@ -381,11 +387,11 @@ export default function AIInsights() {
             <div style={{ fontSize: 13, color: overview.currentTotal > user.monthlyIncome ? '#991B1B' : 'var(--text)', lineHeight: 1.5 }}>
               {overview.currentTotal > user.monthlyIncome ? (
                 <span>
-                  <strong>Over-Budget Condition Triggered:</strong> Total expenses (₹{overview.currentTotal.toLocaleString('en-IN')}) exceed income (₹{user.monthlyIncome.toLocaleString('en-IN')}) by ₹{Math.abs(overview.savings).toLocaleString('en-IN')}. An automated email alert was dispatched!
+                  <strong>{t('email_rule_active')}</strong>
                 </span>
               ) : (
                 <span>
-                  <strong>Automated Rule:</strong> Whenever recorded expenses exceed monthly income (currently ₹{overview.currentTotal.toLocaleString('en-IN')} of ₹{user.monthlyIncome.toLocaleString('en-IN')}), NexWorth automatically dispatches an alert email to keep you informed.
+                  <strong>{t('email_rule_normal')}</strong>
                 </span>
               )}
             </div>
@@ -400,7 +406,7 @@ export default function AIInsights() {
           border: '1px solid var(--border)'
         }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>
-            Demo / Testing: Send Test Email via Gmail SMTP
+            {t('email_send_test')} (Gmail SMTP)
           </div>
 
           <div className="flex gap-2" style={{ flexWrap: 'wrap', alignItems: 'center' }}>
@@ -420,7 +426,7 @@ export default function AIInsights() {
               disabled={sendingEmail}
             >
               <Send size={14} />
-              {sendingEmail ? 'Sending...' : 'Send Test Email'}
+              {sendingEmail ? 'Sending...' : t('email_send_test')}
             </button>
             <button
               className="btn btn-outline btn-sm flex items-center gap-1"
@@ -428,7 +434,7 @@ export default function AIInsights() {
               disabled={sendingEmail}
               title="Simulate the over-budget alert email with live figures"
             >
-              <span>Simulate Over-Budget Alert 🚨</span>
+              <span>{t('email_simulate_overbudget')}</span>
             </button>
           </div>
 

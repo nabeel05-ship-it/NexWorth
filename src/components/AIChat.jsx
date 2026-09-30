@@ -2,22 +2,44 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { processAIChat, getMonthlyOverview, analyzeSpendingPatterns } from '../utils/aiEngine';
 import { sendAIChatQuery } from '../utils/api';
+import LanguageSwitcher from './LanguageSwitcher';
 import { MessageCircle, Send, Sparkles, Bot, User, ArrowRight, Target, Zap } from 'lucide-react';
 
 export default function AIChat() {
-  const { state, dispatch } = useApp();
+  const { state, dispatch, t, language } = useApp();
   const { expenses, user, goals } = state;
+
+  const getInitialGreeting = (lang) => {
+    if (lang === 'kn') {
+      return `ನಮಸ್ಕಾರ! ನಾನು ನಿಮ್ಮ NexWorth ಎಐ ಆರ್ಥಿಕ ಸಹಾಯಕ (Gemini 2.5 Flash). 👋\n\nನಾನು ನಿಮ್ಮ ನೈಜ ಖರ್ಚುಗಳನ್ನು ವಿಶ್ಲೇಷಿಸುತ್ತೇನೆ, ಸಣ್ಣ ಖರ್ಚುಗಳ ಸೋರಿಕೆಯನ್ನು ಪತ್ತೆಹಚ್ಚುತ್ತೇನೆ ಮತ್ತು ನಿಮ್ಮ ಗುರಿಗಳಿಗೆ ಸಂಬಂಧಿಸಿದಂತೆ ವಾಟ್-ಇಫ್ ಸನ್ನಿವೇಶಗಳನ್ನು ಸಿಮ್ಯುಲೇಟ್ ಮಾಡುತ್ತೇನೆ.\n\nಕನ್ನಡ, ಇಂಗ್ಲಿಷ್ ಅಥವಾ ಹಿಂದಿಯಲ್ಲಿ ನನ್ನನ್ನು ಕೇಳಿ:\n• "₹500 ಕಡಿಮೆ ಖರ್ಚು ಮಾಡಿದರೆ ಎಷ್ಟು ಉಳಿಯುತ್ತದೆ?"\n• "ನನ್ನ ಸಣ್ಣ ಖರ್ಚುಗಳು ಎಲ್ಲಿವೆ?"\n• "ನನ್ನ ಎಐ ಖರ್ಚಿನ ಮಾದರಿ ತೋರಿಸಿ"\n• "ತಿಂಗಳಿಗೆ ₹2,000 ಹೂಡಿಕೆ ಮಾಡಿದರೆ ಹೇಗೆ?"`;
+    }
+    if (lang === 'hi') {
+      return `नमस्ते! मैं आपका NexWorth एआई वित्तीय सहायक हूँ, जो Gemini 2.5 Flash द्वारा संचालित है। 👋\n\nमैं आपके वास्तविक खर्चों का विश्लेषण करता हूँ, छोटे खर्चों के नुकसान की पहचान करता हूँ और आपके वित्तीय लक्ष्यों से जुड़े व्हाट-इफ परिदृश्यों का सटीक अनुकरण करता हूँ।\n\nहिंदी, हिंग्लिश या अंग्रेज़ी में मुझसे पूछें:\n• "अगर ₹500 कम खर्च करूँ तो क्या होगा?"\n• "मेरे छोटे-छोटे खर्चे कहाँ हो रहे हैं?"\n• "मेरा एआई खर्च पैटर्न दिखाओ"\n• "अगर हर महीने ₹2,000 निवेश करूँ तो 5 साल में कितना होगा?"`;
+    }
+    return `Hello! I'm your NexWorth AI assistant powered by Gemini 2.5 Flash. 👋\n\nI analyze your real expenses, detect micro-expense leaks, and simulate deterministic financial what-if scenarios connected to your goals.\n\nTry asking me in English, Hindi, or Kannada:\n• "What if I reduce food spending by ₹500?"\n• "Where are my frequent small expenses?"\n• "Show my AI Spending Pattern"\n• "What if I invest ₹2,000 per month for 5 years?"`;
+  };
 
   const [messages, setMessages] = useState([
     {
       type: 'ai',
-      text: `Hello! I'm your NexWorth AI assistant powered by Gemini 2.5 Flash. 👋\n\nI analyze your real expenses, detect micro-expense leaks, and simulate deterministic financial what-if scenarios connected to your goals.\n\nTry asking me in Hindi, Hinglish, or English:\n• "Agar ₹500 kam spend karu?"\n• "Where are my frequent small expenses?"\n• "Show my AI Spending Pattern"\n• "What if I invest ₹2,000 per month for 5 years?"`,
+      text: getInitialGreeting(language),
       model: 'gemini-2.5-flash',
     },
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
+
+  // Update initial message if no conversation yet and language switched
+  useEffect(() => {
+    if (messages.length === 1 && messages[0].type === 'ai') {
+      setMessages([{
+        type: 'ai',
+        text: getInitialGreeting(language),
+        model: 'gemini-2.5-flash',
+      }]);
+    }
+  }, [language]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -66,7 +88,11 @@ export default function AIChat() {
         type: 'ai',
         appliedSuccess: true,
         model: 'gemini-2.5-flash',
-        text: `🎉 **Goal Updated Successfully!**\n\nApplied **+₹${amount.toLocaleString('en-IN')}** simulated savings to your **${targetGoal.name} Goal**!\n\n• Target: ₹${targetAmount.toLocaleString('en-IN')}\n• Previously Saved: ₹${prevAmount.toLocaleString('en-IN')} (${Math.round((prevAmount / targetAmount) * 100)}%)\n• New Progress: ₹${newAmount.toLocaleString('en-IN')} (${newPercent}% reached!)\n• Remaining: ₹${remaining.toLocaleString('en-IN')}\n\nYou're now 68% of the way there and projected to reach your ${targetGoal.name} goal 3 months sooner! 🎯`,
+        text: language === 'kn'
+          ? `🎉 **ಗುರಿ ಯಶಸ್ವಿಯಾಗಿ ನವೀಕರಿಸಲಾಗಿದೆ!**\n\nನಿಮ್ಮ **${targetGoal.name} ಗುರಿಗೆ** +₹${amount.toLocaleString('en-IN')} ಮೊತ್ತವನ್ನು ಸೇರಿಸಲಾಗಿದೆ!\n\n• ಒಟ್ಟು ಗುರಿ: ₹${targetAmount.toLocaleString('en-IN')}\n• ಈ ಮೊದಲು ಉಳಿಸಿದ್ದು: ₹${prevAmount.toLocaleString('en-IN')} (${Math.round((prevAmount / targetAmount) * 100)}%)\n• ಹೊಸ ಪ್ರಗತಿ: ₹${newAmount.toLocaleString('en-IN')} (${newPercent}% ಪೂರ್ಣಗೊಂಡಿದೆ!)\n• ಬಾಕಿ ಮೊತ್ತ: ₹${remaining.toLocaleString('en-IN')} 🎯`
+          : language === 'hi'
+          ? `🎉 **लक्ष्य सफलतापूर्वक अपडेट हुआ!**\n\nआपके **${targetGoal.name} लक्ष्य** में +₹${amount.toLocaleString('en-IN')} की बचत जोड़ दी गई है!\n\n• कुल लक्ष्य: ₹${targetAmount.toLocaleString('en-IN')}\n• पहले से बचाई गई: ₹${prevAmount.toLocaleString('en-IN')} (${Math.round((prevAmount / targetAmount) * 100)}%)\n• नई प्रगति: ₹${newAmount.toLocaleString('en-IN')} (${newPercent}% पूरा हुआ!)\n• शेष राशि: ₹${remaining.toLocaleString('en-IN')} 🎯`
+          : `🎉 **Goal Updated Successfully!**\n\nApplied **+₹${amount.toLocaleString('en-IN')}** simulated savings to your **${targetGoal.name} Goal**!\n\n• Target: ₹${targetAmount.toLocaleString('en-IN')}\n• Previously Saved: ₹${prevAmount.toLocaleString('en-IN')} (${Math.round((prevAmount / targetAmount) * 100)}%)\n• New Progress: ₹${newAmount.toLocaleString('en-IN')} (${newPercent}% reached!)\n• Remaining: ₹${remaining.toLocaleString('en-IN')}\n\nYou're now 68% of the way there and projected to reach your ${targetGoal.name} goal 3 months sooner! 🎯`,
         followUps: [
           'View Laptop Goal in Planner 🎯',
           'What if I invest ₹2,000 per month? 📈',
@@ -86,7 +112,7 @@ export default function AIChat() {
       return;
     }
 
-    if (query.includes('Spending Pattern') || query.includes('AI Spending Pattern')) {
+    if (query.includes('Spending Pattern') || query.includes('AI Spending Pattern') || query.includes('पैटर्न') || query.includes('ಮಾದರಿ')) {
       dispatch({ type: 'SET_PAGE', payload: 'insights' });
       return;
     }
@@ -100,7 +126,7 @@ export default function AIChat() {
     const patterns = analyzeSpendingPatterns(expenses, user.monthlyIncome, goals);
 
     try {
-      // Call Gemini 2.5 Flash via our backend endpoint
+      // Call Gemini 2.5 Flash via our backend endpoint with selected language
       const remoteRes = await sendAIChatQuery({
         query,
         expenses,
@@ -109,6 +135,7 @@ export default function AIChat() {
         goals,
         overview,
         patterns,
+        language,
       });
 
       let response = remoteRes;
@@ -146,24 +173,27 @@ export default function AIChat() {
   };
 
   const SUGGESTIONS = [
-    'Agar ₹500 kam spend karu?',
-    'Where are my frequent small expenses?',
-    'Show my AI Spending Pattern 🧬',
-    'How can I reach my Laptop goal faster?',
-    'What if I invest ₹2,000 per month?',
+    t('chat_preset_1'),
+    t('chat_preset_2'),
+    t('chat_preset_3'),
+    t('chat_preset_4'),
+    t('chat_preset_5'),
   ];
 
   return (
     <div>
-      <div className="page-header">
-        <div className="flex items-center gap-1" style={{ flexWrap: 'wrap' }}>
-          <h2>Ask Your Money</h2>
-          <span className="ai-badge" style={{ background: 'rgba(34, 197, 94, 0.08)', color: '#16A34A', borderColor: 'rgba(34, 197, 94, 0.25)' }}>
-            <Sparkles size={12} /> Gemini 2.5 Flash Live
-          </span>
-          <span className="ai-badge"><Zap size={12} /> Deterministic Engine</span>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <div className="flex items-center gap-1" style={{ flexWrap: 'wrap' }}>
+            <h2>{t('chat_title')}</h2>
+            <span className="ai-badge" style={{ background: 'rgba(34, 197, 94, 0.08)', color: '#16A34A', borderColor: 'rgba(34, 197, 94, 0.25)' }}>
+              <Sparkles size={12} /> {t('chat_gemini_live')}
+            </span>
+            <span className="ai-badge"><Zap size={12} /> {t('chat_deterministic_badge')}</span>
+          </div>
+          <p className="subtitle">{t('chat_subtitle')}</p>
         </div>
-        <p className="subtitle">Explore your spending patterns, simulate what-if scenarios, and connect savings directly to your goals.</p>
+        <LanguageSwitcher />
       </div>
 
       <div className="card" style={{ padding: 0 }}>
@@ -171,7 +201,7 @@ export default function AIChat() {
           {/* Suggestions (only show if no user messages yet) */}
           {messages.length <= 1 && (
             <div style={{ padding: '16px 0', borderBottom: '1px solid var(--border)' }}>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>Suggested questions:</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>{t('chat_suggested')}</div>
               <div className="flex gap-1" style={{ flexWrap: 'wrap' }}>
                 {SUGGESTIONS.map((s, i) => (
                   <button key={i} className="btn btn-outline btn-sm" onClick={() => handleSend(s)} style={{ fontSize: 12 }}>
@@ -270,20 +300,20 @@ export default function AIChat() {
                             className="btn btn-primary btn-sm flex items-center gap-1"
                             onClick={() => handleApplyToGoal(msg.scenario)}
                           >
-                            <Target size={14} /> Apply to {msg.scenario.targetGoalName || 'Laptop'} Goal
+                            <Target size={14} /> {t('chat_apply_to_goal')} ({msg.scenario.targetGoalName || 'Laptop'})
                           </button>
                         )}
                         <button
                           className="btn btn-outline btn-sm flex items-center gap-1"
                           onClick={() => handleSend(`What if I invest ₹${msg.scenario.monthly} per month?`)}
                         >
-                          Invest Instead 📈
+                          {t('chat_invest_instead')}
                         </button>
                         <button
                           className="btn btn-ghost btn-sm flex items-center gap-1"
-                          onClick={() => setInput('What if I reduce ')}
+                          onClick={() => setInput(language === 'kn' ? 'ಖರ್ಚು ಕಡಿಮೆ ಮಾಡಿದರೆ ' : language === 'hi' ? 'अगर खर्च कम करूँ ' : 'What if I reduce ')}
                         >
-                          Try Another <ArrowRight size={14} />
+                          {t('chat_try_another')} <ArrowRight size={14} />
                         </button>
                       </div>
                       {msg.scenario.investedValue && (
@@ -328,7 +358,7 @@ export default function AIChat() {
           <div className="chat-input-area" style={{ marginTop: 24 }}>
             <input
               className="form-input"
-              placeholder="Ask me about your spending, goals, or what-if scenarios..."
+              placeholder={t('chat_placeholder')}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}

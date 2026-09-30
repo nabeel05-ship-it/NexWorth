@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import LanguageSwitcher from './LanguageSwitcher';
 import { CATEGORIES } from '../utils/demoData';
 import { parseTransactionMessage, SAMPLE_TRANSACTION_MESSAGES } from '../utils/aiTransactionParser';
 import {
@@ -9,7 +10,7 @@ import {
 } from 'lucide-react';
 
 export default function AITransactionCapture() {
-  const { state, dispatch } = useApp();
+  const { state, dispatch, t } = useApp();
   const [inputText, setInputText] = useState('');
   const [selectedSource, setSelectedSource] = useState('SMS');
   const [detectedTxn, setDetectedTxn] = useState(null);
@@ -154,16 +155,21 @@ export default function AITransactionCapture() {
 
       {/* Page Header */}
       <div className="page-header">
-        <div className="flex items-center gap-2 mb-1">
-          <h2>AI Transaction Capture</h2>
-          <span className="ai-badge"><Sparkles size={12} /> AI Powered</span>
-          <span className="badge" style={{ background: '#FFF4D6', color: '#D97706', border: '1px solid rgba(217, 119, 6, 0.25)' }}>
-            Demo Mode Sandbox
-          </span>
+        <div className="flex justify-between items-center" style={{ flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <h2>{t('cap_title')}</h2>
+              <span className="ai-badge"><Sparkles size={12} /> AI Powered</span>
+              <span className="badge" style={{ background: '#FFF4D6', color: '#D97706', border: '1px solid rgba(217, 119, 6, 0.25)' }}>
+                Demo Mode Sandbox
+              </span>
+            </div>
+            <p className="subtitle">
+              {t('cap_subtitle')}
+            </p>
+          </div>
+          <LanguageSwitcher compact={false} />
         </div>
-        <p className="subtitle">
-          Intelligently parse user-authorized SMS messages, transaction notifications, and email receipts into confirmed expenses.
-        </p>
       </div>
 
       {/* Privacy & Security Guarantee Banner */}
@@ -431,21 +437,21 @@ export default function AITransactionCapture() {
                       style={{ flex: 2, padding: '14px 20px', fontSize: 15 }}
                       onClick={handleConfirm}
                     >
-                      <CheckCircle2 size={18} /> Confirm & Save
+                      <CheckCircle2 size={18} /> {t('cap_confirm_btn')}
                     </button>
                     <button
                       className="btn btn-outline"
                       style={{ flex: 1, padding: '14px 16px' }}
                       onClick={() => setIsEditing(true)}
                     >
-                      <Edit3 size={16} /> Edit
+                      <Edit3 size={16} /> {t('cap_edit_btn')}
                     </button>
                     <button
                       className="btn btn-ghost"
                       style={{ padding: '14px 16px', color: 'var(--text-muted)' }}
                       onClick={handleIgnore}
                     >
-                      <XCircle size={16} /> Ignore
+                      <XCircle size={16} /> {t('cap_ignore_btn')}
                     </button>
                   </div>
                 </>

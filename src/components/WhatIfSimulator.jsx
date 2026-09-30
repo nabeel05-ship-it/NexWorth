@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import LanguageSwitcher from './LanguageSwitcher';
 import { calculateWhatIf } from '../utils/aiEngine';
 import { CATEGORIES } from '../utils/demoData';
 import {
@@ -10,19 +11,42 @@ import { GitCompareArrows, Zap, TrendingUp, Calculator } from 'lucide-react';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
-const PRESET_SCENARIOS = [
-  { label: 'Reduce food spending by ₹1,000/month', amount: 1000, months: 12, icon: '🍕' },
-  { label: 'Save ₹2,000 every month', amount: 2000, months: 12, icon: '💰' },
-  { label: 'Cut shopping by ₹1,500/month', amount: 1500, months: 12, icon: '🛍️' },
-  { label: 'Save ₹5,000/month for 6 months', amount: 5000, months: 6, icon: '🎯' },
-  { label: 'Save for laptop — ₹5,000/month × 12', amount: 5000, months: 12, icon: '💻' },
-];
-
 export default function WhatIfSimulator() {
+  const { t, language } = useApp();
   const [amount, setAmount] = useState(2000);
   const [months, setMonths] = useState(12);
   const [annualReturn, setAnnualReturn] = useState(12);
   const [activePreset, setActivePreset] = useState(null);
+
+  const getPresets = (lang) => {
+    if (lang === 'kn') {
+      return [
+        { label: 'ತಿಂಗಳಿಗೆ ₹1,000 ಊಟದ ಖರ್ಚು ಕಡಿಮೆ ಮಾಡಿ', amount: 1000, months: 12, icon: '🍕' },
+        { label: 'ಪ್ರತಿ ತಿಂಗಳು ₹2,000 ಉಳಿಸಿ', amount: 2000, months: 12, icon: '💰' },
+        { label: 'ಶಾಪಿಂಗ್ ಖರ್ಚನ್ನು ₹1,500 ಕಡಿತಗೊಳಿಸಿ', amount: 1500, months: 12, icon: '🛍️' },
+        { label: '6 ತಿಂಗಳಿಗೆ ₹5,000/ತಿಂಗಳು ಉಳಿಸಿ', amount: 5000, months: 6, icon: '🎯' },
+        { label: 'ಲ್ಯಾಪ್‌ಟಾಪ್ ಉಳಿತಾಯ — ₹5,000/ತಿಂಗಳು × 12', amount: 5000, months: 12, icon: '💻' },
+      ];
+    }
+    if (lang === 'hi') {
+      return [
+        { label: 'खाने पर ₹1,000/माह कम खर्च करें', amount: 1000, months: 12, icon: '🍕' },
+        { label: 'हर महीने ₹2,000 बचाएं', amount: 2000, months: 12, icon: '💰' },
+        { label: 'शॉपिंग में ₹1,500/माह की कटौती करें', amount: 1500, months: 12, icon: '🛍️' },
+        { label: '6 महीने के लिए ₹5,000/माह बचाएं', amount: 5000, months: 6, icon: '🎯' },
+        { label: 'लैपटॉप के लिए बचत — ₹5,000/माह × 12', amount: 5000, months: 12, icon: '💻' },
+      ];
+    }
+    return [
+      { label: 'Reduce food spending by ₹1,000/month', amount: 1000, months: 12, icon: '🍕' },
+      { label: 'Save ₹2,000 every month', amount: 2000, months: 12, icon: '💰' },
+      { label: 'Cut shopping by ₹1,500/month', amount: 1500, months: 12, icon: '🛍️' },
+      { label: 'Save ₹5,000/month for 6 months', amount: 5000, months: 6, icon: '🎯' },
+      { label: 'Save for laptop — ₹5,000/month × 12', amount: 5000, months: 12, icon: '💻' },
+    ];
+  };
+
+  const presets = getPresets(language);
 
   const result = useMemo(() => calculateWhatIf({ amount, months, annualReturn }), [amount, months, annualReturn]);
 
@@ -51,21 +75,21 @@ export default function WhatIfSimulator() {
       labels: periods,
       datasets: [
         {
-          label: 'Total Saved',
+          label: t('whatif_total_saved'),
           data: savedData,
           backgroundColor: 'rgba(215, 206, 195, 0.65)',
           borderRadius: 4,
           borderSkipped: false,
         },
         {
-          label: 'Illustrative FD Value',
+          label: t('whatif_fd_value'),
           data: fdData,
           backgroundColor: 'rgba(217, 119, 6, 0.75)',
           borderRadius: 4,
           borderSkipped: false,
         },
         {
-          label: 'Illustrative Investment Value',
+          label: t('whatif_invested_value'),
           data: investedData,
           backgroundColor: '#FC6C26',
           borderRadius: 4,
@@ -73,7 +97,7 @@ export default function WhatIfSimulator() {
         },
       ],
     };
-  }, [amount, months, annualReturn]);
+  }, [amount, months, annualReturn, language, t]);
 
   const chartOptions = {
     responsive: true,
@@ -108,19 +132,22 @@ export default function WhatIfSimulator() {
 
   return (
     <div>
-      <div className="page-header">
-        <div className="flex items-center gap-1">
-          <h2>What-If Simulator</h2>
-          <span className="ai-badge"><Zap size={12} /> Interactive</span>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <div className="flex items-center gap-1">
+            <h2>{t('whatif_title')}</h2>
+            <span className="ai-badge"><Zap size={12} /> Interactive</span>
+          </div>
+          <p className="subtitle">{t('whatif_subtitle')}</p>
         </div>
-        <p className="subtitle">Explore how small financial changes could affect your future</p>
+        <LanguageSwitcher />
       </div>
 
       {/* Preset Scenarios */}
       <div className="card mb-3">
-        <div className="card-title mb-2">⚡ Quick Scenarios</div>
+        <div className="card-title mb-2">⚡ {t('whatif_presets_title')}</div>
         <div className="flex gap-1" style={{ flexWrap: 'wrap' }}>
-          {PRESET_SCENARIOS.map((preset, i) => (
+          {presets.map((preset, i) => (
             <button
               key={i}
               className={`btn ${activePreset === i ? 'btn-primary' : 'btn-outline'} btn-sm`}
@@ -135,10 +162,10 @@ export default function WhatIfSimulator() {
       <div className="simulator-grid">
         {/* Input Panel */}
         <div className="simulator-panel">
-          <div className="card-title mb-2"><Calculator size={16} /> Configure Scenario</div>
+          <div className="card-title mb-2"><Calculator size={16} /> {language === 'kn' ? 'ಸನ್ನಿವೇಶ ಸಂರಚಿಸಿ' : language === 'hi' ? 'परिदृश्य निर्धारित करें' : 'Configure Scenario'}</div>
 
           <div className="form-group">
-            <label className="form-label">Monthly Saving / Reduction Amount (₹)</label>
+            <label className="form-label">{t('whatif_monthly_savings')} (₹)</label>
             <input
               className="form-input"
               type="number"
@@ -175,7 +202,7 @@ export default function WhatIfSimulator() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Assumed Annual Return (%): {annualReturn}%</label>
+            <label className="form-label">{t('whatif_return_rate')}: {annualReturn}%</label>
             <input
               type="range"
               min="0"
@@ -195,34 +222,38 @@ export default function WhatIfSimulator() {
           </div>
 
           <div className="disclaimer">
-            ℹ️ These are illustrative scenarios based on assumed returns. Actual investment returns are not guaranteed and may vary significantly.
+            {language === 'kn'
+              ? 'ℹ️ ಇವು ಊಹಿಸಲಾದ ಆದಾಯದ ಮೇಲಿನ ವಿವರಣಾತ್ಮಕ ಸನ್ನಿವೇಶಗಳಾಗಿವೆ. ನೈಜ ಹೂಡಿಕೆಯ ಆದಾಯಗಳು ಖಾತರಿಯಿಲ್ಲ ಮತ್ತು ಮಾರುಕಟ್ಟೆಗೆ ಒಳಪಟ್ಟಿರುತ್ತವೆ.'
+              : language === 'hi'
+              ? 'ℹ️ ये अनुमानित रिटर्न पर आधारित उदाहरणात्मक परिदृश्य हैं। वास्तविक निवेश रिटर्न की गारंटी नहीं है और यह भिन्न हो सकता है।'
+              : 'ℹ️ These are illustrative scenarios based on assumed returns. Actual investment returns are not guaranteed and may vary significantly.'}
           </div>
         </div>
 
         {/* Results Panel */}
         <div className="simulator-panel">
-          <div className="card-title mb-2"><TrendingUp size={16} /> Scenario Results</div>
+          <div className="card-title mb-2"><TrendingUp size={16} /> {language === 'kn' ? 'ಸನ್ನಿವೇಶದ ಫಲಿತಾಂಶಗಳು' : language === 'hi' ? 'परिदृश्य परिणाम' : 'Scenario Results'}</div>
 
           <div className="scenario-result">
             <div className="scenario-box">
-              <div className="scenario-label">Monthly</div>
+              <div className="scenario-label">{language === 'kn' ? 'ಮಾಸಿಕ' : language === 'hi' ? 'मासिक' : 'Monthly'}</div>
               <div className="scenario-value">₹{amount.toLocaleString('en-IN')}</div>
-              <div className="scenario-note">per month</div>
+              <div className="scenario-note">/{t('common_month')}</div>
             </div>
             <div className="scenario-box">
-              <div className="scenario-label">Total Saved</div>
+              <div className="scenario-label">{t('whatif_total_saved')}</div>
               <div className="scenario-value">₹{result.totalSaved.toLocaleString('en-IN')}</div>
-              <div className="scenario-note">in {months} months</div>
+              <div className="scenario-note">{months} {language === 'kn' ? 'ತಿಂಗಳುಗಳು' : language === 'hi' ? 'महीने' : 'months'}</div>
             </div>
             <div className="scenario-box" style={{ background: '#FFFDF9', borderColor: 'rgba(217, 119, 6, 0.25)' }}>
-              <div className="scenario-label">FD Value (est.)</div>
+              <div className="scenario-label">{language === 'kn' ? 'FD ಮೌಲ್ಯ (ಅಂದಾಜು)' : language === 'hi' ? 'FD मूल्य (अनुमानित)' : 'FD Value (est.)'}</div>
               <div className="scenario-value" style={{ color: 'var(--accent-dark)' }}>₹{result.fdValue.toLocaleString('en-IN')}</div>
-              <div className="scenario-note">@7% p.a. assumed</div>
+              <div className="scenario-note">@7% p.a.</div>
             </div>
             <div className="scenario-box" style={{ background: 'rgba(5, 150, 105, 0.06)', borderColor: 'rgba(5, 150, 105, 0.2)' }}>
-              <div className="scenario-label">Investment (est.)</div>
+              <div className="scenario-label">{language === 'kn' ? 'ಹೂಡಿಕೆ (ಅಂದಾಜು)' : language === 'hi' ? 'निवेश (अनुमानित)' : 'Investment (est.)'}</div>
               <div className="scenario-value" style={{ color: 'var(--success)' }}>₹{result.investedValue.toLocaleString('en-IN')}</div>
-              <div className="scenario-note">@{annualReturn}% p.a. assumed</div>
+              <div className="scenario-note">@{annualReturn}% p.a.</div>
             </div>
           </div>
 
@@ -232,7 +263,11 @@ export default function WhatIfSimulator() {
               borderRadius: 'var(--radius-md)', border: '1px solid rgba(252,108,38,0.2)'
             }}>
               <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-                💡 By saving ₹{amount.toLocaleString('en-IN')}/month for {months} months, your total saved amount of ₹{result.totalSaved.toLocaleString('en-IN')} could illustratively grow to ₹{result.investedValue.toLocaleString('en-IN')} — an estimated gain of <span style={{ color: 'var(--success)', fontWeight: 600 }}>₹{result.estimatedGrowth.toLocaleString('en-IN')}</span> under the assumed {annualReturn}% annual return.
+                {language === 'kn'
+                  ? `💡 ತಿಂಗಳಿಗೆ ₹${amount.toLocaleString('en-IN')} ರಂತೆ ${months} ತಿಂಗಳು ಉಳಿಸುವ ಮೂಲಕ, ನಿಮ್ಮ ಒಟ್ಟು ₹${result.totalSaved.toLocaleString('en-IN')} ನಗದು ಸುಮಾರು ₹${result.investedValue.toLocaleString('en-IN')} ಆಗಿ ಬೆಳೆಯಬಹುದು — ಅಂದಾಜು ಗಳಿಕೆ ₹${result.estimatedGrowth.toLocaleString('en-IN')} (${annualReturn}% ಆದಾಯದಲ್ಲಿ).`
+                  : language === 'hi'
+                  ? `💡 प्रति माह ₹${amount.toLocaleString('en-IN')} बचाकर ${months} महीनों में, आपकी कुल ₹${result.totalSaved.toLocaleString('en-IN')} की बचत अनुमानित रूप से ₹${result.investedValue.toLocaleString('en-IN')} तक बढ़ सकती है — ${annualReturn}% वार्षिक रिटर्न पर लगभग ₹${result.estimatedGrowth.toLocaleString('en-IN')} का लाभ!`
+                  : `💡 By saving ₹${amount.toLocaleString('en-IN')}/month for ${months} months, your total saved amount of ₹${result.totalSaved.toLocaleString('en-IN')} could illustratively grow to ₹${result.investedValue.toLocaleString('en-IN')} — an estimated gain of ₹${result.estimatedGrowth.toLocaleString('en-IN')} under the assumed ${annualReturn}% annual return.`}
               </p>
             </div>
           )}

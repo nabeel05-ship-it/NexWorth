@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import LanguageSwitcher from './LanguageSwitcher';
 import { Target, Plus, Edit3, Trash2, Calendar } from 'lucide-react';
 
 const GOAL_ICONS = ['💻', '✈️', '🛡️', '📚', '🏠', '🚗', '💍', '📱', '🎓', '🏖️', '💰', '🎯'];
 
 export default function GoalPlanner() {
-  const { state, dispatch } = useApp();
+  const { state, dispatch, t, language } = useApp();
   const { goals } = state;
 
   const [showForm, setShowForm] = useState(false);
@@ -52,7 +53,7 @@ export default function GoalPlanner() {
   };
 
   const handleDelete = (id) => {
-    if (confirm('Delete this goal?')) {
+    if (confirm(language === 'kn' ? 'ಈ ಗುರಿಯನ್ನು ಅಳಿಸಲು ನೀವು ಖಚಿತವಾಗಿದ್ದೀರಾ?' : language === 'hi' ? 'क्या आप इस लक्ष्य को हटाना चाहते हैं?' : 'Delete this goal?')) {
       dispatch({ type: 'DELETE_GOAL', payload: id });
     }
   };
@@ -69,14 +70,15 @@ export default function GoalPlanner() {
 
   return (
     <div>
-      <div className="page-header">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2>Financial Goals</h2>
-            <p className="subtitle">Set targets, track progress, and plan your savings</p>
-          </div>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h2>{t('goal_title')}</h2>
+          <p className="subtitle">{t('goal_subtitle')}</p>
+        </div>
+        <div className="flex items-center gap-2" style={{ flexWrap: 'wrap' }}>
+          <LanguageSwitcher />
           <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditId(null); setFormData({ name: '', targetAmount: '', currentAmount: '', targetDate: '', icon: '🎯' }); }}>
-            <Plus size={16} /> New Goal
+            <Plus size={16} /> {t('goal_new_btn')}
           </button>
         </div>
       </div>
@@ -86,13 +88,13 @@ export default function GoalPlanner() {
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowForm(false); }}>
           <div className="modal">
             <div className="modal-header">
-              <h3>{editId ? 'Edit Goal' : 'Create New Goal'}</h3>
+              <h3>{editId ? t('goal_edit_title') : t('goal_create_title')}</h3>
               <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
             </div>
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
                 <div className="form-group">
-                  <label className="form-label">Choose Icon</label>
+                  <label className="form-label">{t('goal_choose_icon')}</label>
                   <div className="flex gap-1" style={{ flexWrap: 'wrap' }}>
                     {GOAL_ICONS.map(icon => (
                       <button
@@ -113,7 +115,7 @@ export default function GoalPlanner() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Goal Name</label>
+                  <label className="form-label">{t('goal_name_label')}</label>
                   <input
                     className="form-input"
                     type="text"
@@ -126,7 +128,7 @@ export default function GoalPlanner() {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label className="form-label">Target Amount (₹)</label>
+                    <label className="form-label">{t('goal_target_label')}</label>
                     <input
                       className="form-input"
                       type="number"
@@ -138,7 +140,7 @@ export default function GoalPlanner() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Currently Saved (₹)</label>
+                    <label className="form-label">{t('goal_current_label')}</label>
                     <input
                       className="form-input"
                       type="number"
@@ -151,7 +153,7 @@ export default function GoalPlanner() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Target Date</label>
+                  <label className="form-label">{t('goal_date_label')}</label>
                   <input
                     className="form-input"
                     type="date"
@@ -161,8 +163,8 @@ export default function GoalPlanner() {
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">{editId ? 'Update Goal' : 'Create Goal'}</button>
+                <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)}>{t('goal_cancel_btn')}</button>
+                <button type="submit" className="btn btn-primary">{editId ? t('goal_update_btn') : t('goal_save_btn')}</button>
               </div>
             </form>
           </div>
@@ -174,10 +176,9 @@ export default function GoalPlanner() {
         <div className="card">
           <div className="empty-state">
             <div className="empty-icon">🎯</div>
-            <h4>No goals yet</h4>
-            <p className="text-muted mt-1">Create your first financial goal to start tracking progress.</p>
+            <h4>{t('goal_no_goals')}</h4>
             <button className="btn btn-primary mt-2" onClick={() => setShowForm(true)}>
-              <Plus size={16} /> Create Goal
+              <Plus size={16} /> {t('goal_new_btn')}
             </button>
           </div>
         </div>
@@ -199,7 +200,7 @@ export default function GoalPlanner() {
                     padding: '4px 10px', background: 'var(--success-bg)',
                     borderRadius: 20, fontSize: 11, fontWeight: 600, color: 'var(--success)'
                   }}>
-                    ✅ Complete!
+                    {t('goal_reached')}
                   </div>
                 )}
 
@@ -223,7 +224,11 @@ export default function GoalPlanner() {
 
                 {!isComplete && (
                   <div style={{ marginTop: 14, padding: '10px 14px', background: '#FFF7EE', border: '1px solid rgba(252, 108, 38, 0.15)', borderRadius: 'var(--radius-sm)', fontSize: 13, color: 'var(--text-secondary)' }}>
-                    Need ~₹{monthlyNeeded.toLocaleString('en-IN')}/month for {monthsLeft} months
+                    {language === 'kn'
+                      ? `${monthsLeft} ತಿಂಗಳುಗಳಿಗೆ ತಿಂಗಳಿಗೆ ~₹${monthlyNeeded.toLocaleString('en-IN')} ಅಗತ್ಯವಿದೆ`
+                      : language === 'hi'
+                      ? `${monthsLeft} महीनों के लिए प्रति माह ~₹${monthlyNeeded.toLocaleString('en-IN')} की आवश्यकता है`
+                      : `Need ~₹${monthlyNeeded.toLocaleString('en-IN')}/month for ${monthsLeft} months`}
                   </div>
                 )}
 
@@ -232,7 +237,7 @@ export default function GoalPlanner() {
                     <Calendar size={12} />
                     {targetDate.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
                   </span>
-                  <span>₹{remaining.toLocaleString('en-IN')} remaining</span>
+                  <span>₹{remaining.toLocaleString('en-IN')} {t('goal_remaining')}</span>
                 </div>
 
                 <div className="flex gap-1 mt-2">

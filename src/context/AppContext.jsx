@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState, useCallback } from 'react';
 import { DEMO_EXPENSES, DEMO_GOALS, DEFAULT_USER } from '../utils/demoData';
 import { fetchDbStatus, fetchExpensesFromDb, saveExpenseToDb, deleteExpenseFromDb, syncExpensesToDb } from '../utils/api';
+import { getTranslation, LANGUAGES } from '../utils/translations';
 
 const AppContext = createContext();
 
@@ -9,6 +10,7 @@ const initialState = {
   expenses: DEMO_EXPENSES,
   goals: DEMO_GOALS,
   currentPage: 'dashboard',
+  language: 'en',
   isOnboarded: true,
   darkMode: true,
   pendingChatQuery: null,
@@ -18,6 +20,9 @@ function appReducer(state, action) {
   switch (action.type) {
     case 'SET_PAGE':
       return { ...state, currentPage: action.payload };
+
+    case 'SET_LANGUAGE':
+      return { ...state, language: action.payload };
 
     case 'SET_CHAT_QUERY':
       return { ...state, pendingChatQuery: action.payload, currentPage: 'ai-chat' };
@@ -238,8 +243,20 @@ export function AppProvider({ children }) {
     }
   };
 
+  const currentLanguage = state.language || 'en';
+  const t = useCallback((key) => getTranslation(key, currentLanguage), [currentLanguage]);
+  const setLanguage = useCallback((lang) => enhancedDispatch({ type: 'SET_LANGUAGE', payload: lang }), []);
+
   return (
-    <AppContext.Provider value={{ state, dispatch: enhancedDispatch, mongoStatus }}>
+    <AppContext.Provider value={{
+      state,
+      dispatch: enhancedDispatch,
+      mongoStatus,
+      language: currentLanguage,
+      setLanguage,
+      languages: LANGUAGES,
+      t,
+    }}>
       {children}
     </AppContext.Provider>
   );
@@ -251,4 +268,9 @@ export function useApp() {
     throw new Error('useApp must be used within an AppProvider');
   }
   return context;
+}
+
+export function useTranslation() {
+  const { t, language, setLanguage, languages } = useApp();
+  return { t, language, setLanguage, languages };
 }

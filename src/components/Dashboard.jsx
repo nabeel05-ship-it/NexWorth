@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import LanguageSwitcher from './LanguageSwitcher';
 import { CATEGORIES, MONTH_NAMES } from '../utils/demoData';
 import { getMonthlyOverview, generateInsights, generateExpenseStory } from '../utils/aiEngine';
 import {
@@ -12,7 +13,7 @@ import { TrendingUp, TrendingDown, ArrowRight, Sparkles, Target } from 'lucide-r
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Filler);
 
 export default function Dashboard() {
-  const { state, dispatch } = useApp();
+  const { state, dispatch, t } = useApp();
   const { expenses, user, goals } = state;
 
   const overview = useMemo(() => getMonthlyOverview(expenses, user.monthlyIncome), [expenses, user.monthlyIncome]);
@@ -163,22 +164,27 @@ export default function Dashboard() {
   return (
     <div>
       <div className="page-header">
-        <h2>Dashboard</h2>
-        <p className="subtitle">{monthName} {now.getFullYear()} — Financial Overview</p>
+        <div className="flex justify-between items-center" style={{ flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <h2>{t('nav_dashboard')}</h2>
+            <p className="subtitle">{monthName} {now.getFullYear()} — {t('dash_subtitle')}</p>
+          </div>
+          <LanguageSwitcher compact={false} />
+        </div>
       </div>
 
       {/* AI Story Card */}
       <div className="card card-glow mb-3" style={{ background: 'linear-gradient(135deg, #FFF7F0 0%, #FFF1E3 100%)', border: '1px solid rgba(252, 108, 38, 0.25)' }}>
         <div className="flex justify-between items-center mb-1" style={{ flexWrap: 'wrap', gap: 8 }}>
           <div className="flex items-center gap-1">
-            <span className="ai-badge"><Sparkles size={12} /> AI Expense Story</span>
+            <span className="ai-badge"><Sparkles size={12} /> {t('ins_story_title')}</span>
           </div>
           <button 
             className="btn btn-ghost btn-sm" 
             style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600 }}
             onClick={() => dispatch({ type: 'SET_PAGE', payload: 'insights' })}
           >
-            Explore AI Spending Pattern 🧬 →
+            {t('ins_pattern_title')} 🧬 →
           </button>
         </div>
         <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 12 }}>{story}</p>
@@ -197,14 +203,14 @@ export default function Dashboard() {
         }}>
           <div style={{ fontSize: 13, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
             <span>💡</span>
-            <span><strong>Pattern Leak:</strong> ₹2,100 spent in frequent micro-transactions. Reducing just ₹500/mo saves <strong>₹6,000/yr</strong> for your Laptop Goal.</span>
+            <span><strong>{t('ins_micro_title')}:</strong> ₹2,100 spent in frequent micro-transactions. Reducing just ₹500/mo saves <strong>₹6,000/yr</strong> for your Laptop Goal.</span>
           </div>
           <button
             className="btn btn-primary btn-sm"
             style={{ fontSize: 12, padding: '6px 12px' }}
             onClick={() => dispatch({ type: 'SET_CHAT_QUERY', payload: 'Agar ₹500 kam spend karu?' })}
           >
-            Ask Your Money 💬
+            {t('nav_ai_chat')} 💬
           </button>
         </div>
       </div>
@@ -213,12 +219,12 @@ export default function Dashboard() {
       <div className="stat-grid">
         <div className="stat-card">
           <div className="stat-icon apricot">💰</div>
-          <div className="stat-label">Monthly Income</div>
+          <div className="stat-label">{t('dash_income')}</div>
           <div className="stat-value">₹{user.monthlyIncome.toLocaleString('en-IN')}</div>
         </div>
         <div className="stat-card">
           <div className="stat-icon purple">📊</div>
-          <div className="stat-label">Total Expenses</div>
+          <div className="stat-label">{t('dash_expenses')}</div>
           <div className="stat-value">₹{overview.currentTotal.toLocaleString('en-IN')}</div>
           <div className={`stat-change ${spendingChange > 0 ? 'negative' : 'positive'}`}>
             {spendingChange > 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
@@ -227,17 +233,17 @@ export default function Dashboard() {
         </div>
         <div className="stat-card">
           <div className="stat-icon green">💵</div>
-          <div className="stat-label">Savings</div>
+          <div className="stat-label">{t('dash_savings')}</div>
           <div className="stat-value" style={{ color: overview.savings >= 0 ? 'var(--success)' : 'var(--danger)' }}>
             ₹{overview.savings.toLocaleString('en-IN')}
           </div>
           <div className="stat-change" style={{ color: 'var(--text-muted)' }}>
-            {overview.savingsRate}% savings rate
+            {overview.savingsRate}% {t('dash_savings_rate')}
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon red">🏷️</div>
-          <div className="stat-label">Top Expense</div>
+          <div className="stat-label">{t('dash_spending_category')}</div>
           <div className="stat-value" style={{ fontSize: 20 }}>
             {CATEGORIES.find(c => c.id === overview.topCategory)?.icon} {CATEGORIES.find(c => c.id === overview.topCategory)?.name}
           </div>
@@ -342,9 +348,9 @@ export default function Dashboard() {
 
         <div className="card">
           <div className="card-header">
-            <div className="card-title"><span className="card-icon">📝</span> Recent Transactions</div>
+            <div className="card-title"><span className="card-icon">📝</span> {t('dash_recent_transactions')}</div>
             <button className="btn btn-ghost btn-sm" onClick={() => dispatch({ type: 'SET_PAGE', payload: 'add-expense' })}>
-              View All <ArrowRight size={14} />
+              {t('dash_view_all')} <ArrowRight size={14} />
             </button>
           </div>
           <ul className="expense-list">

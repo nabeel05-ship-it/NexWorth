@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import LanguageSwitcher from './LanguageSwitcher';
 import { CATEGORIES, MONTH_NAMES } from '../utils/demoData';
 import { PlusCircle, Edit3, Trash2, Search, Filter, CheckCircle2, ArrowUpDown } from 'lucide-react';
 
 export default function ExpenseForm() {
-  const { state, dispatch } = useApp();
+  const { state, dispatch, t } = useApp();
   const { expenses = [] } = state;
 
   const [showForm, setShowForm] = useState(false);
@@ -229,14 +230,15 @@ export default function ExpenseForm() {
       <div className="page-header">
         <div className="flex justify-between items-center" style={{ flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <h2>Expenses</h2>
-            <p className="subtitle">
-              Track, organize, and manage all your cash and digital transactions in one place.
-            </p>
+            <h2>{t('exp_title')}</h2>
+            <p className="subtitle">{t('exp_subtitle')}</p>
           </div>
-          <button className="btn btn-primary" onClick={() => openAddModal('UPI')}>
-            <PlusCircle size={16} /> Add Expense
-          </button>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher compact={false} />
+            <button className="btn btn-primary" onClick={() => openAddModal('UPI')}>
+              <PlusCircle size={16} /> {t('exp_add_btn')}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -246,9 +248,9 @@ export default function ExpenseForm() {
           <div className="modal" style={{ maxWidth: 540 }}>
             <div className="modal-header">
               <div>
-                <h3 style={{ margin: 0 }}>{editId ? 'Edit Expense' : 'Add New Expense'}</h3>
+                <h3 style={{ margin: 0 }}>{editId ? t('exp_edit_modal_title') : t('exp_add_modal_title')}</h3>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  Enter transaction details below. Choose Cash or digital payment methods.
+                  {t('exp_modal_subtitle')}
                 </div>
               </div>
               <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
@@ -257,7 +259,7 @@ export default function ExpenseForm() {
               <div className="modal-body">
                 {/* Quick Payment Method Pills */}
                 <div className="form-group mb-2">
-                  <label className="form-label" style={{ marginBottom: 6 }}>Payment Method</label>
+                  <label className="form-label" style={{ marginBottom: 6 }}>{t('exp_payment_label')}</label>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {paymentButtons.map(pm => {
                       const isActive = formData.paymentMethod === pm.id;
@@ -286,11 +288,11 @@ export default function ExpenseForm() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Expense Name / Merchant</label>
+                  <label className="form-label">{t('exp_name_label')}</label>
                   <input
                     className="form-input"
                     type="text"
-                    placeholder="e.g., Swiggy, Tea Shop, Amazon, Metro Recharge"
+                    placeholder={t('exp_name_placeholder')}
                     value={formData.name}
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                     required
@@ -300,7 +302,7 @@ export default function ExpenseForm() {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label className="form-label">Amount (₹)</label>
+                    <label className="form-label">{t('exp_amount_label')}</label>
                     <input
                       className="form-input"
                       type="number"
@@ -313,21 +315,21 @@ export default function ExpenseForm() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Category</label>
+                    <label className="form-label">{t('exp_category_label')}</label>
                     <select
                       className="form-select"
                       value={formData.category}
                       onChange={e => setFormData({ ...formData, category: e.target.value })}
                     >
                       {CATEGORIES.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
+                        <option key={cat.id} value={cat.id}>{cat.icon} {t(`cat_${cat.id}`) || cat.name}</option>
                       ))}
                     </select>
                   </div>
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Date</label>
+                  <label className="form-label">{t('exp_date_label')}</label>
                   <input
                     className="form-input"
                     type="date"
@@ -338,10 +340,10 @@ export default function ExpenseForm() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Note (optional)</label>
+                  <label className="form-label">{t('exp_note_label')}</label>
                   <textarea
                     className="form-textarea"
-                    placeholder="Add brief note (e.g. Lunch with friends, chai break)..."
+                    placeholder={t('exp_note_placeholder')}
                     value={formData.note}
                     onChange={e => setFormData({ ...formData, note: e.target.value })}
                     rows={2}
@@ -351,10 +353,10 @@ export default function ExpenseForm() {
 
               <div className="modal-footer">
                 <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)}>
-                  Cancel
+                  {t('exp_cancel_btn')}
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  {editId ? 'Update Expense' : 'Add Expense'}
+                  {editId ? t('exp_update_btn') : t('exp_save_btn')}
                 </button>
               </div>
             </form>
@@ -368,14 +370,14 @@ export default function ExpenseForm() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                Showing {filteredExpenses.length} transactions:
+                {t('exp_showing')} {filteredExpenses.length} {t('exp_transactions')}:
               </span>
               <span style={{ fontSize: 20, fontWeight: 700, fontFamily: "'Space Grotesk'", color: 'var(--text)' }}>
                 ₹{totalShown.toLocaleString('en-IN')}
               </span>
               {cashTotal > 0 && (
                 <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, background: '#E6F4EA', color: '#137333', fontWeight: 600 }}>
-                  💵 Cash: ₹{cashTotal.toLocaleString('en-IN')}
+                  💵 {t('exp_cash_total')}: ₹{cashTotal.toLocaleString('en-IN')}
                 </span>
               )}
             </div>
@@ -388,7 +390,7 @@ export default function ExpenseForm() {
               <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input
                 className="form-input"
-                placeholder="Search expense or note..."
+                placeholder={t('exp_search_placeholder')}
                 style={{ paddingLeft: 30, maxWidth: 190, fontSize: 13 }}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
@@ -402,7 +404,7 @@ export default function ExpenseForm() {
               onChange={e => setFilterMonth(e.target.value)}
               style={{ maxWidth: 150, fontSize: 13 }}
             >
-              <option value="all">All Months</option>
+              <option value="all">{t('exp_filter_month')}</option>
               {availableMonths.map(mKey => {
                 const [y, m] = mKey.split('-');
                 const monthName = MONTH_NAMES[parseInt(m, 10) - 1] || m;
@@ -421,9 +423,9 @@ export default function ExpenseForm() {
               onChange={e => setFilterCategory(e.target.value)}
               style={{ maxWidth: 140, fontSize: 13 }}
             >
-              <option value="all">All Categories</option>
+              <option value="all">{t('exp_filter_category')}</option>
               {CATEGORIES.map(cat => (
-                <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
+                <option key={cat.id} value={cat.id}>{cat.icon} {t(`cat_${cat.id}`) || cat.name}</option>
               ))}
             </select>
 
@@ -434,8 +436,8 @@ export default function ExpenseForm() {
               onChange={e => setFilterPayment(e.target.value)}
               style={{ maxWidth: 130, fontSize: 13 }}
             >
-              <option value="all">All Modes</option>
-              <option value="Cash">💵 Cash</option>
+              <option value="all">{t('exp_filter_mode')}</option>
+              <option value="Cash">💵 {t('pay_cash')}</option>
               <option value="UPI">📱 UPI</option>
               <option value="Card">💳 Card</option>
             </select>
@@ -448,12 +450,12 @@ export default function ExpenseForm() {
         {filteredExpenses.length === 0 ? (
           <div className="empty-state" style={{ padding: '40px 20px', textAlign: 'center' }}>
             <div className="empty-icon" style={{ fontSize: 36, marginBottom: 10 }}>📭</div>
-            <h4 style={{ margin: '0 0 6px' }}>No expenses found</h4>
+            <h4 style={{ margin: '0 0 6px' }}>{t('exp_no_found')}</h4>
             <p className="text-muted mt-1" style={{ fontSize: 13, margin: '0 0 16px' }}>
-              No transactions match your active filters, or you haven't added an expense yet.
+              {t('exp_no_found_desc')}
             </p>
             <button className="btn btn-primary btn-sm" onClick={() => openAddModal('UPI')}>
-              <PlusCircle size={14} /> Add First Expense
+              <PlusCircle size={14} /> {t('exp_add_first')}
             </button>
           </div>
         ) : (

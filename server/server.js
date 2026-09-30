@@ -290,7 +290,7 @@ app.delete('/api/goals/:id', async (req, res) => {
 
 // 5. Gemini 2.5 Flash AI Assistant (Ask Your Money)
 app.post('/api/ai/chat', async (req, res) => {
-  const { query, expenses = [], income = 25000, budgets = {}, goals = [], overview = {}, patterns = {} } = req.body;
+  const { query, expenses = [], income = 25000, budgets = {}, goals = [], overview = {}, patterns = {}, language = 'en' } = req.body;
   if (!query) {
     return res.status(400).json({ error: 'Query is required' });
   }
@@ -336,7 +336,11 @@ app.post('/api/ai/chat', async (req, res) => {
       appliedAmount: effectiveAmount,
       appliedGoalName: laptopGoal.name,
       model: 'gemini-2.5-flash',
-      text: `🎉 **Goal Updated Successfully!**\n\nApplied **+₹${effectiveAmount.toLocaleString('en-IN')}** simulated savings to your **${laptopGoal.name} Goal**!\n\n• Target: ₹${laptopGoal.targetAmount.toLocaleString('en-IN')}\n• Previously Saved: ₹${prevAmount.toLocaleString('en-IN')} (${Math.round((prevAmount / laptopGoal.targetAmount) * 100)}%)\n• New Progress: ₹${newAmount.toLocaleString('en-IN')} (${newPercent}% reached!)\n• Remaining: ₹${Math.max(0, laptopGoal.targetAmount - newAmount).toLocaleString('en-IN')}\n\nYou're now 68% of the way there and projected to reach your ${laptopGoal.name} goal 3 months sooner! 🎯`,
+      text: language === 'kn'
+        ? `🎉 **ಗುರಿ ಯಶಸ್ವಿಯಾಗಿ ನವೀಕರಿಸಲಾಗಿದೆ!**\n\nನಿಮ್ಮ **${laptopGoal.name} ಗುರಿಗೆ** +₹${effectiveAmount.toLocaleString('en-IN')} ಮೊತ್ತವನ್ನು ಸೇರಿಸಲಾಗಿದೆ!\n\n• ಗುರಿಯ ಮೊತ್ತ: ₹${laptopGoal.targetAmount.toLocaleString('en-IN')}\n• ಹೊಸ ಪ್ರಗತಿ: ₹${newAmount.toLocaleString('en-IN')} (${newPercent}% ಪೂರ್ಣಗೊಂಡಿದೆ!)\n• ಬಾಕಿ ಮೊತ್ತ: ₹${Math.max(0, laptopGoal.targetAmount - newAmount).toLocaleString('en-IN')} 🎯`
+        : language === 'hi'
+        ? `🎉 **लक्ष्य सफलतापूर्वक अपडेट हुआ!**\n\nआपके **${laptopGoal.name} लक्ष्य** में +₹${effectiveAmount.toLocaleString('en-IN')} की बचत जोड़ दी गई है!\n\n• कुल लक्ष्य: ₹${laptopGoal.targetAmount.toLocaleString('en-IN')}\n• नई प्रगति: ₹${newAmount.toLocaleString('en-IN')} (${newPercent}% पूरा हुआ!)\n• शेष राशि: ₹${Math.max(0, laptopGoal.targetAmount - newAmount).toLocaleString('en-IN')} 🎯`
+        : `🎉 **Goal Updated Successfully!**\n\nApplied **+₹${effectiveAmount.toLocaleString('en-IN')}** simulated savings to your **${laptopGoal.name} Goal**!\n\n• Target: ₹${laptopGoal.targetAmount.toLocaleString('en-IN')}\n• Previously Saved: ₹${prevAmount.toLocaleString('en-IN')} (${Math.round((prevAmount / laptopGoal.targetAmount) * 100)}%)\n• New Progress: ₹${newAmount.toLocaleString('en-IN')} (${newPercent}% reached!)\n• Remaining: ₹${Math.max(0, laptopGoal.targetAmount - newAmount).toLocaleString('en-IN')} 🎯`,
       followUps: [
         'View Laptop Goal in Planner 🎯',
         'What if I invest ₹2,000 per month? 📈',
@@ -366,6 +370,14 @@ app.post('/api/ai/chat', async (req, res) => {
     projectedGoalAmount,
   };
 
+  // Language instruction for Gemini
+  let langInstruction = 'Respond in warm, clear, empowering English.';
+  if (language === 'kn') {
+    langInstruction = 'Respond in natural, friendly Kannada (ಕನ್ನಡ) script or bilingual Kannada-English as appropriate. Use proper Kannada financial terms (ಉಳಿತಾಯ, ಖರ್ಚು, ಗುರಿ).';
+  } else if (language === 'hi') {
+    langInstruction = 'Respond in natural, friendly Hindi (हिंदी / Hinglish). Use clear, everyday Indian financial terms that users relate to.';
+  }
+
   // If Gemini API Key is available, call Gemini 2.5 Flash
   if (geminiKey) {
     try {
@@ -376,9 +388,7 @@ USER DATA:
 - Monthly Income: ₹${Number(income).toLocaleString('en-IN')}
 - Total Expenses: ₹${(overview?.currentTotal || 16428).toLocaleString('en-IN')}
 - Top Spending Category: ${overview?.topCategory || 'Food'} (₹${(overview?.topAmount || 4200).toLocaleString('en-IN')})
-- Micro-Transactions (<₹250): ₹${(patterns?.totalSmallValue || 2100).toLocaleString('en-IN')} across ${patterns?.allSmallCount || 11} transactions (Tea, coffee, snacks, auto)
-- Weekend Spending: ${patterns?.weekendPct || 54}% of discretionary spending occurs over weekends
-- Recurring Subscriptions: ₹${(patterns?.recurringTotal || 2448).toLocaleString('en-IN')}/month (Netflix, WiFi, Gym)
+- Micro-Transactions (<₹250): ₹${(patterns?.totalSmallValue || 2100).toLocaleString('en-IN')} across ${patterns?.allSmallCount || 11} transactions
 - Primary Goal: ${laptopGoal.name} (Target: ₹${laptopGoal.targetAmount.toLocaleString('en-IN')}, Saved: ₹${(laptopGoal.currentAmount || 35000).toLocaleString('en-IN')})
 
 PRE-CALCULATED FINANCIAL ENGINE RESULTS (USE EXACTLY THESE DETERMINISTIC VALUES):
@@ -389,10 +399,10 @@ PRE-CALCULATED FINANCIAL ENGINE RESULTS (USE EXACTLY THESE DETERMINISTIC VALUES)
 - Goal Impact: Laptop Goal progresses from ${Math.round(((laptopGoal.currentAmount || 35000) / laptopGoal.targetAmount) * 100)}% to ${Math.round((projectedGoalAmount / laptopGoal.targetAmount) * 100)}% (+₹${twelveMonths.toLocaleString('en-IN')} contribution)
 
 RULES:
-1. Language: If user asks in Hindi/Hinglish (e.g., "Agar ₹500 kam spend karu?"), respond naturally in warm, friendly, clear Hinglish/Hindi or English matching their style.
-2. Tone: Strictly non-judgmental, empowering, transparent. Never say "you wasted money" or "bad spending". Say "Your recorded spending shows...", "Reducing this could create...".
+1. Language: ${langInstruction}
+2. Tone: Strictly non-judgmental, empowering, transparent. Never say "you wasted money". Say "Your recorded spending shows...", "Saving this amount creates...".
 3. Length: Keep it concise, engaging, and directly actionable (2-3 short paragraphs or bullet points).
-4. Highlight how the calculated ₹${twelveMonths.toLocaleString('en-IN')} savings over 12 months directly helps achieve their ${laptopGoal.name} Goal.
+4. Connect this directly to their ${laptopGoal.name} Goal.
 
 User Question: "${query}"`;
 
