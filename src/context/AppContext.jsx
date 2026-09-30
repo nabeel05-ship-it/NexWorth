@@ -167,17 +167,56 @@ export function AppProvider({ children }) {
   });
 
   const [state, dispatch] = useReducer(appReducer, initialState, (initial) => {
+    let base = initial;
     try {
       const saved = localStorage.getItem('nexworth_state');
       if (saved) {
-        const parsed = JSON.parse(saved);
-        return { ...initial, ...parsed };
+        base = { ...initial, ...JSON.parse(saved) };
       }
     } catch (e) {
       // Local storage fallback
     }
-    return initial;
+
+    // Support deep linking from email alerts (e.g. ?page=ai-chat or #ai-chat)
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const urlPage = params.get('page') || window.location.hash.replace('#', '').trim();
+        const validPages = ['dashboard', 'capture', 'add-expense', 'insights', 'what-if', 'goals', 'compare', 'calculator', 'forecast', 'ai-chat', 'privacy'];
+        if (urlPage && validPages.includes(urlPage)) {
+          base.currentPage = urlPage;
+        }
+      } catch (err) {
+        // Fallback
+      }
+    }
+
+    return base;
   });
+
+  // Listen to URL navigation (e.g. when clicking email link or changing URL hash)
+  useEffect(() => {
+    const handleUrlNavigation = () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const urlPage = params.get('page') || window.location.hash.replace('#', '').trim();
+        const validPages = ['dashboard', 'capture', 'add-expense', 'insights', 'what-if', 'goals', 'compare', 'calculator', 'forecast', 'ai-chat', 'privacy'];
+        if (urlPage && validPages.includes(urlPage)) {
+          dispatch({ type: 'SET_PAGE', payload: urlPage });
+        }
+      } catch (err) {
+        // Fallback
+      }
+    };
+
+    handleUrlNavigation();
+    window.addEventListener('popstate', handleUrlNavigation);
+    window.addEventListener('hashchange', handleUrlNavigation);
+    return () => {
+      window.removeEventListener('popstate', handleUrlNavigation);
+      window.removeEventListener('hashchange', handleUrlNavigation);
+    };
+  }, []);
 
   // Sync to localStorage
   useEffect(() => {

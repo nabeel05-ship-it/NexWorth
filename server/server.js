@@ -569,7 +569,7 @@ function generateOverBudgetEmailHtml({ currentTotal, monthlyIncome, deficit, mon
       </div>
 
       <div style="text-align: center; margin-top: 12px;">
-        <a href="http://localhost:5173" class="btn">Open Ask Your Money Assistant →</a>
+        <a href="${(process.env.CLIENT_URL || process.env.APP_URL || 'https://nexworth-ten.vercel.app').replace(/\/+$/, '')}/?page=ai-chat" class="btn" target="_blank" rel="noopener noreferrer">Open Ask Your Money Assistant →</a>
       </div>
     </div>
     <div class="footer">
@@ -637,9 +637,13 @@ function generateTestEmailHtml(toEmail) {
         </div>
       </div>
 
-      <p style="font-size: 13.5px; color: #655E57; line-height: 1.6; margin: 0;">
+      <p style="font-size: 13.5px; color: #655E57; line-height: 1.6; margin: 0 0 16px;">
         When recorded expenses exceed monthly income, NexWorth will trigger an automated high-priority financial alert to this email address.
       </p>
+
+      <div style="text-align: center; margin-top: 18px;">
+        <a href="${(process.env.CLIENT_URL || process.env.APP_URL || 'https://nexworth-ten.vercel.app').replace(/\/+$/, '')}/?page=ai-chat" style="display: inline-block; background: #FC6C26; color: #FFFFFF; padding: 12px 28px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px; box-shadow: 0 4px 12px rgba(252, 108, 38, 0.3);" target="_blank" rel="noopener noreferrer">Open Ask Your Money Assistant →</a>
+      </div>
     </div>
     <div class="footer">
       NexWorth AI Financial Intelligence • Automated Notification System
