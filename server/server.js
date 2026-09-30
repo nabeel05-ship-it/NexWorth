@@ -68,25 +68,69 @@ app.get('/api/status', (req, res) => {
   });
 });
 
+// In-memory fallback expenses store when MongoDB Atlas connection is pending or IP not whitelisted
+let inMemoryExpenses = [];
+
 // 2. Expenses APIs
 app.get('/api/expenses', async (req, res) => {
-  try {
-    const expenses = await Expense.find().sort({ date: -1, createdAt: -1 });
-    res.json(expenses);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  if (mongoose.connection.readyState === 1) {
+    try {
+      const expenses = await Expense.find().sort({ date: -1, createdAt: -1 });
+      const formatted = expenses.map(e => {
+        const obj = e.toObject();
+        return {
+          ...obj,
+          id: obj._id.toString(),
+          name: obj.merchant || obj.name,
+        };
+      });
+      return res.json(formatted);
+    } catch (err) {
+      console.warn('MongoDB query error, falling back to memory:', err.message);
+    }
   }
+  res.json(inMemoryExpenses);
 });
 
 app.post('/api/expenses', async (req, res) => {
   try {
-    const { amount, merchant, category, date, paymentMethod, source, note, reference, rawMessage } = req.body;
+    const { amount, category, date, paymentMethod, source, note, reference, rawMessage } = req.body;
+    const merchant = (req.body.merchant || req.body.name || '').trim();
     if (!amount || !merchant) {
-      return res.status(400).json({ error: 'Amount and merchant are required' });
+      return res.status(400).json({ error: 'Amount and merchant/name are required' });
     }
-    const newExpense = new Expense({
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const newExpense = new Expense({
+          amount: Number(amount),
+          merchant,
+          category: category || 'Other',
+          date: date || new Date().toISOString().split('T')[0],
+          paymentMethod: paymentMethod || 'UPI',
+          source: source || 'manual',
+          note: note || '',
+          reference: reference || '',
+          rawMessage: rawMessage || '',
+        });
+        const saved = await newExpense.save();
+        const obj = saved.toObject();
+        obj.id = obj._id.toString();
+        obj.name = obj.merchant;
+        return res.status(201).json(obj);
+      } catch (err) {
+        console.warn('MongoDB save error, falling back to memory:', err.message);
+      }
+    }
+
+    // In-memory fallback
+    const id = `local_${Date.now()}`;
+    const newExpense = {
+      id,
+      _id: id,
       amount: Number(amount),
       merchant,
+      name: merchant,
       category: category || 'Other',
       date: date || new Date().toISOString().split('T')[0],
       paymentMethod: paymentMethod || 'UPI',
@@ -94,9 +138,10 @@ app.post('/api/expenses', async (req, res) => {
       note: note || '',
       reference: reference || '',
       rawMessage: rawMessage || '',
-    });
-    const saved = await newExpense.save();
-    res.status(201).json(saved);
+      createdAt: new Date().toISOString(),
+    };
+    inMemoryExpenses.unshift(newExpense);
+    res.status(201).json(newExpense);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -104,9 +149,32 @@ app.post('/api/expenses', async (req, res) => {
 
 app.put('/api/expenses/:id', async (req, res) => {
   try {
-    const updated = await Expense.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updated) return res.status(404).json({ error: 'Expense not found' });
-    res.json(updated);
+    const updateData = { ...req.body };
+    if (updateData.name && !updateData.merchant) {
+      updateData.merchant = updateData.name;
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const updated = await Expense.findByIdAndUpdate(req.params.id, updateData, { new: true });
+        if (updated) {
+          const obj = updated.toObject();
+          obj.id = obj._id.toString();
+          obj.name = obj.merchant;
+          return res.json(obj);
+        }
+      } catch (err) {
+        console.warn('MongoDB update error, updating in-memory:', err.message);
+      }
+    }
+
+    // In-memory update
+    const idx = inMemoryExpenses.findIndex(e => e.id === req.params.id || e._id === req.params.id);
+    if (idx !== -1) {
+      inMemoryExpenses[idx] = { ...inMemoryExpenses[idx], ...updateData };
+      return res.json(inMemoryExpenses[idx]);
+    }
+    res.json({ id: req.params.id, ...updateData });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -114,8 +182,14 @@ app.put('/api/expenses/:id', async (req, res) => {
 
 app.delete('/api/expenses/:id', async (req, res) => {
   try {
-    const deleted = await Expense.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ error: 'Expense not found' });
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await Expense.findByIdAndDelete(req.params.id);
+      } catch (err) {
+        console.warn('MongoDB delete error:', err.message);
+      }
+    }
+    inMemoryExpenses = inMemoryExpenses.filter(e => e.id !== req.params.id && e._id !== req.params.id);
     res.json({ message: 'Deleted successfully', id: req.params.id });
   } catch (err) {
     res.status(500).json({ error: err.message });

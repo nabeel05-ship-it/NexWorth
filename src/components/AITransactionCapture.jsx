@@ -83,13 +83,15 @@ export default function AITransactionCapture() {
 
     const dataToSave = isEditing && editData ? editData : detectedTxn;
 
+    const merchantName = (dataToSave.merchant || detectedTxn.merchant || 'Expense').trim();
     const expensePayload = {
-      name: dataToSave.merchant || detectedTxn.merchant,
+      name: merchantName,
+      merchant: merchantName,
       amount: parseFloat(dataToSave.amount || detectedTxn.amount),
-      category: dataToSave.category || detectedTxn.category,
+      category: (dataToSave.category || detectedTxn.category || 'other').toLowerCase(),
       date: new Date().toISOString(),
       note: `${detectedTxn.source || 'SMS'} Auto-Capture (${detectedTxn.paymentMethod || 'UPI'})`,
-      paymentMethod: dataToSave.paymentMethod || detectedTxn.paymentMethod,
+      paymentMethod: dataToSave.paymentMethod || detectedTxn.paymentMethod || 'UPI',
       source: detectedTxn.source || 'SMS',
     };
 

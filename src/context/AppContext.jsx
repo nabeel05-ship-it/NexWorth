@@ -47,20 +47,57 @@ function appReducer(state, action) {
     case 'SET_EXPENSES':
       return {
         ...state,
-        expenses: action.payload,
+        expenses: (action.payload || []).map((e, idx) => {
+          const id = e._id ? e._id.toString() : (e.id ? e.id.toString() : `exp_${Date.now()}_${idx}`);
+          return {
+            ...e,
+            id,
+            _id: id,
+            name: e.name || e.merchant || 'Expense',
+            merchant: e.merchant || e.name || 'Expense',
+            amount: Number(e.amount) || 0,
+            category: (e.category || 'other').toLowerCase(),
+          };
+        }),
       };
 
-    case 'ADD_EXPENSE':
+    case 'ADD_EXPENSE': {
+      const id = action.payload._id ? action.payload._id.toString() : (action.payload.id ? action.payload.id.toString() : `exp_${Date.now()}`);
+      const newExpense = {
+        ...action.payload,
+        id,
+        _id: id,
+        name: action.payload.name || action.payload.merchant || 'Expense',
+        merchant: action.payload.merchant || action.payload.name || 'Expense',
+        amount: Number(action.payload.amount) || 0,
+        category: (action.payload.category || 'other').toLowerCase(),
+        date: action.payload.date || new Date().toISOString(),
+        paymentMethod: action.payload.paymentMethod || 'UPI',
+        source: action.payload.source || 'Manual',
+        note: action.payload.note || '',
+      };
       return {
         ...state,
-        expenses: [{ id: action.payload._id || action.payload.id || Date.now(), ...action.payload }, ...state.expenses],
+        expenses: [newExpense, ...state.expenses],
       };
+    }
 
-    case 'UPDATE_EXPENSE':
+    case 'UPDATE_EXPENSE': {
+      const targetId = action.payload._id || action.payload.id;
       return {
         ...state,
-        expenses: state.expenses.map(e => ((e._id && e._id === action.payload._id) || e.id === action.payload.id ? action.payload : e)),
+        expenses: state.expenses.map(e => (e.id === targetId || e._id === targetId ? {
+          ...e,
+          ...action.payload,
+          id: targetId,
+          _id: targetId,
+          name: action.payload.name || action.payload.merchant || e.name,
+          merchant: action.payload.merchant || action.payload.name || e.merchant,
+          amount: Number(action.payload.amount) || e.amount,
+          category: (action.payload.category || e.category || 'other').toLowerCase(),
+        } : e)),
       };
+    }
 
     case 'DELETE_EXPENSE':
       return {
@@ -190,7 +227,11 @@ export function AppProvider({ children }) {
 
     if (mongoStatus.connected) {
       if (action.type === 'ADD_EXPENSE') {
-        saveExpenseToDb(action.payload).catch(console.error);
+        saveExpenseToDb({
+          ...action.payload,
+          merchant: action.payload.merchant || action.payload.name,
+          name: action.payload.name || action.payload.merchant,
+        }).catch(console.error);
       } else if (action.type === 'DELETE_EXPENSE') {
         deleteExpenseFromDb(action.payload).catch(console.error);
       }

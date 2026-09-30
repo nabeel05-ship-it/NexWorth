@@ -349,20 +349,23 @@ export default function Dashboard() {
           </div>
           <ul className="expense-list">
             {recentExpenses.map(exp => {
-              const cat = CATEGORIES.find(c => c.id === exp.category);
+              const catId = (exp.category || 'other').toLowerCase();
+              const cat = CATEGORIES.find(c => c.id.toLowerCase() === catId) || { name: 'Other', icon: '📌', color: '#A0A0B0' };
+              const id = exp._id || exp.id;
+              const name = exp.name || exp.merchant || 'Expense';
               return (
-                <li key={exp.id} className="expense-item" style={{ padding: '10px 0' }}>
-                  <div className="expense-cat-icon" style={{ background: `${cat?.color}20`, width: 34, height: 34, fontSize: 15 }}>
-                    {cat?.icon}
+                <li key={id} className="expense-item" style={{ padding: '10px 0' }}>
+                  <div className="expense-cat-icon" style={{ background: `${cat.color}20`, width: 34, height: 34, fontSize: 15 }}>
+                    {cat.icon}
                   </div>
                   <div className="expense-info">
-                    <div className="expense-name">{exp.name}</div>
+                    <div className="expense-name">{name}</div>
                     <div className="expense-meta">
-                      <span>{cat?.name}</span>
-                      <span>{new Date(exp.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                      <span>{cat.name}</span>
+                      <span>• {new Date(exp.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
                     </div>
                   </div>
-                  <div className="expense-amount">-₹{exp.amount.toLocaleString('en-IN')}</div>
+                  <div className="expense-amount">-₹{Number(exp.amount || 0).toLocaleString('en-IN')}</div>
                 </li>
               );
             })}
