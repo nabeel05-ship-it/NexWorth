@@ -458,12 +458,13 @@ async function getTransporter() {
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
   if (user && pass && user.trim() !== '' && pass.trim() !== '') {
+    const cleanPass = pass.replace(/\s+/g, '').trim();
     return {
       transporter: nodemailer.createTransport({
         service: 'gmail',
         auth: {
           user: user.trim(),
-          pass: pass.trim(),
+          pass: cleanPass,
         },
       }),
       fromEmail: `"NexWorth AI Financial Intelligence" <${user.trim()}>`,
