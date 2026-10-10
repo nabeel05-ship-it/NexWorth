@@ -13,8 +13,6 @@ if (!cached) {
   cached = global.mongoose = { conn: null, promise: null, lastFailure: 0 };
 }
 
-const FAILURE_COOLDOWN_MS = 5000; // Wait 5s before re-attempting if cluster unreachable
-
 export async function connectDB() {
   const uri = process.env.MONGODB_URI;
   if (!uri) return null;
@@ -24,16 +22,13 @@ export async function connectDB() {
     return mongoose.connection;
   }
 
-  // Avoid stalling requests if cluster was recently unreachable
-  const now = Date.now();
-  if (cached.lastFailure && now - cached.lastFailure < FAILURE_COOLDOWN_MS) {
-    return null;
-  }
-
   if (!cached.promise) {
     cached.promise = mongoose
       .connect(uri, {
-        serverSelectionTimeoutMS: 5000,
+        // Atlas can take longer than five seconds to wake or complete TLS on a
+        // fresh serverless instance. A failed first request must not send the
+        // rest of that instance's writes to non-persistent memory.
+        serverSelectionTimeoutMS: 9000,
         maxPoolSize: 10,
       })
       .then((m) => {

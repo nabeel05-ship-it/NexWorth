@@ -16,7 +16,7 @@ async function parseJsonResponse(res, errorMessage = 'Request failed') {
 
 export async function fetchDbStatus() {
   try {
-    const res = await fetch(`${API_BASE}/status`, { signal: AbortSignal.timeout(6000) });
+    const res = await fetch(`${API_BASE}/status`, { signal: AbortSignal.timeout(12000) });
     if (!res.ok) throw new Error(`Status check returned HTTP ${res.status}`);
     const data = await parseJsonResponse(res, 'Status check failed');
     return { ...data, backendReachable: true };
@@ -42,7 +42,7 @@ export async function saveExpenseToDb(expense) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(expense),
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(12000),
     });
     if (!res.ok) throw new Error(`Failed to save expense: HTTP ${res.status}`);
     return await parseJsonResponse(res, 'Expense save failed');

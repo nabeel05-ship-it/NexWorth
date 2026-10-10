@@ -61,6 +61,17 @@ router.get('/status', async (req, res) => {
 // In-memory fallback expenses store when MongoDB Atlas connection is pending or offline
 let inMemoryExpenses = [];
 
+// A serverless function's memory is discarded between invocations. It is useful
+// for local development without MongoDB, but must never be presented as saved
+// data when this deployment is configured to use Atlas.
+function databaseUnavailable(res) {
+  return res.status(503).json({
+    error: 'Database is temporarily unavailable. The expense was not saved.',
+    code: 'DATABASE_UNAVAILABLE',
+    persistent: false,
+  });
+}
+
 // 2. Expenses APIs
 router.get('/expenses', async (req, res) => {
   if (process.env.MONGODB_URI && !isDbConnected()) {
@@ -85,6 +96,9 @@ router.get('/expenses', async (req, res) => {
     } catch (err) {
       console.warn('MongoDB query error, falling back to memory:', err.message);
     }
+  }
+  if (process.env.MONGODB_URI) {
+    return databaseUnavailable(res);
   }
   res.json(inMemoryExpenses.map(e => ({ ...e, storage: 'memory' })));
 });
@@ -123,11 +137,15 @@ router.post('/expenses', async (req, res) => {
         obj.storage = 'cloud';
         return res.status(201).json(obj);
       } catch (err) {
-        console.warn('MongoDB save error, falling back to memory:', err.message);
+        console.warn('MongoDB save error:', err.message);
       }
     }
 
-    // In-memory fallback
+    if (process.env.MONGODB_URI) {
+      return databaseUnavailable(res);
+    }
+
+    // Local-development fallback when no database has been configured.
     const id = `local_${Date.now()}`;
     const newExpense = {
       id,
@@ -176,11 +194,15 @@ router.put('/expenses/:id', async (req, res) => {
           return res.json(obj);
         }
       } catch (err) {
-        console.warn('MongoDB update error, updating in-memory:', err.message);
+        console.warn('MongoDB update error:', err.message);
       }
     }
 
-    // In-memory update
+    if (process.env.MONGODB_URI) {
+      return databaseUnavailable(res);
+    }
+
+    // Local-development fallback when no database has been configured.
     const idx = inMemoryExpenses.findIndex((e) => e.id === req.params.id || e._id === req.params.id);
     if (idx !== -1) {
       inMemoryExpenses[idx] = { ...inMemoryExpenses[idx], ...updateData };
@@ -208,6 +230,9 @@ router.delete('/expenses/:id', async (req, res) => {
       } catch (err) {
         console.warn('MongoDB delete error:', err.message);
       }
+    }
+    if (process.env.MONGODB_URI) {
+      return databaseUnavailable(res);
     }
     inMemoryExpenses = inMemoryExpenses.filter((e) => e.id !== req.params.id && e._id !== req.params.id);
     res.json({ message: 'Deleted successfully', id: req.params.id, deletedFromDb });

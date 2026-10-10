@@ -229,9 +229,17 @@ export function AppProvider({ children }) {
   useEffect(() => {
     let isMounted = true;
 
-    async function initMongo() {
+    async function initMongo(attempt = 0) {
       const status = await fetchDbStatus();
       if (!isMounted) return;
+
+      // The first invocation of a serverless function can finish before Atlas
+      // completes its TLS handshake. Retry instead of treating that transient
+      // condition as a non-persistent memory store.
+      if (!status?.connected && status?.backendReachable && status?.env?.hasMongo && attempt < 2) {
+        window.setTimeout(() => initMongo(attempt + 1), 1200 * (attempt + 1));
+        return;
+      }
 
       if (status && status.connected) {
         setMongoStatus({
@@ -277,31 +285,50 @@ export function AppProvider({ children }) {
 
   // Enhanced dispatch that syncs to MongoDB asynchronously
   const enhancedDispatch = (action) => {
-    dispatch(action);
-
-    if (mongoStatus.connected || mongoStatus.backendReachable) {
+    // Do not miss an expense submitted while the first production status check
+    // is still in flight; the API itself is the source of truth for persistence.
+    const shouldUseRemoteExpenseStore = mongoStatus.connected || mongoStatus.backendReachable || import.meta.env.PROD;
+    if (shouldUseRemoteExpenseStore) {
       if (action.type === 'ADD_EXPENSE') {
+        // Keep a stable temporary id so a failed cloud save can be rolled back
+        // rather than surviving only until the next page refresh.
+        const pendingId = `pending_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        const pendingExpense = { ...action.payload, id: pendingId, _id: pendingId, storage: 'pending' };
+        dispatch({ ...action, payload: pendingExpense });
         saveExpenseToDb({
-          ...action.payload,
-          merchant: action.payload.merchant || action.payload.name,
-          name: action.payload.name || action.payload.merchant,
+          ...pendingExpense,
+          merchant: pendingExpense.merchant || pendingExpense.name,
+          name: pendingExpense.name || pendingExpense.merchant,
         }).then((saved) => {
           if (saved && (saved._id || saved.id)) {
+            // Replace the optimistic item with the record returned by MongoDB;
+            // its ObjectId is the id future edits/deletes must use.
+            dispatch({ type: 'DELETE_EXPENSE', payload: pendingId });
             dispatch({
-              type: 'UPDATE_EXPENSE',
+              type: 'ADD_EXPENSE',
               payload: {
-                ...action.payload,
+                ...pendingExpense,
+                ...saved,
                 _id: saved._id || saved.id,
                 id: saved.id || saved._id,
                 storage: saved.storage || (mongoStatus.connected ? 'cloud' : 'memory'),
               },
             });
+          } else {
+            // A configured Atlas database must never silently degrade to an
+            // ephemeral entry. Remove the optimistic entry on failed save.
+            dispatch({ type: 'DELETE_EXPENSE', payload: pendingId });
           }
         }).catch(console.error);
+        return;
       } else if (action.type === 'DELETE_EXPENSE') {
+        dispatch(action);
         deleteExpenseFromDb(action.payload).catch(console.error);
+        return;
       }
     }
+
+    dispatch(action);
   };
 
   const currentLanguage = state.language || 'en';
