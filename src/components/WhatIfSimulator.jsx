@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import LanguageSwitcher from './LanguageSwitcher';
 import { calculateWhatIf } from '../utils/aiEngine';
 import { CATEGORIES } from '../utils/demoData';
 import {
@@ -140,7 +139,6 @@ export default function WhatIfSimulator() {
           </div>
           <p className="subtitle">{t('whatif_subtitle')}</p>
         </div>
-        <LanguageSwitcher />
       </div>
 
       {/* Preset Scenarios */}

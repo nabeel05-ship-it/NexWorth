@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import LanguageSwitcher from './LanguageSwitcher';
 import { CATEGORIES, MONTH_NAMES } from '../utils/demoData';
 import { getMonthlyOverview, generateInsights, generateExpenseStory } from '../utils/aiEngine';
 import {
@@ -169,7 +168,6 @@ export default function Dashboard() {
             <h2>{t('nav_dashboard')}</h2>
             <p className="subtitle">{monthName} {now.getFullYear()} — {t('dash_subtitle')}</p>
           </div>
-          <LanguageSwitcher compact={false} />
         </div>
       </div>
 
