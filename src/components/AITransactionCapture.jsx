@@ -4,7 +4,7 @@ import { CATEGORIES } from '../utils/demoData';
 import { parseTransactionMessage, SAMPLE_TRANSACTION_MESSAGES } from '../utils/aiTransactionParser';
 import {
   Sparkles, CheckCircle2, XCircle, Edit3, MessageSquare,
-  BellRing, Mail, Smartphone, ArrowRight, ShieldCheck,
+  BellRing, Smartphone, ArrowRight, ShieldCheck,
   Lock, AlertCircle, RefreshCw, Send, Check, Wallet, Banknote
 } from 'lucide-react';
 
@@ -644,39 +644,7 @@ export default function AITransactionCapture() {
         </div>
       </div>
 
-      {/* Email Integration & Future Architecture Roadmap */}
-      <div className="card">
-        <div className="card-header">
-          <div className="card-title">
-            <Mail size={18} color="var(--primary)" />
-            <span>Email Transaction Import (Future-Ready Integration)</span>
-          </div>
-          <span className="badge" style={{ background: '#FFF4D6', color: '#D97706' }}>Future Architecture</span>
-        </div>
-        <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 20 }}>
-          NexWorth supports a secure email receipt capture model designed for zero-password access:
-        </p>
 
-        <div className="architecture-flow" style={{ background: '#FAF8F4', borderRadius: 'var(--radius-lg)' }}>
-          <div className="arch-node default">📧 Authorized Email Provider (Google / Microsoft OAuth)</div>
-          <div className="arch-arrow">↓</div>
-          <div className="arch-node default" style={{ borderColor: 'var(--primary)' }}>
-            🔑 OAuth Permission (Restricted read-only financial receipts scope — No inbox passwords stored)
-          </div>
-          <div className="arch-arrow">↓</div>
-          <div className="arch-node accent">🤖 Transaction Email Parser (Identifies Swiggy, Uber, Amazon receipts)</div>
-          <div className="arch-arrow">↓</div>
-          <div className="arch-node default">✨ AI Structured Extraction (Amount, Payee, Tax, Category)</div>
-          <div className="arch-arrow">↓</div>
-          <div className="arch-node primary">✅ User Confirmation Prompt</div>
-          <div className="arch-arrow">↓</div>
-          <div className="arch-node accent">💾 Local Expense Database & Insights</div>
-        </div>
-
-        <div className="disclaimer mt-2">
-          🔒 <strong>Privacy Assurance:</strong> We never implement unrestricted email scanning. Only receipts matching authorized financial domains are parsed with explicit user confirmation before any transaction is saved.
-        </div>
-      </div>
     </div>
   );
 }
