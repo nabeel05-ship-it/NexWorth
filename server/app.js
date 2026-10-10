@@ -226,7 +226,11 @@ router.delete('/expenses/:id', async (req, res) => {
     if (isDbConnected() && mongoose.Types.ObjectId.isValid(req.params.id)) {
       try {
         const result = await Expense.findByIdAndDelete(req.params.id);
-        if (result) deletedFromDb = true;
+        if (result) {
+          deletedFromDb = true;
+          inMemoryExpenses = inMemoryExpenses.filter((e) => e.id !== req.params.id && e._id !== req.params.id);
+          return res.json({ message: 'Deleted successfully', id: req.params.id, deletedFromDb });
+        }
       } catch (err) {
         console.warn('MongoDB delete error:', err.message);
       }
