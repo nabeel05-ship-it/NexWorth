@@ -37,19 +37,32 @@ export async function fetchExpensesFromDb() {
 }
 
 export async function saveExpenseToDb(expense) {
-  try {
-    const res = await fetch(`${API_BASE}/expenses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(expense),
-      signal: AbortSignal.timeout(12000),
-    });
-    if (!res.ok) throw new Error(`Failed to save expense: HTTP ${res.status}`);
-    return await parseJsonResponse(res, 'Expense save failed');
-  } catch (err) {
-    console.warn('Backend save error:', err.message);
-    return null;
+  // A cold serverless instance can explicitly report that Atlas was not ready
+  // yet (503). Retrying only that response is safe: the API returns 503 before
+  // creating an expense, so this cannot duplicate a saved transaction.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const res = await fetch(`${API_BASE}/expenses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(expense),
+        signal: AbortSignal.timeout(12000),
+      });
+      if (res.ok) return await parseJsonResponse(res, 'Expense save failed');
+      if (res.status !== 503 || attempt === 2) {
+        throw new Error(`Failed to save expense: HTTP ${res.status}`);
+      }
+    } catch (err) {
+      if (attempt === 2) {
+        console.warn('Backend save error:', err.message);
+        return null;
+      }
+    }
+
+    await new Promise((resolve) => window.setTimeout(resolve, 900 * (attempt + 1)));
   }
+
+  return null;
 }
 
 export async function deleteExpenseFromDb(id) {

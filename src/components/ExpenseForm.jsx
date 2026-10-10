@@ -120,7 +120,7 @@ export default function ExpenseForm() {
     }, 3500);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.amount) return;
 
@@ -151,10 +151,14 @@ export default function ExpenseForm() {
       showToast(`✓ Updated "${expensePayload.name}" (₹${amountNum.toLocaleString('en-IN')})`);
       setEditId(null);
     } else {
-      dispatch({
+      const saved = await dispatch({
         type: 'ADD_EXPENSE',
         payload: expensePayload,
       });
+      if (saved === false) {
+        showToast('Could not save this expense. Please try again in a moment.');
+        return;
+      }
       showToast(`✓ Added "${expensePayload.name}" (₹${amountNum.toLocaleString('en-IN')}) to expenses!`);
     }
 

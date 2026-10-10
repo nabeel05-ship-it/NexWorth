@@ -295,7 +295,7 @@ export function AppProvider({ children }) {
         const pendingId = `pending_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
         const pendingExpense = { ...action.payload, id: pendingId, _id: pendingId, storage: 'pending' };
         dispatch({ ...action, payload: pendingExpense });
-        saveExpenseToDb({
+        return saveExpenseToDb({
           ...pendingExpense,
           merchant: pendingExpense.merchant || pendingExpense.name,
           name: pendingExpense.name || pendingExpense.merchant,
@@ -314,13 +314,18 @@ export function AppProvider({ children }) {
                 storage: saved.storage || (mongoStatus.connected ? 'cloud' : 'memory'),
               },
             });
+            return true;
           } else {
             // A configured Atlas database must never silently degrade to an
             // ephemeral entry. Remove the optimistic entry on failed save.
             dispatch({ type: 'DELETE_EXPENSE', payload: pendingId });
+            return false;
           }
-        }).catch(console.error);
-        return;
+        }).catch((err) => {
+          console.error(err);
+          dispatch({ type: 'DELETE_EXPENSE', payload: pendingId });
+          return false;
+        });
       } else if (action.type === 'DELETE_EXPENSE') {
         dispatch(action);
         deleteExpenseFromDb(action.payload).catch(console.error);
