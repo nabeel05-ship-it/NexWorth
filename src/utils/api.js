@@ -1,22 +1,37 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+// In production or on deployed origins, never allow localhost URLs
+const envApiUrl = import.meta.env.VITE_API_URL;
+const isProd = import.meta.env.PROD || (typeof window !== 'undefined' && window.location.hostname !== 'localhost');
+const API_BASE = (isProd && envApiUrl && envApiUrl.includes('localhost'))
+  ? '/api'
+  : (envApiUrl || '/api');
+
+async function parseJsonResponse(res, errorMessage = 'Request failed') {
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    const text = await res.text();
+    throw new Error(`${errorMessage}: Received non-JSON response (${contentType || 'empty'})`);
+  }
+  return await res.json();
+}
 
 export async function fetchDbStatus() {
   try {
-    const res = await fetch(`${API_BASE}/status`, { signal: AbortSignal.timeout(4000) });
-    if (!res.ok) throw new Error('Status check failed');
-    return await res.json();
+    const res = await fetch(`${API_BASE}/status`, { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) throw new Error(`Status check returned HTTP ${res.status}`);
+    const data = await parseJsonResponse(res, 'Status check failed');
+    return { ...data, backendReachable: true };
   } catch (err) {
-    return { connected: false, error: err.message };
+    return { connected: false, backendReachable: false, error: err.message };
   }
 }
 
 export async function fetchExpensesFromDb() {
   try {
-    const res = await fetch(`${API_BASE}/expenses`, { signal: AbortSignal.timeout(5000) });
-    if (!res.ok) throw new Error('Failed to fetch expenses');
-    return await res.json();
+    const res = await fetch(`${API_BASE}/expenses`, { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) throw new Error(`Failed to fetch expenses: HTTP ${res.status}`);
+    return await parseJsonResponse(res, 'Expenses fetch failed');
   } catch (err) {
-    console.warn('MongoDB fetch error, falling back to local:', err.message);
+    console.warn('Backend fetch error, falling back to local state:', err.message);
     return null;
   }
 }
@@ -27,11 +42,12 @@ export async function saveExpenseToDb(expense) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(expense),
+      signal: AbortSignal.timeout(8000),
     });
-    if (!res.ok) throw new Error('Failed to save expense');
-    return await res.json();
+    if (!res.ok) throw new Error(`Failed to save expense: HTTP ${res.status}`);
+    return await parseJsonResponse(res, 'Expense save failed');
   } catch (err) {
-    console.warn('MongoDB save error:', err.message);
+    console.warn('Backend save error:', err.message);
     return null;
   }
 }
@@ -40,10 +56,11 @@ export async function deleteExpenseFromDb(id) {
   try {
     const res = await fetch(`${API_BASE}/expenses/${id}`, {
       method: 'DELETE',
+      signal: AbortSignal.timeout(8000),
     });
     return res.ok;
   } catch (err) {
-    console.warn('MongoDB delete error:', err.message);
+    console.warn('Backend delete error:', err.message);
     return false;
   }
 }
@@ -54,11 +71,12 @@ export async function syncExpensesToDb(expenses) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ expenses }),
+      signal: AbortSignal.timeout(10000),
     });
-    if (!res.ok) throw new Error('Failed to sync expenses');
-    return await res.json();
+    if (!res.ok) throw new Error(`Failed to sync expenses: HTTP ${res.status}`);
+    return await parseJsonResponse(res, 'Expenses sync failed');
   } catch (err) {
-    console.warn('MongoDB sync error:', err.message);
+    console.warn('Backend sync error:', err.message);
     return null;
   }
 }
@@ -71,8 +89,8 @@ export async function sendAIChatQuery(data) {
       body: JSON.stringify(data),
       signal: AbortSignal.timeout(15000),
     });
-    if (!res.ok) throw new Error('API request failed');
-    return await res.json();
+    if (!res.ok) throw new Error(`AI request returned HTTP ${res.status}`);
+    return await parseJsonResponse(res, 'AI chat request failed');
   } catch (err) {
     console.warn('AI API error, fallback to local engine:', err.message);
     return null;
@@ -81,9 +99,9 @@ export async function sendAIChatQuery(data) {
 
 export async function fetchEmailStatus() {
   try {
-    const res = await fetch(`${API_BASE}/email/status`, { signal: AbortSignal.timeout(4000) });
-    if (!res.ok) throw new Error('Failed to fetch email status');
-    return await res.json();
+    const res = await fetch(`${API_BASE}/email/status`, { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) throw new Error(`Failed to fetch email status: HTTP ${res.status}`);
+    return await parseJsonResponse(res, 'Email status request failed');
   } catch (err) {
     return { configured: false, error: err.message };
   }
@@ -97,7 +115,7 @@ export async function sendTestEmail(recipient) {
       body: JSON.stringify({ recipient }),
       signal: AbortSignal.timeout(15000),
     });
-    return await res.json();
+    return await parseJsonResponse(res, 'Email test request failed');
   } catch (err) {
     return { success: false, error: err.message };
   }
@@ -111,7 +129,7 @@ export async function checkOverbudgetAlert({ currentTotal, monthlyIncome, recipi
       body: JSON.stringify({ currentTotal, monthlyIncome, recipient, force, monthName }),
       signal: AbortSignal.timeout(15000),
     });
-    return await res.json();
+    return await parseJsonResponse(res, 'Budget alert request failed');
   } catch (err) {
     return { alertNeeded: false, error: err.message };
   }

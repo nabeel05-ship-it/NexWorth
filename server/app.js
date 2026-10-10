@@ -21,10 +21,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Asynchronously initiate connection attempt without stalling response
-app.use((req, res, next) => {
+// Ensure MongoDB connection is initialized before handling requests
+app.use(async (req, res, next) => {
   if (process.env.MONGODB_URI && mongoose.connection.readyState !== 1) {
-    connectDB().catch(() => {});
+    try {
+      await connectDB();
+    } catch (e) {
+      // ConnectDB handles backoff and caching internally
+    }
   }
   next();
 });
@@ -33,14 +37,19 @@ app.use((req, res, next) => {
 const router = express.Router();
 
 // 1. Health & Connection Status
-router.get('/status', (req, res) => {
+router.get('/status', async (req, res) => {
+  if (process.env.MONGODB_URI && mongoose.connection.readyState !== 1) {
+    try {
+      await connectDB();
+    } catch (e) {}
+  }
   const readyState = mongoose.connection.readyState;
   const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
   res.json({
     connected: readyState === 1,
     status: states[readyState] || 'unknown',
     cluster: 'Cluster0',
-    mode: readyState === 1 ? 'cloud' : 'fallback',
+    mode: readyState === 1 ? 'cloud' : (process.env.MONGODB_URI ? 'database_unreachable' : 'fallback'),
     env: {
       hasMongo: !!process.env.MONGODB_URI,
       hasGemini: !!process.env.GEMINI_API_KEY,
@@ -54,6 +63,12 @@ let inMemoryExpenses = [];
 
 // 2. Expenses APIs
 router.get('/expenses', async (req, res) => {
+  if (process.env.MONGODB_URI && !isDbConnected()) {
+    try {
+      await connectDB();
+    } catch (e) {}
+  }
+
   if (isDbConnected()) {
     try {
       const expenses = await Expense.find().sort({ date: -1, createdAt: -1 });
@@ -63,6 +78,7 @@ router.get('/expenses', async (req, res) => {
           ...obj,
           id: obj._id.toString(),
           name: obj.merchant || obj.name,
+          storage: 'cloud',
         };
       });
       return res.json(formatted);
@@ -70,7 +86,7 @@ router.get('/expenses', async (req, res) => {
       console.warn('MongoDB query error, falling back to memory:', err.message);
     }
   }
-  res.json(inMemoryExpenses);
+  res.json(inMemoryExpenses.map(e => ({ ...e, storage: 'memory' })));
 });
 
 router.post('/expenses', async (req, res) => {
@@ -79,6 +95,12 @@ router.post('/expenses', async (req, res) => {
     const merchant = (req.body.merchant || req.body.name || '').trim();
     if (!amount || !merchant) {
       return res.status(400).json({ error: 'Amount and merchant/name are required' });
+    }
+
+    if (process.env.MONGODB_URI && !isDbConnected()) {
+      try {
+        await connectDB();
+      } catch (e) {}
     }
 
     if (isDbConnected()) {
@@ -98,6 +120,7 @@ router.post('/expenses', async (req, res) => {
         const obj = saved.toObject();
         obj.id = obj._id.toString();
         obj.name = obj.merchant;
+        obj.storage = 'cloud';
         return res.status(201).json(obj);
       } catch (err) {
         console.warn('MongoDB save error, falling back to memory:', err.message);
@@ -120,6 +143,7 @@ router.post('/expenses', async (req, res) => {
       reference: reference || '',
       rawMessage: rawMessage || '',
       createdAt: new Date().toISOString(),
+      storage: 'memory',
     };
     inMemoryExpenses.unshift(newExpense);
     res.status(201).json(newExpense);
@@ -135,13 +159,20 @@ router.put('/expenses/:id', async (req, res) => {
       updateData.merchant = updateData.name;
     }
 
-    if (isDbConnected()) {
+    if (process.env.MONGODB_URI && !isDbConnected()) {
+      try {
+        await connectDB();
+      } catch (e) {}
+    }
+
+    if (isDbConnected() && mongoose.Types.ObjectId.isValid(req.params.id)) {
       try {
         const updated = await Expense.findByIdAndUpdate(req.params.id, updateData, { new: true });
         if (updated) {
           const obj = updated.toObject();
           obj.id = obj._id.toString();
           obj.name = obj.merchant;
+          obj.storage = 'cloud';
           return res.json(obj);
         }
       } catch (err) {
@@ -155,7 +186,7 @@ router.put('/expenses/:id', async (req, res) => {
       inMemoryExpenses[idx] = { ...inMemoryExpenses[idx], ...updateData };
       return res.json(inMemoryExpenses[idx]);
     }
-    res.json({ id: req.params.id, ...updateData });
+    res.json({ id: req.params.id, ...updateData, storage: 'memory' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -163,15 +194,23 @@ router.put('/expenses/:id', async (req, res) => {
 
 router.delete('/expenses/:id', async (req, res) => {
   try {
-    if (isDbConnected()) {
+    if (process.env.MONGODB_URI && !isDbConnected()) {
       try {
-        await Expense.findByIdAndDelete(req.params.id);
+        await connectDB();
+      } catch (e) {}
+    }
+
+    let deletedFromDb = false;
+    if (isDbConnected() && mongoose.Types.ObjectId.isValid(req.params.id)) {
+      try {
+        const result = await Expense.findByIdAndDelete(req.params.id);
+        if (result) deletedFromDb = true;
       } catch (err) {
         console.warn('MongoDB delete error:', err.message);
       }
     }
     inMemoryExpenses = inMemoryExpenses.filter((e) => e.id !== req.params.id && e._id !== req.params.id);
-    res.json({ message: 'Deleted successfully', id: req.params.id });
+    res.json({ message: 'Deleted successfully', id: req.params.id, deletedFromDb });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -728,8 +767,21 @@ router.post('/email/check-overbudget-alert', async (req, res) => {
       });
     }
 
-    const transportObj = await getTransporter();
     const toEmail = recipient || process.env.ALERT_RECIPIENT_EMAIL || process.env.EMAIL_USER || 'alert@nexworth.ai';
+
+    // In automated tests or explicit dry run, verify calculations and recipient without dispatching live emails
+    if (req.body.dryRun || process.env.NODE_ENV === 'test') {
+      return res.json({
+        alertNeeded: true,
+        sent: false,
+        dryRun: true,
+        deficit,
+        recipient: toEmail,
+        message: 'Over-budget condition detected (dry run; live email suppressed).',
+      });
+    }
+
+    const transportObj = await getTransporter();
 
     if (!transportObj) {
       return res.json({

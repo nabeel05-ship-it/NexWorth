@@ -107,13 +107,20 @@ export default function Sidebar({ isOpen, onClose }) {
             padding: '10px 12px',
             borderRadius: 12,
             background: mongoStatus?.connected ? 'rgba(34, 197, 94, 0.08)' : 'rgba(252, 108, 38, 0.08)',
-            border: `1px solid ${mongoStatus?.connected ? 'rgba(34, 197, 94, 0.25)' : 'rgba(252, 108, 38, 0.25)'}`,
+            border: `1px solid ${mongoStatus?.connected ? 'rgba(34, 197, 94, 0.25)' : (mongoStatus?.backendReachable ? 'rgba(245, 158, 11, 0.25)' : 'rgba(252, 108, 38, 0.25)')}`,
             marginBottom: 10,
             display: 'flex',
             flexDirection: 'column',
             gap: 4
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: mongoStatus?.connected ? '#16A34A' : '#D95000' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 11,
+              fontWeight: 700,
+              color: mongoStatus?.connected ? '#16A34A' : (mongoStatus?.backendReachable ? '#D97706' : '#D95000')
+            }}>
               <Database size={13} />
               <span>MongoDB Cloud</span>
               <span style={{
@@ -121,15 +128,17 @@ export default function Sidebar({ isOpen, onClose }) {
                 width: 7,
                 height: 7,
                 borderRadius: '50%',
-                background: mongoStatus?.connected ? '#22C55E' : '#F59E0B',
+                background: mongoStatus?.connected ? '#22C55E' : (mongoStatus?.backendReachable ? '#F59E0B' : '#EF4444'),
               }} />
             </div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-              {mongoStatus?.connected
-                ? `Cloud Active: ${mongoStatus.cluster}`
-                : mongoStatus?.checking
+              {mongoStatus?.checking
                 ? 'Checking Connection...'
-                : 'Local Sandbox Mode (Synced)'}
+                : mongoStatus?.connected
+                ? `Cloud Active: ${mongoStatus.cluster}`
+                : mongoStatus?.backendReachable
+                ? 'Cloud Standby (In-Memory Fallback)'
+                : 'Local Sandbox Mode (Offline)'}
             </div>
           </div>
 
