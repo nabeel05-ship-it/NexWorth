@@ -256,22 +256,34 @@ export function AppProvider({ children }) {
         const dbExpenses = await fetchExpensesFromDb();
         if (dbExpenses && Array.isArray(dbExpenses)) {
           if (dbExpenses.length === 0) {
-            // Seed initial demo expenses to MongoDB
+            // DB is empty — seed all demo expenses
             const syncResult = await syncExpensesToDb(state.expenses);
             if (syncResult && syncResult.items && syncResult.items.length > 0) {
               dispatch({ type: 'SET_EXPENSES', payload: syncResult.items });
+            } else {
+              // Sync failed (e.g. network) — show demo data locally
+              dispatch({ type: 'SET_EXPENSES', payload: state.expenses });
             }
+          } else if (dbExpenses.length < 10) {
+            // DB has only a few manual/test entries — it was never properly seeded.
+            // Merge the full demo dataset so every month has rich data.
+            // Real DB entries take priority (they appear first and carry _id).
+            const realIds = new Set(dbExpenses.map(e => e._id));
+            const demoFill = state.expenses.filter(e => !realIds.has(e._id));
+            dispatch({ type: 'SET_EXPENSES', payload: [...dbExpenses, ...demoFill] });
           } else {
-            // Use live MongoDB expenses, but merge any demo months not present in DB
-            const dbMonthKeys = new Set(
-              dbExpenses.map(e => {
-                const d = new Date(e.date || e.createdAt);
-                return `${d.getFullYear()}-${d.getMonth()}`;
-              })
-            );
+            // DB is sufficiently populated. Merge any demo months entirely absent from DB.
+            const dbMonthCounts = {};
+            dbExpenses.forEach(e => {
+              const d = new Date(e.date || e.createdAt);
+              const k = `${d.getFullYear()}-${d.getMonth()}`;
+              dbMonthCounts[k] = (dbMonthCounts[k] || 0) + 1;
+            });
+            // A month is "sparse" if it has fewer than 3 DB entries
             const missingDemoEntries = state.expenses.filter(e => {
               const d = new Date(e.date);
-              return !dbMonthKeys.has(`${d.getFullYear()}-${d.getMonth()}`);
+              const k = `${d.getFullYear()}-${d.getMonth()}`;
+              return (dbMonthCounts[k] || 0) < 3;
             });
             const merged = missingDemoEntries.length > 0
               ? [...dbExpenses, ...missingDemoEntries]
