@@ -73,6 +73,9 @@ describe('Backend Architecture & Serverless Verification', () => {
       amount: 150,
       category: 'food',
       paymentMethod: 'UPI',
+      // The browser form sends title case; the API must normalize it for the
+      // lowercase enum stored by MongoDB.
+      source: 'Manual',
       note: 'Verification test',
     };
     const res = await fetch(`${baseUrl}/api/expenses`, {
@@ -84,6 +87,7 @@ describe('Backend Architecture & Serverless Verification', () => {
     const data = await res.json();
     expect(data.name).toBe('Test Automated Coffee');
     expect(data.amount).toBe(150);
+    expect(data.source).toBe('manual');
     expect(data.id || data._id).toBeDefined();
     createdExpenseId = data.id || data._id;
   });

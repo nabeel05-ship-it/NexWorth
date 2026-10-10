@@ -107,6 +107,7 @@ router.post('/expenses', async (req, res) => {
   try {
     const { amount, category, date, paymentMethod, source, note, reference, rawMessage } = req.body;
     const merchant = (req.body.merchant || req.body.name || '').trim();
+    const normalizedSource = String(source || 'manual').toLowerCase();
     if (!amount || !merchant) {
       return res.status(400).json({ error: 'Amount and merchant/name are required' });
     }
@@ -125,7 +126,7 @@ router.post('/expenses', async (req, res) => {
           category: category || 'Other',
           date: date || new Date().toISOString().split('T')[0],
           paymentMethod: paymentMethod || 'UPI',
-          source: source || 'manual',
+          source: normalizedSource,
           note: note || '',
           reference: reference || '',
           rawMessage: rawMessage || '',
@@ -156,7 +157,7 @@ router.post('/expenses', async (req, res) => {
       category: category || 'Other',
       date: date || new Date().toISOString().split('T')[0],
       paymentMethod: paymentMethod || 'UPI',
-      source: source || 'manual',
+      source: normalizedSource,
       note: note || '',
       reference: reference || '',
       rawMessage: rawMessage || '',
