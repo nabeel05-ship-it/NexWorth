@@ -262,8 +262,21 @@ export function AppProvider({ children }) {
               dispatch({ type: 'SET_EXPENSES', payload: syncResult.items });
             }
           } else {
-            // Use live MongoDB expenses
-            dispatch({ type: 'SET_EXPENSES', payload: dbExpenses });
+            // Use live MongoDB expenses, but merge any demo months not present in DB
+            const dbMonthKeys = new Set(
+              dbExpenses.map(e => {
+                const d = new Date(e.date || e.createdAt);
+                return `${d.getFullYear()}-${d.getMonth()}`;
+              })
+            );
+            const missingDemoEntries = state.expenses.filter(e => {
+              const d = new Date(e.date);
+              return !dbMonthKeys.has(`${d.getFullYear()}-${d.getMonth()}`);
+            });
+            const merged = missingDemoEntries.length > 0
+              ? [...dbExpenses, ...missingDemoEntries]
+              : dbExpenses;
+            dispatch({ type: 'SET_EXPENSES', payload: merged });
           }
         }
       } else {

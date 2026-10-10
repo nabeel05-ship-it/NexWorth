@@ -162,6 +162,41 @@ function generateDemoExpenses() {
     });
   });
 
+  // October 2026 — explicit hardcoded entries so this month always has data
+  // regardless of when the DB was originally seeded.
+  // Skip this block if currentMonth is already October (the dynamic block above covers it).
+  if (currentMonth !== 9 || currentYear !== 2026) {
+    const oct2026Expenses = [
+      { name: 'Swiggy Order',         amount: 480,  category: 'food',          day: 1,  note: 'Dinner delivery',          paymentMethod: 'UPI',          source: 'Notification' },
+      { name: 'Gym Membership',        amount: 1500, category: 'health',        day: 1,  note: 'Monthly fee',              paymentMethod: 'UPI',          source: 'Manual' },
+      { name: 'Netflix Subscription',  amount: 649,  category: 'entertainment', day: 1,  note: 'Monthly subscription',     paymentMethod: 'Credit Card',  source: 'Manual' },
+      { name: 'Tea & Chai Tapri',      amount: 50,   category: 'food',          day: 2,  note: 'Morning tea',              paymentMethod: 'Cash',         source: 'Cash' },
+      { name: 'Amazon Order',          amount: 3200, category: 'shopping',      day: 3,  note: 'Bluetooth speaker',        paymentMethod: 'UPI',          source: 'Notification' },
+      { name: 'Uber Commute',          amount: 320,  category: 'travel',        day: 4,  note: 'Office commute',           paymentMethod: 'UPI',          source: 'Notification' },
+      { name: 'Electricity Bill',      amount: 1350, category: 'bills',         day: 5,  note: 'Monthly bill',             paymentMethod: 'Bank Transfer', source: 'Manual' },
+      { name: 'Zomato Order',          amount: 390,  category: 'food',          day: 5,  note: 'Lunch with friends',       paymentMethod: 'UPI',          source: 'Notification' },
+      { name: 'Mobile Recharge',       amount: 599,  category: 'bills',         day: 6,  note: 'Monthly plan',             paymentMethod: 'UPI',          source: 'Notification' },
+      { name: 'WiFi Broadband',        amount: 700,  category: 'bills',         day: 6,  note: 'Fiber internet',           paymentMethod: 'UPI',          source: 'Notification' },
+      { name: 'Auto Rickshaw',         amount: 110,  category: 'travel',        day: 7,  note: 'Station ride',             paymentMethod: 'Cash',         source: 'Cash' },
+      { name: 'Grocery Store',         amount: 1250, category: 'food',          day: 8,  note: 'Weekly groceries',         paymentMethod: 'Debit Card',   source: 'Manual' },
+      { name: 'Evening Snacks',        amount: 75,   category: 'food',          day: 9,  note: 'Samosa & tea',             paymentMethod: 'Cash',         source: 'Cash' },
+      { name: 'Ola Cab',               amount: 260,  category: 'travel',        day: 9,  note: 'Market trip',              paymentMethod: 'UPI',          source: 'Notification' },
+      { name: 'Flipkart Sale',         amount: 2800, category: 'shopping',      day: 10, note: 'Festive sale purchase',    paymentMethod: 'UPI',          source: 'Notification' },
+    ];
+    oct2026Expenses.forEach(exp => {
+      expenses.push({
+        id: id++,
+        name: exp.name,
+        amount: exp.amount,
+        category: exp.category,
+        date: new Date(2026, 9, exp.day).toISOString(), // month 9 = October
+        note: exp.note || '',
+        paymentMethod: exp.paymentMethod || 'UPI',
+        source: exp.source || 'Manual',
+      });
+    });
+  }
+
   return expenses;
 }
 
