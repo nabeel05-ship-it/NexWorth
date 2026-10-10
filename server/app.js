@@ -41,6 +41,11 @@ router.get('/status', (req, res) => {
     status: states[readyState] || 'unknown',
     cluster: 'Cluster0',
     mode: readyState === 1 ? 'cloud' : 'fallback',
+    env: {
+      hasMongo: !!process.env.MONGODB_URI,
+      hasGemini: !!process.env.GEMINI_API_KEY,
+      hasEmail: !!process.env.EMAIL_USER,
+    }
   });
 });
 
