@@ -199,6 +199,13 @@ body {
   font-weight: 800;
   color: white;
   box-shadow: var(--shadow-glow);
+  flex-shrink: 0;
+}
+
+.sidebar-logo .logo-icon--img {
+  object-fit: cover;
+  background: none;
+  padding: 0;
 }
 
 .sidebar-logo h1 {

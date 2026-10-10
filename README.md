@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/nexworth-logo.png" alt="NexWorth Logo" width="96" height="96" />
+</p>
+
 # NexWorth — AI Financial Intelligence Platform
 
 > **Empowering mindful financial choices by connecting daily expense tracking, deterministic opportunity-cost modeling, and conversational AI intelligence.**

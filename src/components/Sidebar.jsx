@@ -62,7 +62,11 @@ export default function Sidebar({ isOpen, onClose }) {
 
       <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-logo">
-          <div className="logo-icon">N</div>
+          <img
+            src="/nexworth-logo.png"
+            alt="NexWorth"
+            className="logo-icon logo-icon--img"
+          />
           <div>
             <h1>{t('brand_name')}</h1>
             <div className="logo-tagline">{t('brand_tagline')}</div>
