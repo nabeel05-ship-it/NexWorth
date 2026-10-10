@@ -1,5 +1,11 @@
-// AI Engine for NexWorth - Generates insights, forecasts, and analysis
 import { CATEGORIES, MONTH_NAMES } from './demoData';
+import {
+  calculateLumpSumFV,
+  calculateSIPFutureValue,
+  calculateCombinedFutureValue,
+  compareBuyNowVsInvest,
+  calculateWhatIfSavings,
+} from './financialCalculations';
 
 function getCategoryName(catId) {
   const cat = CATEGORIES.find(c => c.id === catId);
@@ -436,109 +442,36 @@ export function getSpendingForecast(expenses) {
 }
 
 export function calculateWhatIf(scenario) {
-  const { type, amount, months = 12, annualReturn = 12 } = scenario;
-  const monthlyReturn = annualReturn / 100 / 12;
-
-  const results = {
-    monthlySaving: amount,
-    totalSaved: amount * months,
-    months,
-  };
-
-  // SIP-style future value
-  if (monthlyReturn > 0) {
-    results.investedValue = Math.round(
-      amount * ((Math.pow(1 + monthlyReturn, months) - 1) / monthlyReturn) * (1 + monthlyReturn)
-    );
-  } else {
-    results.investedValue = amount * months;
-  }
-
-  results.estimatedGrowth = results.investedValue - results.totalSaved;
-
-  // FD scenario (annual compounding)
-  const fdRate = 7.0; // Assumed FD rate
-  results.fdValue = Math.round(results.totalSaved * Math.pow(1 + fdRate / 100, months / 12));
-
-  return results;
+  const { amount = 2000, months = 12, annualReturn = 12, fdRate = 7.0 } = scenario;
+  return calculateWhatIfSavings({ amount, months, annualReturn, fdRate });
 }
 
-export function calculateFutureValue({ initialAmount, monthlyContribution, annualReturn, years }) {
-  const monthlyReturn = annualReturn / 100 / 12;
-  const months = years * 12;
-
-  // Future value of initial amount
-  const fvInitial = initialAmount * Math.pow(1 + monthlyReturn, months);
-
-  // Future value of monthly contributions (annuity)
-  let fvContributions = 0;
-  if (monthlyReturn > 0) {
-    fvContributions = monthlyContribution * ((Math.pow(1 + monthlyReturn, months) - 1) / monthlyReturn) * (1 + monthlyReturn);
-  } else {
-    fvContributions = monthlyContribution * months;
-  }
-
-  const totalInvested = initialAmount + (monthlyContribution * months);
-  const totalValue = Math.round(fvInitial + fvContributions);
-  const estimatedGrowth = totalValue - totalInvested;
-
-  // Generate yearly data for chart
-  const yearlyData = [];
-  for (let y = 0; y <= years; y++) {
-    const m = y * 12;
-    const fvI = initialAmount * Math.pow(1 + monthlyReturn, m);
-    let fvC = 0;
-    if (monthlyReturn > 0) {
-      fvC = monthlyContribution * ((Math.pow(1 + monthlyReturn, m) - 1) / monthlyReturn) * (1 + monthlyReturn);
-    } else {
-      fvC = monthlyContribution * m;
-    }
-    yearlyData.push({
-      year: y,
-      invested: Math.round(initialAmount + monthlyContribution * m),
-      value: Math.round(fvI + fvC),
-    });
-  }
-
-  return { totalInvested, totalValue, estimatedGrowth, yearlyData };
+export function calculateFutureValue({ initialAmount = 10000, monthlyContribution = 2000, annualReturn = 12, years = 10, compounding = 'annually' }) {
+  return calculateCombinedFutureValue({ initialAmount, monthlyContribution, annualReturn, years, compounding });
 }
 
-export function compareSpendSaveInvest(amount, years = [5, 10, 20]) {
-  const fdRate = 7.0;
-  const sipReturn = 12.0;
-
-  return years.map(y => {
-    const months = y * 12;
-    const monthlyReturn = sipReturn / 100 / 12;
-
-    // Spend
-    const spend = amount;
-
-    // FD (lump sum compound interest)
-    const fd = Math.round(amount * Math.pow(1 + fdRate / 100, y));
-
-    // SIP (monthly contribution)
-    let sip;
-    if (monthlyReturn > 0) {
-      sip = Math.round(
-        amount * ((Math.pow(1 + monthlyReturn, months) - 1) / monthlyReturn) * (1 + monthlyReturn)
-      );
-    } else {
-      sip = amount * months;
-    }
-
-    // Savings account (assume 4%)
-    const savings = Math.round(amount * Math.pow(1 + 0.04, y));
-
-    return {
-      years: y,
-      spend,
-      savings,
-      fd,
-      sip,
-      totalInvestedSIP: amount * months,
-    };
+export function compareSpendSaveInvest(amount = 5000, years = [5, 10, 20], isRecurring = false) {
+  const results = compareBuyNowVsInvest({
+    amount,
+    yearsList: years,
+    isRecurring,
+    savingsRate: 4.0,
+    fdRate: 7.0,
+    equityRate: 12.0,
   });
+
+  return results.map(r => ({
+    years: r.years,
+    spend: r.spend,
+    savings: r.savings,
+    fd: r.fd,
+    sip: r.equity, // Maps to equity investment scenario (or SIP if recurring habit)
+    equity: r.equity,
+    totalInvested: r.totalInvested,
+    totalInvestedSIP: r.totalInvested,
+    potentialDifference: r.potentialDifference,
+    isRecurring: r.isRecurring,
+  }));
 }
 
 export function processAIChat(query, expenses, income, budgets, goals) {

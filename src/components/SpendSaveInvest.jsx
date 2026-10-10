@@ -10,49 +10,50 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 export default function SpendSaveInvest() {
   const [amount, setAmount] = useState(5000);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(2); // Default to Long Term (5, 10, 20 yrs)
+  const [isRecurring, setIsRecurring] = useState(false); // Default to One-Time Purchase
 
   const timeframes = [
-    { years: [1, 3, 5], label: 'Short Term' },
-    { years: [5, 10, 15], label: 'Medium Term' },
-    { years: [5, 10, 20], label: 'Long Term' },
+    { years: [1, 3, 5], label: 'Short Term (1-5 yrs)' },
+    { years: [5, 10, 15], label: 'Medium Term (5-15 yrs)' },
+    { years: [5, 10, 20], label: 'Long Term (5-20 yrs)' },
   ];
 
-  const comparisons = useMemo(() => compareSpendSaveInvest(amount, timeframes[activeTab].years), [amount, activeTab]);
+  const comparisons = useMemo(() => compareSpendSaveInvest(amount, timeframes[activeTab].years, isRecurring), [amount, activeTab, isRecurring]);
 
   const chartData = useMemo(() => ({
     labels: comparisons.map(c => `${c.years} Years`),
     datasets: [
       {
-        label: 'Spend Now',
+        label: isRecurring ? 'Total Spent Over Time' : 'Spend Today',
         data: comparisons.map(c => c.spend),
-        backgroundColor: 'rgba(255, 61, 113, 0.6)',
+        backgroundColor: 'rgba(239, 68, 68, 0.7)',
         borderRadius: 6,
         borderSkipped: false,
       },
       {
-        label: 'Savings Account (est. 4%)',
+        label: 'Savings Account (est. 4% p.a.)',
         data: comparisons.map(c => c.savings),
-        backgroundColor: 'rgba(215, 206, 195, 0.75)',
+        backgroundColor: 'rgba(168, 162, 158, 0.75)',
         borderRadius: 6,
         borderSkipped: false,
       },
       {
-        label: 'FD (est. 7%)',
+        label: isRecurring ? 'Recurring Deposit (est. 7% p.a.)' : 'Fixed Deposit (est. 7% p.a.)',
         data: comparisons.map(c => c.fd),
-        backgroundColor: 'rgba(217, 119, 6, 0.75)',
+        backgroundColor: 'rgba(217, 119, 6, 0.8)',
         borderRadius: 6,
         borderSkipped: false,
       },
       {
-        label: 'SIP/Investment (est. 12%)',
+        label: isRecurring ? 'Monthly SIP (est. 12% p.a.)' : 'Equity Investment (est. 12% p.a.)',
         data: comparisons.map(c => c.sip),
         backgroundColor: '#FC6C26',
         borderRadius: 6,
         borderSkipped: false,
       },
     ],
-  }), [comparisons]);
+  }), [comparisons, isRecurring]);
 
   const chartOptions = {
     responsive: true,
@@ -112,6 +113,29 @@ export default function SpendSaveInvest() {
           </div>
         </div>
 
+        {/* Mode Toggle: One-Time Purchase vs Recurring Habit */}
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
+            Comparison Type:
+          </div>
+          <div className="btn-group">
+            <button
+              type="button"
+              className={`btn btn-sm ${!isRecurring ? 'btn-primary' : 'btn-outline'}`}
+              onClick={() => setIsRecurring(false)}
+            >
+              🏷️ One-Time Purchase (Spend ₹{amount.toLocaleString('en-IN')} once)
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${isRecurring ? 'btn-primary' : 'btn-outline'}`}
+              onClick={() => setIsRecurring(true)}
+            >
+              🔄 Recurring Habit (Spend ₹{amount.toLocaleString('en-IN')}/month)
+            </button>
+          </div>
+        </div>
+
         <div className="tabs mt-2">
           {timeframes.map((tf, i) => (
             <button key={i} className={`tab ${activeTab === i ? 'active' : ''}`} onClick={() => setActiveTab(i)}>
@@ -122,7 +146,9 @@ export default function SpendSaveInvest() {
       </div>
 
       <div style={{ padding: '14px 18px', background: '#FFF7EE', border: '1px solid rgba(252, 108, 38, 0.2)', borderRadius: 'var(--radius-md)', marginBottom: 20, fontSize: 14, color: 'var(--text-secondary)' }}>
-        💡 You have ₹{amount.toLocaleString('en-IN')}. Here's what could happen depending on how you use it — for your awareness and consideration.
+        💡 {!isRecurring
+          ? `Evaluating a one-time purchase worth ₹${amount.toLocaleString('en-IN')}. Below is what investing that same amount ONCE could become over time using compound growth (FV = P × (1 + r)ⁿ).`
+          : `Evaluating a recurring spending habit of ₹${amount.toLocaleString('en-IN')} every month. Below is what saving and investing that amount monthly could accumulate.`}
       </div>
 
       {/* Comparison Cards */}
@@ -133,18 +159,20 @@ export default function SpendSaveInvest() {
           </h3>
           <div className="compare-grid">
             <div className="compare-card spend">
-              <h4>💸 Spend Now</h4>
+              <h4>💸 {isRecurring ? 'Total Spent' : 'Spend Today'}</h4>
               <div className="compare-amount">₹{comp.spend.toLocaleString('en-IN')}</div>
-              <div className="compare-label">Amount spent today</div>
+              <div className="compare-label">
+                {isRecurring ? `₹${amount.toLocaleString('en-IN')}/mo × ${comp.years * 12} months` : 'Amount spent on purchase'}
+              </div>
               <div style={{ marginTop: 12, fontSize: 12, color: 'var(--text-muted)' }}>
-                The item or experience you wanted
+                Item or experience consumed
               </div>
             </div>
 
             <div className="compare-card fd">
-              <h4>🏦 FD Scenario</h4>
+              <h4>🏦 {isRecurring ? 'Recurring Deposit (RD)' : 'Fixed Deposit (FD)'}</h4>
               <div className="compare-amount">₹{comp.fd.toLocaleString('en-IN')}</div>
-              <div className="compare-label">Illustrative FD maturity @ 7% p.a.</div>
+              <div className="compare-label">Illustrative @ 7% p.a.</div>
               <div style={{ marginTop: 12 }}>
                 <span className="badge badge-warning">
                   +₹{(comp.fd - comp.spend).toLocaleString('en-IN')} estimated interest
@@ -153,12 +181,12 @@ export default function SpendSaveInvest() {
             </div>
 
             <div className="compare-card sip">
-              <h4>📈 Investment Scenario</h4>
+              <h4>📈 {isRecurring ? 'Monthly SIP' : 'Equity Investment'}</h4>
               <div className="compare-amount">₹{comp.sip.toLocaleString('en-IN')}</div>
-              <div className="compare-label">Illustrative SIP @ 12% p.a.</div>
+              <div className="compare-label">Illustrative @ 12% p.a.</div>
               <div style={{ marginTop: 12 }}>
                 <span className="badge badge-success">
-                  Total invested: ₹{comp.totalInvestedSIP.toLocaleString('en-IN')}
+                  +₹{(comp.sip - comp.spend).toLocaleString('en-IN')} potential growth
                 </span>
               </div>
             </div>

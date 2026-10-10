@@ -126,8 +126,10 @@ export default function Sidebar({ isOpen, onClose }) {
             </div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
               {mongoStatus?.connected
-                ? `Active: ${mongoStatus.cluster}`
-                : `Connecting to ${mongoStatus.cluster}...`}
+                ? `Cloud Active: ${mongoStatus.cluster}`
+                : mongoStatus?.checking
+                ? 'Checking Connection...'
+                : 'Local Sandbox Mode (Synced)'}
             </div>
           </div>
 

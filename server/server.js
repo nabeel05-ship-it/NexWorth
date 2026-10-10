@@ -61,10 +61,8 @@ app.get('/api/status', (req, res) => {
   res.json({
     connected: readyState === 1,
     status: states[readyState] || 'unknown',
-    database: dbInfo.dbName || 'nexworth',
-    host: dbInfo.host || 'cluster0.2fmepzy.mongodb.net',
-    user: 'nabeelsaroshahmed_db_user',
     cluster: 'Cluster0',
+    mode: readyState === 1 ? 'cloud' : 'fallback',
   });
 });
 
@@ -666,10 +664,15 @@ app.get('/api/email/status', (req, res) => {
     ? user.replace(/^(.{2})(.*)(@.*)$/, (_, a, b, c) => `${a}${'*'.repeat(Math.max(1, b.length))}${c}`)
     : user || null;
 
+  const recipient = process.env.ALERT_RECIPIENT_EMAIL || user || '';
+  const maskedRecipient = recipient && recipient.includes('@')
+    ? recipient.replace(/^(.{2})(.*)(@.*)$/, (_, a, b, c) => `${a}${'*'.repeat(Math.max(1, b.length))}${c}`)
+    : (recipient ? '***' : null);
+
   res.json({
     configured: isConfigured,
     emailUser: maskedEmail,
-    defaultRecipient: process.env.ALERT_RECIPIENT_EMAIL || user || '',
+    defaultRecipient: maskedRecipient,
   });
 });
 
