@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import LanguageSwitcher from './LanguageSwitcher';
 import { CATEGORIES } from '../utils/demoData';
 import { parseTransactionMessage, SAMPLE_TRANSACTION_MESSAGES } from '../utils/aiTransactionParser';
 import {
@@ -168,7 +167,6 @@ export default function AITransactionCapture() {
               {t('cap_subtitle')}
             </p>
           </div>
-          <LanguageSwitcher compact={false} />
         </div>
       </div>
 

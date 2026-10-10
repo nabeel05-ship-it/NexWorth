@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import LanguageSwitcher from './LanguageSwitcher';
 import { CATEGORIES, MONTH_NAMES } from '../utils/demoData';
 import { PlusCircle, Edit3, Trash2, Search, Filter, CheckCircle2, ArrowUpDown } from 'lucide-react';
 
@@ -234,7 +233,6 @@ export default function ExpenseForm() {
             <p className="subtitle">{t('exp_subtitle')}</p>
           </div>
           <div className="flex items-center gap-2">
-            <LanguageSwitcher compact={false} />
             <button className="btn btn-primary" onClick={() => openAddModal('UPI')}>
               <PlusCircle size={16} /> {t('exp_add_btn')}
             </button>
@@ -384,14 +382,14 @@ export default function ExpenseForm() {
           </div>
 
           {/* Filter Controls */}
-          <div className="flex gap-1" style={{ flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', width: '100%' }}>
             {/* Search */}
             <div style={{ position: 'relative' }}>
               <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input
                 className="form-input"
                 placeholder={t('exp_search_placeholder')}
-                style={{ paddingLeft: 30, maxWidth: 190, fontSize: 13 }}
+                style={{ paddingLeft: 30, fontSize: 13, width: '100%' }}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
@@ -402,7 +400,7 @@ export default function ExpenseForm() {
               className="form-select"
               value={filterMonth}
               onChange={e => setFilterMonth(e.target.value)}
-              style={{ maxWidth: 150, fontSize: 13 }}
+              style={{ fontSize: 13, width: '100%' }}
             >
               <option value="all">{t('exp_filter_month')}</option>
               {availableMonths.map(mKey => {
@@ -421,7 +419,7 @@ export default function ExpenseForm() {
               className="form-select"
               value={filterCategory}
               onChange={e => setFilterCategory(e.target.value)}
-              style={{ maxWidth: 140, fontSize: 13 }}
+              style={{ fontSize: 13, width: '100%' }}
             >
               <option value="all">{t('exp_filter_category')}</option>
               {CATEGORIES.map(cat => (
@@ -434,7 +432,7 @@ export default function ExpenseForm() {
               className="form-select"
               value={filterPayment}
               onChange={e => setFilterPayment(e.target.value)}
-              style={{ maxWidth: 130, fontSize: 13 }}
+              style={{ fontSize: 13, width: '100%' }}
             >
               <option value="all">{t('exp_filter_mode')}</option>
               <option value="Cash">💵 {t('pay_cash')}</option>

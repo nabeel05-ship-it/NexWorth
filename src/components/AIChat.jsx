@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { processAIChat, getMonthlyOverview, analyzeSpendingPatterns } from '../utils/aiEngine';
 import { sendAIChatQuery } from '../utils/api';
-import LanguageSwitcher from './LanguageSwitcher';
 import { MessageCircle, Send, Sparkles, Bot, User, ArrowRight, Target, Zap } from 'lucide-react';
 
 export default function AIChat() {
@@ -193,7 +192,6 @@ export default function AIChat() {
           </div>
           <p className="subtitle">{t('chat_subtitle')}</p>
         </div>
-        <LanguageSwitcher />
       </div>
 
       <div className="card" style={{ padding: 0 }}>

@@ -161,9 +161,10 @@ export function AppProvider({ children }) {
   const [mongoStatus, setMongoStatus] = useState({
     connected: false,
     checking: true,
+    backendReachable: false,
     cluster: 'Cluster0',
     database: 'nexworth',
-    host: 'cluster0.2fmepzy.mongodb.net',
+    storage: 'checking',
   });
 
   const [state, dispatch] = useReducer(appReducer, initialState, (initial) => {
@@ -236,10 +237,11 @@ export function AppProvider({ children }) {
         setMongoStatus({
           connected: true,
           checking: false,
+          backendReachable: true,
           cluster: status.cluster || 'Cluster0',
           database: status.database || 'nexworth',
-          host: status.host,
-          user: status.user,
+          storage: 'cloud',
+          env: status.env,
         });
 
         // Fetch records from MongoDB
@@ -257,7 +259,15 @@ export function AppProvider({ children }) {
           }
         }
       } else {
-        setMongoStatus(prev => ({ ...prev, connected: false, checking: false }));
+        setMongoStatus({
+          connected: false,
+          checking: false,
+          backendReachable: Boolean(status?.backendReachable),
+          storage: status?.backendReachable ? 'memory' : 'local',
+          cluster: 'Cluster0',
+          database: 'nexworth',
+          env: status?.env,
+        });
       }
     }
 
@@ -269,12 +279,24 @@ export function AppProvider({ children }) {
   const enhancedDispatch = (action) => {
     dispatch(action);
 
-    if (mongoStatus.connected) {
+    if (mongoStatus.connected || mongoStatus.backendReachable) {
       if (action.type === 'ADD_EXPENSE') {
         saveExpenseToDb({
           ...action.payload,
           merchant: action.payload.merchant || action.payload.name,
           name: action.payload.name || action.payload.merchant,
+        }).then((saved) => {
+          if (saved && (saved._id || saved.id)) {
+            dispatch({
+              type: 'UPDATE_EXPENSE',
+              payload: {
+                ...action.payload,
+                _id: saved._id || saved.id,
+                id: saved.id || saved._id,
+                storage: saved.storage || (mongoStatus.connected ? 'cloud' : 'memory'),
+              },
+            });
+          }
         }).catch(console.error);
       } else if (action.type === 'DELETE_EXPENSE') {
         deleteExpenseFromDb(action.payload).catch(console.error);

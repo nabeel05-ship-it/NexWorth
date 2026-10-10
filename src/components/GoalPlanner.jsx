@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import LanguageSwitcher from './LanguageSwitcher';
 import { Target, Plus, Edit3, Trash2, Calendar } from 'lucide-react';
 
 const GOAL_ICONS = ['💻', '✈️', '🛡️', '📚', '🏠', '🚗', '💍', '📱', '🎓', '🏖️', '💰', '🎯'];
@@ -76,7 +75,6 @@ export default function GoalPlanner() {
           <p className="subtitle">{t('goal_subtitle')}</p>
         </div>
         <div className="flex items-center gap-2" style={{ flexWrap: 'wrap' }}>
-          <LanguageSwitcher />
           <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditId(null); setFormData({ name: '', targetAmount: '', currentAmount: '', targetDate: '', icon: '🎯' }); }}>
             <Plus size={16} /> {t('goal_new_btn')}
           </button>

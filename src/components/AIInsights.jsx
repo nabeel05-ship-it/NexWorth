@@ -1,6 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import LanguageSwitcher from './LanguageSwitcher';
 import { CATEGORIES, MONTH_NAMES } from '../utils/demoData';
 import { generateInsights, generateExpenseStory, getMonthlyOverview, analyzeSpendingPatterns } from '../utils/aiEngine';
 import { fetchEmailStatus, sendTestEmail, checkOverbudgetAlert } from '../utils/api';
@@ -165,7 +164,6 @@ export default function AIInsights() {
             </div>
             <p className="subtitle">{t('ins_subtitle')}</p>
           </div>
-          <LanguageSwitcher compact={false} />
         </div>
       </div>
 
