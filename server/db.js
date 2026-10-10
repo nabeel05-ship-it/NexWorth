@@ -13,7 +13,7 @@ if (!cached) {
   cached = global.mongoose = { conn: null, promise: null, lastFailure: 0 };
 }
 
-const FAILURE_COOLDOWN_MS = 30000; // Wait 30s before re-attempting if cluster unreachable
+const FAILURE_COOLDOWN_MS = 5000; // Wait 5s before re-attempting if cluster unreachable
 
 export async function connectDB() {
   const uri = process.env.MONGODB_URI;
@@ -24,7 +24,7 @@ export async function connectDB() {
     return mongoose.connection;
   }
 
-  // Avoid stalling requests if cluster was recently unreachable (e.g. IP whitelist block)
+  // Avoid stalling requests if cluster was recently unreachable
   const now = Date.now();
   if (cached.lastFailure && now - cached.lastFailure < FAILURE_COOLDOWN_MS) {
     return null;
@@ -33,8 +33,8 @@ export async function connectDB() {
   if (!cached.promise) {
     cached.promise = mongoose
       .connect(uri, {
-        serverSelectionTimeoutMS: 3000,
-        bufferCommands: false,
+        serverSelectionTimeoutMS: 5000,
+        maxPoolSize: 10,
       })
       .then((m) => {
         cached.lastFailure = 0;
