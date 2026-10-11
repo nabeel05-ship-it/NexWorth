@@ -1325,48 +1325,6 @@ body {
   line-height: 1.5;
 }
 
-/* ==========================================
-   Future Architecture
-   ========================================== */
-
-.architecture-flow {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 24px;
-}
-
-.arch-node {
-  padding: 14px 28px;
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  font-weight: 600;
-  text-align: center;
-  min-width: 200px;
-}
-
-.arch-node.primary {
-  background: var(--gradient-primary);
-  color: white;
-}
-
-.arch-node.accent {
-  background: rgba(255, 244, 214, 0.15);
-  border: 1px solid rgba(255, 244, 214, 0.3);
-  color: var(--accent);
-}
-
-.arch-node.default {
-  background: var(--bg-card);
-  border: 1px solid var(--glass-border);
-  color: var(--text-secondary);
-}
-
-.arch-arrow {
-  font-size: 20px;
-  color: var(--text-muted);
-}
 
 /* ==========================================
    Scrollbar
@@ -1464,6 +1422,11 @@ body {
    Responsive
    ========================================== */
 
+.mobile-drawer-backdrop {
+  display: none !important;
+  pointer-events: none !important;
+}
+
 .mobile-menu-btn {
   display: none;
   position: fixed;
@@ -1483,6 +1446,10 @@ body {
 }
 
 @media (max-width: 1024px) {
+  .mobile-drawer-backdrop {
+    display: block !important;
+    pointer-events: auto !important;
+  }
   .mobile-menu-btn {
     display: flex;
   }

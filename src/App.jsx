@@ -40,7 +40,11 @@ function AppContent() {
 
   return (
     <div className="app-layout">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(!sidebarOpen)} />
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onToggle={() => setSidebarOpen(prev => !prev)}
+      />
       <main className="main-content">
         <AnimatePresence mode="wait">
           <motion.div

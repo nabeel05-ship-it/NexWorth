@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { EASE_FINTECH } from '../utils/motionVariants';
 
-export default function Sidebar({ isOpen, onClose }) {
+export default function Sidebar({ isOpen, onClose, onToggle }) {
   const { state, dispatch, mongoStatus, t } = useApp();
   const shouldReduceMotion = useReducedMotion();
 
@@ -62,7 +62,7 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Mobile Menu Trigger */}
       <motion.button
         className="mobile-menu-btn"
-        onClick={onClose}
+        onClick={onToggle || onClose}
         whileTap={shouldReduceMotion ? undefined : { scale: 0.92 }}
         whileHover={shouldReduceMotion ? undefined : { scale: 1.05 }}
         aria-label="Toggle navigation menu"
@@ -85,6 +85,7 @@ export default function Sidebar({ isOpen, onClose }) {
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            className="mobile-drawer-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

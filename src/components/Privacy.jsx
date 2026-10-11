@@ -20,18 +20,33 @@ export default function Privacy() {
 
       {/* Privacy Statement */}
       <motion.div
-        className="card card-glow mb-3"
+        className="card mb-3"
         variants={fadeInUp}
         {...cardHoverProps}
-        style={{ background: 'linear-gradient(135deg, rgba(0,214,143,0.08) 0%, rgba(26,26,46,0.95) 40%)' }}
+        style={{
+          background: 'linear-gradient(135deg, #FFFFFF 0%, #FFFDF9 100%)',
+          border: '1px solid rgba(252, 108, 38, 0.18)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
+        }}
       >
         <div className="flex items-center gap-1 mb-2">
-          <Shield size={24} color="var(--success)" />
-          <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 20, color: 'var(--success)' }}>
+          <div style={{
+            width: 40,
+            height: 40,
+            borderRadius: 'var(--radius-md)',
+            background: 'rgba(252, 108, 38, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <Shield size={22} color="var(--primary)" />
+          </div>
+          <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
             {t('priv_banner_title')}
           </h3>
         </div>
-        <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.8, maxWidth: 700 }}>
+        <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.75, maxWidth: 780, margin: 0 }}>
           {t('priv_banner_desc')}
         </p>
       </motion.div>
@@ -94,7 +109,7 @@ export default function Privacy() {
       </motion.div>
 
       {/* Data Example */}
-      <motion.div className="card mb-3" variants={fadeInUp} {...cardHoverProps}>
+      <motion.div className="card" variants={fadeInUp} {...cardHoverProps}>
         <div className="card-title mb-2">📋 {t('priv_example_title')}</div>
         <div style={{
           padding: 20, background: 'var(--bg-input)', borderRadius: 'var(--radius-md)',
@@ -109,37 +124,6 @@ export default function Privacy() {
         <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 12 }}>
           {t('priv_example_note')}
         </p>
-      </motion.div>
-
-      {/* Future Architecture */}
-      <motion.div className="card" variants={fadeInUp} {...cardHoverProps}>
-        <div className="card-header">
-          <div className="card-title">🚀 {t('priv_roadmap_title')}</div>
-          <span className="badge badge-primary">{t('priv_roadmap_badge')}</span>
-        </div>
-        <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.6 }}>
-          {t('priv_roadmap_desc')}
-        </p>
-
-        <div className="architecture-flow" style={{ background: '#FAF8F4', borderRadius: 'var(--radius-lg)' }}>
-          <div className="arch-node default">📧 {t('priv_node_1')}</div>
-          <div className="arch-arrow">↓</div>
-          <div className="arch-node default" style={{ borderColor: 'var(--primary)' }}>
-            🔑 {t('priv_node_2')}
-          </div>
-          <div className="arch-arrow">↓</div>
-          <div className="arch-node accent">🤖 {t('priv_node_3')}</div>
-          <div className="arch-arrow">↓</div>
-          <div className="arch-node default">✅ {t('priv_node_4')}</div>
-          <div className="arch-arrow">↓</div>
-          <div className="arch-node primary">💾 {t('priv_node_5')}</div>
-          <div className="arch-arrow">↓</div>
-          <div className="arch-node accent">💡 {t('priv_node_6')}</div>
-        </div>
-
-        <div className="disclaimer mt-2">
-          {t('priv_roadmap_disclaimer')}
-        </div>
       </motion.div>
     </motion.div>
   );
