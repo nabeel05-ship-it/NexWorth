@@ -6,6 +6,8 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { TrendingUp } from 'lucide-react';
+import { motion } from 'motion/react';
+import { fadeInUp, buttonClickProps, cardHoverProps, staggerContainer } from '../utils/motionVariants';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
@@ -87,14 +89,18 @@ export default function SpendSaveInvest() {
   };
 
   return (
-    <div>
-      <div className="page-header">
+    <motion.div
+      variants={staggerContainer(0.05, 0.02)}
+      initial="initial"
+      animate="animate"
+    >
+      <motion.div className="page-header" variants={fadeInUp}>
         <h2>{t('compare_title')}</h2>
         <p className="subtitle">{t('compare_subtitle')}</p>
-      </div>
+      </motion.div>
 
       {/* Amount Input */}
-      <div className="card mb-3">
+      <motion.div className="card mb-3" variants={fadeInUp} {...cardHoverProps}>
         <div className="card-title mb-2">{t('compare_amount_prompt')}</div>
         <div className="flex items-center gap-2">
           <span style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Space Grotesk'", color: 'var(--accent)' }}>₹</span>
@@ -108,9 +114,15 @@ export default function SpendSaveInvest() {
           />
           <div className="btn-group">
             {[1000, 2000, 5000, 10000].map(v => (
-              <button key={v} className={`btn btn-sm ${amount === v ? 'btn-primary' : 'btn-outline'}`} onClick={() => setAmount(v)}>
+              <motion.button
+                key={v}
+                className={`btn btn-sm ${amount === v ? 'btn-primary' : 'btn-outline'}`}
+                onClick={() => setAmount(v)}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.96 }}
+              >
                 ₹{v.toLocaleString('en-IN')}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
@@ -121,46 +133,59 @@ export default function SpendSaveInvest() {
             {t('compare_type_label')}
           </div>
           <div className="btn-group">
-            <button
+            <motion.button
               type="button"
               className={`btn btn-sm ${!isRecurring ? 'btn-primary' : 'btn-outline'}`}
               onClick={() => setIsRecurring(false)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
             >
               {t('compare_onetime_btn', { amount: amount.toLocaleString('en-IN') })}
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="button"
               className={`btn btn-sm ${isRecurring ? 'btn-primary' : 'btn-outline'}`}
               onClick={() => setIsRecurring(true)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
             >
               {t('compare_recurring_btn', { amount: amount.toLocaleString('en-IN') })}
-            </button>
+            </motion.button>
           </div>
         </div>
 
         <div className="tabs mt-2">
           {timeframes.map((tf, i) => (
-            <button key={i} className={`tab ${activeTab === i ? 'active' : ''}`} onClick={() => setActiveTab(i)}>
+            <motion.button
+              key={i}
+              className={`tab ${activeTab === i ? 'active' : ''}`}
+              onClick={() => setActiveTab(i)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+            >
               {tf.label}
-            </button>
+            </motion.button>
           ))}
         </div>
-      </div>
+      </motion.div>
 
-      <div style={{ padding: '14px 18px', background: '#FFF7EE', border: '1px solid rgba(252, 108, 38, 0.2)', borderRadius: 'var(--radius-md)', marginBottom: 20, fontSize: 14, color: 'var(--text-secondary)' }}>
+      <motion.div
+        variants={fadeInUp}
+        style={{ padding: '14px 18px', background: '#FFF7EE', border: '1px solid rgba(252, 108, 38, 0.2)', borderRadius: 'var(--radius-md)', marginBottom: 20, fontSize: 14, color: 'var(--text-secondary)' }}
+      >
         💡 {!isRecurring
           ? t('compare_banner_onetime', { amount: amount.toLocaleString('en-IN') })
           : t('compare_banner_recurring', { amount: amount.toLocaleString('en-IN') })}
-      </div>
+      </motion.div>
 
       {/* Comparison Cards */}
       {comparisons.map((comp, ci) => (
-        <div key={ci} className="mb-3">
+        <motion.div key={ci} className="mb-3" variants={fadeInUp}>
           <h3 style={{ fontSize: 16, color: 'var(--text-muted)', marginBottom: 12, fontFamily: "'Space Grotesk'" }}>
             {comp.years === 1 ? t('compare_after_year', { years: comp.years }) : t('compare_after_years', { years: comp.years })}
           </h3>
           <div className="compare-grid">
-            <div className="compare-card spend">
+            <motion.div className="compare-card spend" whileHover={{ y: -3, transition: { duration: 0.16 } }}>
               <h4>💸 {isRecurring ? t('compare_spent_total') : t('compare_spent_today')}</h4>
               <div className="compare-amount">₹{comp.spend.toLocaleString('en-IN')}</div>
               <div className="compare-label">
@@ -169,9 +194,9 @@ export default function SpendSaveInvest() {
               <div style={{ marginTop: 12, fontSize: 12, color: 'var(--text-muted)' }}>
                 {t('compare_spent_consumed')}
               </div>
-            </div>
+            </motion.div>
 
-            <div className="compare-card fd">
+            <motion.div className="compare-card fd" whileHover={{ y: -3, transition: { duration: 0.16 } }}>
               <h4>🏦 {isRecurring ? t('compare_rd_title') : t('compare_fd_title')}</h4>
               <div className="compare-amount">₹{comp.fd.toLocaleString('en-IN')}</div>
               <div className="compare-label">{t('compare_fd_est_rate')}</div>
@@ -180,9 +205,9 @@ export default function SpendSaveInvest() {
                   {t('compare_fd_interest', { interest: (comp.fd - comp.spend).toLocaleString('en-IN') })}
                 </span>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="compare-card sip">
+            <motion.div className="compare-card sip" whileHover={{ y: -3, transition: { duration: 0.16 } }}>
               <h4>📈 {isRecurring ? t('compare_sip_title') : t('compare_equity_title')}</h4>
               <div className="compare-amount">₹{comp.sip.toLocaleString('en-IN')}</div>
               <div className="compare-label">{t('compare_sip_est_rate')}</div>
@@ -191,25 +216,25 @@ export default function SpendSaveInvest() {
                   {t('compare_sip_growth', { growth: (comp.sip - comp.spend).toLocaleString('en-IN') })}
                 </span>
               </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       ))}
 
       {/* Chart */}
-      <div className="card mt-3">
+      <motion.div className="card mt-3" variants={fadeInUp} {...cardHoverProps}>
         <div className="card-header">
           <div className="card-title"><TrendingUp size={16} /> {t('compare_chart_title')}</div>
         </div>
         <div className="chart-container" style={{ height: 320 }}>
           <Bar data={chartData} options={chartOptions} />
         </div>
-      </div>
+      </motion.div>
 
       <div className="disclaimer mt-3">
         {t('compare_disclaimer')}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

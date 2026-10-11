@@ -643,25 +643,26 @@ export function calculateFutureValue({ initialAmount = 10000, monthlyContributio
 }
 
 export function compareSpendSaveInvest(amount = 5000, timeframes = [1, 3, 5], isRecurring = false) {
-  return timeframes.map(years => {
-    const comparison = compareBuyNowVsInvest({
-      amount,
-      years,
-      inflationRate: 6,
-      fdRate: 7,
-      sipReturnRate: 12,
-      isRecurring,
-    });
-
-    return {
-      years,
-      spend: comparison.spendCost,
-      savings: comparison.savingsAccountValue,
-      fd: comparison.fixedDepositValue,
-      sip: comparison.sipEquityValue,
-      purchasingPowerLost: comparison.inflationLostValue,
-    };
+  const comparisons = compareBuyNowVsInvest({
+    amount,
+    yearsList: timeframes,
+    isRecurring,
+    savingsRate: 4.0,
+    fdRate: 7.0,
+    equityRate: 12.0,
   });
+
+  return comparisons.map(c => ({
+    years: c.years,
+    spend: c.spend,
+    savings: c.savings,
+    fd: c.fd,
+    sip: c.equity,
+    potentialDifference: c.potentialDifference,
+    savingsGain: c.savingsGain,
+    fdGain: c.fdGain,
+    equityGain: c.equityGain,
+  }));
 }
 
 export function processAIChat(query, expenses, income, budgets, goals, lang = 'en') {

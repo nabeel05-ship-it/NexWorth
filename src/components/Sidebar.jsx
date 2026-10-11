@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { useApp } from '../context/AppContext';
 import LanguageSwitcher from './LanguageSwitcher';
 import {
@@ -6,9 +7,11 @@ import {
   GitCompareArrows, Target, Calculator, TrendingUp,
   MessageCircle, Shield, Menu, X, Zap, Database
 } from 'lucide-react';
+import { EASE_FINTECH } from '../utils/motionVariants';
 
 export default function Sidebar({ isOpen, onClose }) {
   const { state, dispatch, mongoStatus, t } = useApp();
+  const shouldReduceMotion = useReducedMotion();
 
   const navSections = [
     {
@@ -56,9 +59,47 @@ export default function Sidebar({ isOpen, onClose }) {
 
   return (
     <>
-      <button className="mobile-menu-btn" onClick={onClose}>
-        {isOpen ? <X size={20} /> : <Menu size={20} />}
-      </button>
+      {/* Mobile Menu Trigger */}
+      <motion.button
+        className="mobile-menu-btn"
+        onClick={onClose}
+        whileTap={shouldReduceMotion ? undefined : { scale: 0.92 }}
+        whileHover={shouldReduceMotion ? undefined : { scale: 1.05 }}
+        aria-label="Toggle navigation menu"
+      >
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span
+            key={isOpen ? 'close' : 'open'}
+            initial={{ opacity: 0, rotate: -45 }}
+            animate={{ opacity: 1, rotate: 0 }}
+            exit={{ opacity: 0, rotate: 45 }}
+            transition={{ duration: 0.15 }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            {isOpen ? <X size={20} /> : <Menu size={20} />}
+          </motion.span>
+        </AnimatePresence>
+      </motion.button>
+
+      {/* Mobile Drawer Backdrop */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={onClose}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(26, 23, 20, 0.4)',
+              backdropFilter: 'blur(3px)',
+              zIndex: 90,
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-logo">
@@ -87,18 +128,22 @@ export default function Sidebar({ isOpen, onClose }) {
               <div className="sidebar-section-title">{t(section.titleKey)}</div>
               {section.items.map(item => {
                 const Icon = item.icon;
+                const isActive = state.currentPage === item.id;
                 return (
-                  <button
+                  <motion.button
                     key={item.id}
-                    className={`nav-item ${state.currentPage === item.id ? 'active' : ''}`}
+                    className={`nav-item ${isActive ? 'active' : ''}`}
                     onClick={() => handleNav(item.id)}
+                    whileHover={shouldReduceMotion ? undefined : { x: 3, transition: { duration: 0.15, ease: EASE_FINTECH } }}
+                    whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
+                    style={{ position: 'relative' }}
                   >
                     <Icon className="nav-icon" size={18} />
                     <span>{t(item.labelKey)}</span>
                     {item.id === 'ai-chat' && (
                       <span className="ai-badge" style={{ marginLeft: 'auto', fontSize: 9 }}>AI</span>
                     )}
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
@@ -127,13 +172,18 @@ export default function Sidebar({ isOpen, onClose }) {
             }}>
               <Database size={13} />
               <span>{t('mongo_cloud')}</span>
-              <span style={{
-                marginLeft: 'auto',
-                width: 7,
-                height: 7,
-                borderRadius: '50%',
-                background: mongoStatus?.connected ? '#22C55E' : (mongoStatus?.backendReachable ? '#F59E0B' : '#EF4444'),
-              }} />
+              <motion.span
+                animate={shouldReduceMotion ? undefined : { scale: [1, 1.25, 1], opacity: [0.8, 1, 0.8] }}
+                transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+                style={{
+                  marginLeft: 'auto',
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  background: mongoStatus?.connected ? '#22C55E' : (mongoStatus?.backendReachable ? '#F59E0B' : '#EF4444'),
+                  display: 'inline-block',
+                }}
+              />
             </div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
               {mongoStatus?.checking
@@ -155,3 +205,4 @@ export default function Sidebar({ isOpen, onClose }) {
     </>
   );
 }
+

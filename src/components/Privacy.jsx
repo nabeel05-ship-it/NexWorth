@@ -1,19 +1,30 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { Shield, Lock, Eye, Server, Fingerprint, Ban } from 'lucide-react';
+import { motion } from 'motion/react';
+import { fadeInUp, cardHoverProps, staggerContainer } from '../utils/motionVariants';
 
 export default function Privacy() {
   const { t } = useApp();
 
   return (
-    <div>
-      <div className="page-header">
+    <motion.div
+      variants={staggerContainer(0.06, 0.02)}
+      initial="initial"
+      animate="animate"
+    >
+      <motion.div className="page-header" variants={fadeInUp}>
         <h2>{t('priv_title')}</h2>
         <p className="subtitle">{t('priv_subtitle')}</p>
-      </div>
+      </motion.div>
 
       {/* Privacy Statement */}
-      <div className="card card-glow mb-3" style={{ background: 'linear-gradient(135deg, rgba(0,214,143,0.08) 0%, rgba(26,26,46,0.95) 40%)' }}>
+      <motion.div
+        className="card card-glow mb-3"
+        variants={fadeInUp}
+        {...cardHoverProps}
+        style={{ background: 'linear-gradient(135deg, rgba(0,214,143,0.08) 0%, rgba(26,26,46,0.95) 40%)' }}
+      >
         <div className="flex items-center gap-1 mb-2">
           <Shield size={24} color="var(--success)" />
           <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 20, color: 'var(--success)' }}>
@@ -23,10 +34,10 @@ export default function Privacy() {
         <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.8, maxWidth: 700 }}>
           {t('priv_banner_desc')}
         </p>
-      </div>
+      </motion.div>
 
       {/* What We NEVER Ask */}
-      <div className="card mb-3">
+      <motion.div className="card mb-3" variants={fadeInUp} {...cardHoverProps}>
         <div className="card-header">
           <div className="card-title"><Ban size={16} color="var(--danger)" /> {t('priv_never_title')}</div>
         </div>
@@ -39,47 +50,51 @@ export default function Privacy() {
             { icon: '📲', label: t('priv_item_gpay') },
             { icon: '📲', label: t('priv_item_phonepe') },
           ].map((item, i) => (
-            <div key={i} style={{
-              padding: '14px 16px', background: 'rgba(255,61,113,0.05)',
-              border: '1px solid rgba(255,61,113,0.15)', borderRadius: 'var(--radius-md)',
-              display: 'flex', alignItems: 'center', gap: 10,
-            }}>
+            <motion.div
+              key={i}
+              whileHover={{ scale: 1.02, transition: { duration: 0.14 } }}
+              style={{
+                padding: '14px 16px', background: 'rgba(255,61,113,0.05)',
+                border: '1px solid rgba(255,61,113,0.15)', borderRadius: 'var(--radius-md)',
+                display: 'flex', alignItems: 'center', gap: 10,
+              }}
+            >
               <span style={{ fontSize: 20 }}>{item.icon}</span>
               <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--danger)' }}>{item.label}</span>
-            </div>
+            </motion.div>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* How Data is Handled */}
-      <div className="card mb-3">
+      <motion.div className="card mb-3" variants={fadeInUp} {...cardHoverProps}>
         <div className="card-title mb-2">🔐 {t('priv_handling_title')}</div>
         <div className="privacy-grid">
-          <div className="privacy-card">
+          <motion.div className="privacy-card" whileHover={{ y: -3, transition: { duration: 0.16 } }}>
             <div className="privacy-icon"><Lock size={28} color="var(--primary-light)" /></div>
             <h4>{t('priv_card1_title')}</h4>
             <p>{t('priv_card1_desc')}</p>
-          </div>
-          <div className="privacy-card">
+          </motion.div>
+          <motion.div className="privacy-card" whileHover={{ y: -3, transition: { duration: 0.16 } }}>
             <div className="privacy-icon"><Eye size={28} color="var(--accent)" /></div>
             <h4>{t('priv_card2_title')}</h4>
             <p>{t('priv_card2_desc')}</p>
-          </div>
-          <div className="privacy-card">
+          </motion.div>
+          <motion.div className="privacy-card" whileHover={{ y: -3, transition: { duration: 0.16 } }}>
             <div className="privacy-icon"><Server size={28} color="var(--success)" /></div>
             <h4>{t('priv_card3_title')}</h4>
             <p>{t('priv_card3_desc')}</p>
-          </div>
-          <div className="privacy-card">
+          </motion.div>
+          <motion.div className="privacy-card" whileHover={{ y: -3, transition: { duration: 0.16 } }}>
             <div className="privacy-icon"><Fingerprint size={28} color="var(--info)" /></div>
             <h4>{t('priv_card4_title')}</h4>
             <p>{t('priv_card4_desc')}</p>
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Data Example */}
-      <div className="card mb-3">
+      <motion.div className="card mb-3" variants={fadeInUp} {...cardHoverProps}>
         <div className="card-title mb-2">📋 {t('priv_example_title')}</div>
         <div style={{
           padding: 20, background: 'var(--bg-input)', borderRadius: 'var(--radius-md)',
@@ -94,10 +109,10 @@ export default function Privacy() {
         <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 12 }}>
           {t('priv_example_note')}
         </p>
-      </div>
+      </motion.div>
 
       {/* Future Architecture */}
-      <div className="card">
+      <motion.div className="card" variants={fadeInUp} {...cardHoverProps}>
         <div className="card-header">
           <div className="card-title">🚀 {t('priv_roadmap_title')}</div>
           <span className="badge badge-primary">{t('priv_roadmap_badge')}</span>
@@ -125,8 +140,7 @@ export default function Privacy() {
         <div className="disclaimer mt-2">
           {t('priv_roadmap_disclaimer')}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
-

@@ -7,6 +7,13 @@ import {
   Smartphone, ShieldCheck,
   RefreshCw, Banknote
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import {
+  toastVariants,
+  buttonClickProps,
+  fadeInUp,
+  scaleIn,
+} from '../utils/motionVariants';
 
 export default function AITransactionCapture() {
   const { dispatch, t, formatDate } = useApp();
@@ -129,28 +136,35 @@ export default function AITransactionCapture() {
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto' }}>
       {/* Toast Notification */}
-      {toastMessage && (
-        <div style={{
-          position: 'fixed',
-          top: 24,
-          right: 24,
-          zIndex: 9999,
-          background: '#1A1714',
-          color: '#FFFFFF',
-          padding: '14px 22px',
-          borderRadius: 'var(--radius-md)',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.18)',
-          fontSize: 14,
-          fontWeight: 500,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          animation: 'slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          border: '1px solid rgba(252, 108, 38, 0.3)',
-        }}>
-          <span>{toastMessage}</span>
-        </div>
-      )}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            variants={toastVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            style={{
+              position: 'fixed',
+              top: 24,
+              right: 24,
+              zIndex: 9999,
+              background: '#1A1714',
+              color: '#FFFFFF',
+              padding: '14px 22px',
+              borderRadius: 'var(--radius-md)',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.18)',
+              fontSize: 14,
+              fontWeight: 500,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              border: '1px solid rgba(252, 108, 38, 0.3)',
+            }}
+          >
+            <span>{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Page Header */}
       <div className="page-header">
@@ -171,16 +185,21 @@ export default function AITransactionCapture() {
       </div>
 
       {/* Privacy & Security Guarantee Banner */}
-      <div style={{
-        background: '#FFFDF9',
-        border: '1px solid rgba(252, 108, 38, 0.2)',
-        borderRadius: 'var(--radius-lg)',
-        padding: '16px 20px',
-        marginBottom: 24,
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: 14,
-      }}>
+      <motion.div
+        variants={fadeInUp}
+        initial="initial"
+        animate="animate"
+        style={{
+          background: '#FFFDF9',
+          border: '1px solid rgba(252, 108, 38, 0.2)',
+          borderRadius: 'var(--radius-lg)',
+          padding: '16px 20px',
+          marginBottom: 24,
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 14,
+        }}
+      >
         <div style={{
           width: 38,
           height: 38,
@@ -202,7 +221,7 @@ export default function AITransactionCapture() {
             {t('cap_shield_desc')}
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Main Grid: Interactive Capture Simulator + Detected Transaction Card */}
       <div className="simulator-grid" style={{ marginBottom: 28 }}>
@@ -213,9 +232,9 @@ export default function AITransactionCapture() {
               <Smartphone size={18} color="var(--primary)" />
               <span>{t('cap_sim_title')}</span>
             </div>
-            <button className="btn btn-outline btn-sm" onClick={handleSimulateRandom}>
+            <motion.button className="btn btn-outline btn-sm" onClick={handleSimulateRandom} {...buttonClickProps}>
               <RefreshCw size={13} /> {t('cap_sim_random')}
-            </button>
+            </motion.button>
           </div>
 
           <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 14 }}>
@@ -225,10 +244,12 @@ export default function AITransactionCapture() {
           {/* Quick Simulation Templates */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
             {SAMPLE_TRANSACTION_MESSAGES.slice(0, 4).map(tpl => (
-              <button
+              <motion.button
                 key={tpl.id}
                 type="button"
                 className="btn btn-outline"
+                whileHover={{ x: 3, transition: { duration: 0.15 } }}
+                whileTap={{ scale: 0.98 }}
                 style={{
                   textAlign: 'left',
                   justifyContent: 'flex-start',
@@ -254,7 +275,7 @@ export default function AITransactionCapture() {
                     {tpl.text}
                   </div>
                 </div>
-              </button>
+              </motion.button>
             ))}
           </div>
 
@@ -306,18 +327,23 @@ export default function AITransactionCapture() {
 
         {/* Right Column: AI Transaction Detected */}
         <div>
-          {detectedTxn ? (
-            <div
-              className="card card-glow"
-              style={{
-                border: '2px solid var(--primary)',
-                background: '#FFFFFF',
-                borderRadius: 'var(--radius-xl)',
-                padding: '28px 24px',
-                position: 'relative',
-                animation: 'slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              }}
-            >
+          <AnimatePresence mode="wait">
+            {detectedTxn ? (
+              <motion.div
+                key="detected-txn-card"
+                className="card card-glow"
+                variants={scaleIn}
+                initial="initial"
+                animate="animate"
+                exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.15 } }}
+                style={{
+                  border: '2px solid var(--primary)',
+                  background: '#FFFFFF',
+                  borderRadius: 'var(--radius-xl)',
+                  padding: '28px 24px',
+                  position: 'relative',
+                }}
+              >
               <div style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -505,29 +531,36 @@ export default function AITransactionCapture() {
                     </select>
                   </div>
                   <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-                    <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleConfirm}>
+                    <motion.button className="btn btn-primary" style={{ flex: 1 }} onClick={handleConfirm} {...buttonClickProps}>
                       {t('cap_confirm_btn')}
-                    </button>
-                    <button className="btn btn-outline" onClick={() => setIsEditing(false)}>
+                    </motion.button>
+                    <motion.button className="btn btn-outline" onClick={() => setIsEditing(false)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                       {t('exp_cancel_btn')}
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
           ) : (
             /* Idle Placeholder */
-            <div className="card" style={{
-              minHeight: 380,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center',
-              padding: 36,
-              background: '#FFFDFB',
-              border: '2px dashed rgba(252, 108, 38, 0.25)',
-            }}>
+            <motion.div
+              key="idle-placeholder"
+              className="card"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1, transition: { duration: 0.25 } }}
+              exit={{ opacity: 0 }}
+              style={{
+                minHeight: 380,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                padding: 36,
+                background: '#FFFDFB',
+                border: '2px dashed rgba(252, 108, 38, 0.25)',
+              }}
+            >
               <div style={{
                 width: 60,
                 height: 60,
@@ -544,11 +577,12 @@ export default function AITransactionCapture() {
               <p style={{ fontSize: 14, color: 'var(--text-secondary)', maxWidth: 360, lineHeight: 1.6, marginBottom: 20 }}>
                 {t('cap_ready_desc')}
               </p>
-              <button className="btn btn-outline btn-sm" onClick={handleSimulateRandom}>
+              <motion.button className="btn btn-outline btn-sm" onClick={handleSimulateRandom} {...buttonClickProps}>
                 {t('cap_demo_sim_btn')}
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
       </div>
 

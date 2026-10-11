@@ -4,6 +4,8 @@ import { CATEGORIES } from '../utils/demoData';
 import { generateExpenseStory, getMonthlyOverview, analyzeSpendingPatterns } from '../utils/aiEngine';
 import { fetchEmailStatus, sendTestEmail, checkOverbudgetAlert } from '../utils/api';
 import { Sparkles, TrendingUp, TrendingDown, Clock, Coffee, Target, ArrowRight, Zap, Mail, Send, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { motion } from 'motion/react';
+import { fadeInUp, buttonClickProps, cardHoverProps, staggerContainer } from '../utils/motionVariants';
 
 export default function AIInsights() {
   const { state, dispatch, t, language, getMonthName } = useApp();
@@ -71,8 +73,12 @@ export default function AIInsights() {
   };
 
   return (
-    <div>
-      <div className="page-header">
+    <motion.div
+      variants={staggerContainer(0.06, 0.02)}
+      initial="initial"
+      animate="animate"
+    >
+      <motion.div className="page-header" variants={fadeInUp}>
         <div className="flex justify-between items-center" style={{ flexWrap: 'wrap', gap: 12 }}>
           <div>
             <div className="flex items-center gap-1">
@@ -82,10 +88,15 @@ export default function AIInsights() {
             <p className="subtitle">{t('ins_subtitle')}</p>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* AI SPENDING PATTERN SECTION */}
-      <div className="card mb-3" style={{ background: '#FFFFFF', border: '1px solid rgba(252, 108, 38, 0.2)', boxShadow: '0 8px 24px rgba(252, 108, 38, 0.06)' }}>
+      <motion.div
+        className="card mb-3"
+        variants={fadeInUp}
+        {...cardHoverProps}
+        style={{ background: '#FFFFFF', border: '1px solid rgba(252, 108, 38, 0.2)', boxShadow: '0 8px 24px rgba(252, 108, 38, 0.06)' }}
+      >
         <div className="flex justify-between items-center mb-2" style={{ flexWrap: 'wrap', gap: 10 }}>
           <div className="flex items-center gap-2">
             <span style={{ fontSize: 22 }}>🧬</span>
@@ -115,7 +126,10 @@ export default function AIInsights() {
         {/* Pattern Pillars Grid */}
         <div className="grid-3 mb-3" style={{ gap: 14 }}>
           {/* Pillar 1: Frequency & Amount */}
-          <div style={{ background: 'var(--bg-secondary)', padding: 14, borderRadius: 12, border: '1px solid var(--border)' }}>
+          <motion.div
+            style={{ background: 'var(--bg-secondary)', padding: 14, borderRadius: 12, border: '1px solid var(--border)' }}
+            whileHover={{ y: -2, transition: { duration: 0.15 } }}
+          >
             <div className="flex items-center gap-1 mb-2">
               <Zap size={16} color="var(--primary)" />
               <div style={{ fontSize: 13, fontWeight: 600 }}>{t('ins_frequency_title')}</div>
@@ -135,10 +149,13 @@ export default function AIInsights() {
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Pillar 2: Small Expenses Leak */}
-          <div style={{ background: 'var(--bg-secondary)', padding: 14, borderRadius: 12, border: '1px solid var(--border)' }}>
+          <motion.div
+            style={{ background: 'var(--bg-secondary)', padding: 14, borderRadius: 12, border: '1px solid var(--border)' }}
+            whileHover={{ y: -2, transition: { duration: 0.15 } }}
+          >
             <div className="flex items-center gap-1 mb-2">
               <Coffee size={16} color="#D97706" />
               <div style={{ fontSize: 13, fontWeight: 600 }}>{t('ins_micro_title')}</div>
@@ -152,10 +169,13 @@ export default function AIInsights() {
             <div style={{ fontSize: 11, color: '#78350F', background: '#FEF3C7', padding: '6px 10px', borderRadius: 6, lineHeight: 1.4 }}>
               ⚠️ {t('ins_micro_warning')}
             </div>
-          </div>
+          </motion.div>
 
           {/* Pillar 3: Time Pattern & Recurring */}
-          <div style={{ background: 'var(--bg-secondary)', padding: 14, borderRadius: 12, border: '1px solid var(--border)' }}>
+          <motion.div
+            style={{ background: 'var(--bg-secondary)', padding: 14, borderRadius: 12, border: '1px solid var(--border)' }}
+            whileHover={{ y: -2, transition: { duration: 0.15 } }}
+          >
             <div className="flex items-center gap-1 mb-2">
               <Clock size={16} color="#4F46E5" />
               <div style={{ fontSize: 13, fontWeight: 600 }}>{t('ins_time_title')}</div>
@@ -166,7 +186,13 @@ export default function AIInsights() {
                 <span style={{ fontSize: 13, fontWeight: 700, color: '#4F46E5' }}>{patterns.weekendPct}%</span>
               </div>
               <div className="progress-bar" style={{ height: 6 }}>
-                <div className="progress-fill" style={{ width: `${patterns.weekendPct}%`, background: '#4F46E5' }} />
+                <motion.div
+                  className="progress-fill"
+                  style={{ background: '#4F46E5' }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${patterns.weekendPct}%` }}
+                  transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+                />
               </div>
             </div>
             <div style={{ borderTop: '1px dashed var(--border)', paddingTop: 8 }}>
@@ -178,21 +204,24 @@ export default function AIInsights() {
                 {patterns.subscriptions.length} active (Netflix, WiFi, Gym, etc.)
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Actionable Benefit Card */}
-        <div style={{
-          background: 'linear-gradient(135deg, #1C1917 0%, #292524 100%)',
-          color: '#FFFFFF',
-          padding: '18px 20px',
-          borderRadius: 14,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: 16,
-        }}>
+        <motion.div
+          style={{
+            background: 'linear-gradient(135deg, #1C1917 0%, #292524 100%)',
+            color: '#FFFFFF',
+            padding: '18px 20px',
+            borderRadius: 14,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 16,
+          }}
+          whileHover={{ boxShadow: '0 8px 28px rgba(0,0,0,0.2)' }}
+        >
           <div style={{ maxWidth: 650 }}>
             <div className="flex items-center gap-1 mb-1">
               <Target size={18} color="#FC6C26" />
@@ -204,43 +233,49 @@ export default function AIInsights() {
               {patterns.opportunity.explanation}
             </div>
           </div>
-          <button
+          <motion.button
             className="btn btn-primary"
             style={{ padding: '12px 20px', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 16px rgba(252, 108, 38, 0.4)' }}
             onClick={() => handleInsightAction(patterns.opportunity.suggestedQuery)}
+            {...buttonClickProps}
           >
             <span>{t('ins_ask_money_btn')}: "{patterns.opportunity.suggestedQuery}"</span>
             <ArrowRight size={16} />
-          </button>
-        </div>
-      </div>
+          </motion.button>
+        </motion.div>
+      </motion.div>
 
       {/* AI Expense Story */}
-      <div className="card card-glow mb-3" style={{ background: 'linear-gradient(135deg, #FFF7F0 0%, #FFF1E3 100%)', border: '1px solid rgba(252, 108, 38, 0.25)' }}>
+      <motion.div
+        className="card card-glow mb-3"
+        variants={fadeInUp}
+        {...cardHoverProps}
+        style={{ background: 'linear-gradient(135deg, #FFF7F0 0%, #FFF1E3 100%)', border: '1px solid rgba(252, 108, 38, 0.25)' }}
+      >
         <div className="flex items-center gap-1 mb-2">
           <Sparkles size={18} color="var(--primary)" />
           <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 18 }}>{t('ins_story_title')} ({monthName})</h3>
         </div>
         <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.8, maxWidth: 700 }}>{story}</p>
-      </div>
+      </motion.div>
 
       {/* Key Metrics */}
-      <div className="stat-grid mb-3">
-        <div className="stat-card">
+      <motion.div className="stat-grid mb-3" variants={staggerContainer(0.04, 0.05)}>
+        <motion.div className="stat-card" variants={fadeInUp} {...cardHoverProps}>
           <div className="stat-label">{t('ins_metric_txns')}</div>
           <div className="stat-value">{overview.transactionCount}</div>
           <div className="stat-change" style={{ color: 'var(--text-muted)' }}>{t('ins_metric_this_month')}</div>
-        </div>
-        <div className="stat-card">
+        </motion.div>
+        <motion.div className="stat-card" variants={fadeInUp} {...cardHoverProps}>
           <div className="stat-label">{t('ins_metric_avg')}</div>
           <div className="stat-value">₹{overview.transactionCount > 0 ? Math.round(overview.currentTotal / overview.transactionCount).toLocaleString('en-IN') : 0}</div>
-        </div>
-        <div className="stat-card">
+        </motion.div>
+        <motion.div className="stat-card" variants={fadeInUp} {...cardHoverProps}>
           <div className="stat-label">{t('ins_metric_cats')}</div>
           <div className="stat-value">{overview.categoryCount}</div>
           <div className="stat-change" style={{ color: 'var(--text-muted)' }}>{t('ins_metric_of_total', { total: CATEGORIES.length })}</div>
-        </div>
-        <div className="stat-card">
+        </motion.div>
+        <motion.div className="stat-card" variants={fadeInUp} {...cardHoverProps}>
           <div className="stat-label">{t('ins_metric_change')}</div>
           <div className="stat-value" style={{ color: overview.currentTotal > overview.previousTotal ? 'var(--danger)' : 'var(--success)' }}>
             {overview.previousTotal > 0 ? `${((overview.currentTotal - overview.previousTotal) / overview.previousTotal * 100).toFixed(0)}%` : 'N/A'}
@@ -249,11 +284,16 @@ export default function AIInsights() {
             {overview.currentTotal > overview.previousTotal ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
             {t('dash_vs_last_month')}
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Automated Email Notifications */}
-      <div className="card mb-3" style={{ background: '#FFFFFF', border: '1px solid rgba(252, 108, 38, 0.25)', boxShadow: '0 8px 24px rgba(0, 0, 0, 0.04)' }}>
+      <motion.div
+        className="card mb-3"
+        variants={fadeInUp}
+        {...cardHoverProps}
+        style={{ background: '#FFFFFF', border: '1px solid rgba(252, 108, 38, 0.25)', boxShadow: '0 8px 24px rgba(0, 0, 0, 0.04)' }}
+      >
         <div className="flex justify-between items-center mb-2" style={{ flexWrap: 'wrap', gap: 10 }}>
           <div className="flex items-center gap-2">
             <div style={{
@@ -335,22 +375,25 @@ export default function AIInsights() {
                 style={{ background: '#FFFFFF', fontSize: 13 }}
               />
             </div>
-            <button
+            <motion.button
               className="btn btn-primary btn-sm flex items-center gap-1"
               onClick={handleSendTestEmail}
               disabled={sendingEmail}
+              {...buttonClickProps}
             >
               <Send size={14} />
               {sendingEmail ? t('email_sending') : t('email_send_test')}
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               className="btn btn-outline btn-sm flex items-center gap-1"
               onClick={handleTriggerOverbudgetTest}
               disabled={sendingEmail}
               title="Simulate the over-budget alert email with live figures"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
             >
               <span>{t('email_simulate_overbudget')}</span>
-            </button>
+            </motion.button>
           </div>
 
           {/* Feedback Message */}
@@ -406,11 +449,11 @@ export default function AIInsights() {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       <div className="disclaimer mt-3">
         {t('ins_disclaimer')}
       </div>
-    </div>
+    </motion.div>
   );
 }

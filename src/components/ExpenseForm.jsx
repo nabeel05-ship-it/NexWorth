@@ -2,6 +2,16 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { CATEGORIES } from '../utils/demoData';
 import { PlusCircle, Edit3, Trash2, Search, CheckCircle2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import {
+  modalBackdropVariants,
+  modalDialogVariants,
+  toastVariants,
+  buttonClickProps,
+  iconButtonProps,
+  pillToggleProps,
+  fadeInUp,
+} from '../utils/motionVariants';
 
 export default function ExpenseForm() {
   const { state, dispatch, t, formatDate, getMonthName } = useApp();
@@ -205,29 +215,36 @@ export default function ExpenseForm() {
   return (
     <div>
       {/* Toast Notification */}
-      {toastMessage && (
-        <div style={{
-          position: 'fixed',
-          top: 24,
-          right: 24,
-          zIndex: 9999,
-          background: '#1A1714',
-          color: '#FFFFFF',
-          padding: '14px 22px',
-          borderRadius: 'var(--radius-md)',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-          fontSize: 14,
-          fontWeight: 600,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          animation: 'slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          border: '1px solid rgba(252, 108, 38, 0.4)',
-        }}>
-          <CheckCircle2 size={18} color="#22C55E" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            variants={toastVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            style={{
+              position: 'fixed',
+              top: 24,
+              right: 24,
+              zIndex: 9999,
+              background: '#1A1714',
+              color: '#FFFFFF',
+              padding: '14px 22px',
+              borderRadius: 'var(--radius-md)',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+              fontSize: 14,
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              border: '1px solid rgba(252, 108, 38, 0.4)',
+            }}
+          >
+            <CheckCircle2 size={18} color="#22C55E" />
+            <span>{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Page Header */}
       <div className="page-header">
@@ -237,134 +254,167 @@ export default function ExpenseForm() {
             <p className="subtitle">{t('exp_subtitle')}</p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="btn btn-primary" onClick={() => openAddModal('UPI')}>
+            <motion.button
+              className="btn btn-primary"
+              onClick={() => openAddModal('UPI')}
+              {...buttonClickProps}
+            >
               <PlusCircle size={16} /> {t('exp_add_btn')}
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>
 
       {/* Add / Edit Modal */}
-      {showForm && (
-        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowForm(false); }}>
-          <div className="modal" style={{ maxWidth: 540 }}>
-            <div className="modal-header">
-              <div>
-                <h3 style={{ margin: 0 }}>{editId ? t('exp_edit_modal_title') : t('exp_add_modal_title')}</h3>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  {t('exp_modal_subtitle')}
-                </div>
-              </div>
-              <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
-            </div>
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body">
-                {/* Quick Payment Method Pills */}
-                <div className="form-group mb-2">
-                  <label className="form-label" style={{ marginBottom: 6 }}>{t('exp_payment_label')}</label>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {paymentButtons.map(pm => {
-                      const isActive = formData.paymentMethod === pm.id;
-                      return (
-                        <button
-                          key={pm.id}
-                          type="button"
-                          onClick={() => setFormData({ ...formData, paymentMethod: pm.id, source: pm.source })}
-                          style={{
-                            padding: '7px 13px',
-                            borderRadius: 8,
-                            fontSize: 12.5,
-                            fontWeight: isActive ? 600 : 500,
-                            border: isActive ? '2px solid var(--primary)' : '1px solid var(--border)',
-                            background: isActive ? 'rgba(252, 108, 38, 0.12)' : 'var(--bg-secondary)',
-                            color: isActive ? 'var(--primary)' : 'var(--text)',
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease',
-                          }}
-                        >
-                          {t(pm.labelKey)}
-                        </button>
-                      );
-                    })}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            className="modal-overlay"
+            variants={modalBackdropVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            onClick={(e) => { if (e.target === e.currentTarget) setShowForm(false); }}
+          >
+            <motion.div
+              className="modal"
+              style={{ maxWidth: 540 }}
+              variants={modalDialogVariants}
+            >
+              <div className="modal-header">
+                <div>
+                  <h3 style={{ margin: 0 }}>{editId ? t('exp_edit_modal_title') : t('exp_add_modal_title')}</h3>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    {t('exp_modal_subtitle')}
                   </div>
                 </div>
+                <motion.button
+                  className="btn btn-ghost btn-icon"
+                  onClick={() => setShowForm(false)}
+                  {...iconButtonProps}
+                >
+                  ✕
+                </motion.button>
+              </div>
+              <form onSubmit={handleSubmit}>
+                <div className="modal-body">
+                  {/* Quick Payment Method Pills */}
+                  <div className="form-group mb-2">
+                    <label className="form-label" style={{ marginBottom: 6 }}>{t('exp_payment_label')}</label>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {paymentButtons.map(pm => {
+                        const isActive = formData.paymentMethod === pm.id;
+                        return (
+                          <motion.button
+                            key={pm.id}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, paymentMethod: pm.id, source: pm.source })}
+                            {...pillToggleProps}
+                            style={{
+                              padding: '7px 13px',
+                              borderRadius: 8,
+                              fontSize: 12.5,
+                              fontWeight: isActive ? 600 : 500,
+                              border: isActive ? '2px solid var(--primary)' : '1px solid var(--border)',
+                              background: isActive ? 'rgba(252, 108, 38, 0.12)' : 'var(--bg-secondary)',
+                              color: isActive ? 'var(--primary)' : 'var(--text)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {t(pm.labelKey)}
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-                <div className="form-group">
-                  <label className="form-label">{t('exp_name_label')}</label>
-                  <input
-                    className="form-input"
-                    type="text"
-                    placeholder={t('exp_name_placeholder')}
-                    value={formData.name}
-                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                    required
-                    autoFocus
-                  />
-                </div>
-
-                <div className="form-row">
                   <div className="form-group">
-                    <label className="form-label">{t('exp_amount_label')}</label>
+                    <label className="form-label">{t('exp_name_label')}</label>
                     <input
                       className="form-input"
-                      type="number"
-                      placeholder="0"
-                      min="1"
-                      step="any"
-                      value={formData.amount}
-                      onChange={e => setFormData({ ...formData, amount: e.target.value })}
+                      type="text"
+                      placeholder={t('exp_name_placeholder')}
+                      value={formData.name}
+                      onChange={e => setFormData({ ...formData, name: e.target.value })}
+                      required
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">{t('exp_amount_label')}</label>
+                      <input
+                        className="form-input"
+                        type="number"
+                        placeholder="0"
+                        min="1"
+                        step="any"
+                        value={formData.amount}
+                        onChange={e => setFormData({ ...formData, amount: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">{t('exp_category_label')}</label>
+                      <select
+                        className="form-select"
+                        value={formData.category}
+                        onChange={e => setFormData({ ...formData, category: e.target.value })}
+                      >
+                        {CATEGORIES.map(cat => (
+                          <option key={cat.id} value={cat.id}>{cat.icon} {t(`cat_${cat.id}`) || cat.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">{t('exp_date_label')}</label>
+                    <input
+                      className="form-input"
+                      type="date"
+                      value={formData.date}
+                      onChange={e => setFormData({ ...formData, date: e.target.value })}
                       required
                     />
                   </div>
+
                   <div className="form-group">
-                    <label className="form-label">{t('exp_category_label')}</label>
-                    <select
-                      className="form-select"
-                      value={formData.category}
-                      onChange={e => setFormData({ ...formData, category: e.target.value })}
-                    >
-                      {CATEGORIES.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.icon} {t(`cat_${cat.id}`) || cat.name}</option>
-                      ))}
-                    </select>
+                    <label className="form-label">{t('exp_note_label')}</label>
+                    <textarea
+                      className="form-textarea"
+                      placeholder={t('exp_note_placeholder')}
+                      value={formData.note}
+                      onChange={e => setFormData({ ...formData, note: e.target.value })}
+                      rows={2}
+                    />
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">{t('exp_date_label')}</label>
-                  <input
-                    className="form-input"
-                    type="date"
-                    value={formData.date}
-                    onChange={e => setFormData({ ...formData, date: e.target.value })}
-                    required
-                  />
+                <div className="modal-footer">
+                  <motion.button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => setShowForm(false)}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {t('exp_cancel_btn')}
+                  </motion.button>
+                  <motion.button
+                    type="submit"
+                    className="btn btn-primary"
+                    {...buttonClickProps}
+                  >
+                    {editId ? t('exp_update_btn') : t('exp_save_btn')}
+                  </motion.button>
                 </div>
-
-                <div className="form-group">
-                  <label className="form-label">{t('exp_note_label')}</label>
-                  <textarea
-                    className="form-textarea"
-                    placeholder={t('exp_note_placeholder')}
-                    value={formData.note}
-                    onChange={e => setFormData({ ...formData, note: e.target.value })}
-                    rows={2}
-                  />
-                </div>
-              </div>
-
-              <div className="modal-footer">
-                <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)}>
-                  {t('exp_cancel_btn')}
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  {editId ? t('exp_update_btn') : t('exp_save_btn')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Summary + Filters Bar */}
       <div className="card mb-2" style={{ background: '#FFFFFF', border: '1px solid var(--border)' }}>
@@ -456,9 +506,13 @@ export default function ExpenseForm() {
             <p className="text-muted mt-1" style={{ fontSize: 13, margin: '0 0 16px' }}>
               {t('exp_no_found_desc')}
             </p>
-            <button className="btn btn-primary btn-sm" onClick={() => openAddModal('UPI')}>
+            <motion.button
+              className="btn btn-primary btn-sm"
+              onClick={() => openAddModal('UPI')}
+              {...buttonClickProps}
+            >
               <PlusCircle size={14} /> {t('exp_add_first')}
-            </button>
+            </motion.button>
           </div>
         ) : (
           <ul className="expense-list">
@@ -482,7 +536,11 @@ export default function ExpenseForm() {
               }
 
               return (
-                <li key={id} className="expense-item">
+                <motion.li
+                  key={id}
+                  className="expense-item"
+                  whileHover={{ x: 2, backgroundColor: 'rgba(252, 108, 38, 0.03)', transition: { duration: 0.15 } }}
+                >
                   <div className="expense-cat-icon" style={{ background: `${cat.color}20` }}>
                     {cat.icon}
                   </div>
@@ -520,19 +578,25 @@ export default function ExpenseForm() {
                   </div>
 
                   <div className="expense-actions">
-                    <button className="btn btn-ghost btn-icon" onClick={() => handleEdit(exp)} title={t('common_edit')}>
+                    <motion.button
+                      className="btn btn-ghost btn-icon"
+                      onClick={() => handleEdit(exp)}
+                      title={t('common_edit')}
+                      {...iconButtonProps}
+                    >
                       <Edit3 size={14} />
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
                       className="btn btn-ghost btn-icon"
                       onClick={() => handleDelete(id)}
                       title={t('common_delete')}
                       style={{ color: 'var(--danger)' }}
+                      {...iconButtonProps}
                     >
                       <Trash2 size={14} />
-                    </button>
+                    </motion.button>
                   </div>
-                </li>
+                </motion.li>
               );
             })}
           </ul>

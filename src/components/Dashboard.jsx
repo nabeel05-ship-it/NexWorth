@@ -8,6 +8,8 @@ import {
 } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
 import { TrendingUp, TrendingDown, ArrowRight, Sparkles, Target } from 'lucide-react';
+import { motion } from 'motion/react';
+import { staggerContainer, fadeInUp, cardHoverProps, buttonClickProps } from '../utils/motionVariants';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Filler);
 
@@ -173,29 +175,40 @@ export default function Dashboard() {
   const topCategoryName = overview.topCategory ? (t(`cat_${overview.topCategory}`) || topCategoryObj?.name) : '';
 
   return (
-    <div>
-      <div className="page-header">
+    <motion.div
+      variants={staggerContainer(0.06, 0.02)}
+      initial="initial"
+      animate="animate"
+    >
+      <motion.div className="page-header" variants={fadeInUp}>
         <div className="flex justify-between items-center" style={{ flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h2>{t('nav_dashboard')}</h2>
             <p className="subtitle">{monthName} {now.getFullYear()} — {t('dash_subtitle')}</p>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* AI Story Card */}
-      <div className="card card-glow mb-3" style={{ background: 'linear-gradient(135deg, #FFF7F0 0%, #FFF1E3 100%)', border: '1px solid rgba(252, 108, 38, 0.25)' }}>
+      <motion.div
+        className="card card-glow mb-3"
+        variants={fadeInUp}
+        whileHover={{ boxShadow: '0 8px 24px rgba(252, 108, 38, 0.12)', transition: { duration: 0.2 } }}
+        style={{ background: 'linear-gradient(135deg, #FFF7F0 0%, #FFF1E3 100%)', border: '1px solid rgba(252, 108, 38, 0.25)' }}
+      >
         <div className="flex justify-between items-center mb-1" style={{ flexWrap: 'wrap', gap: 8 }}>
           <div className="flex items-center gap-1">
             <span className="ai-badge"><Sparkles size={12} /> {t('ins_story_title')}</span>
           </div>
-          <button 
+          <motion.button 
             className="btn btn-ghost btn-sm" 
             style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600 }}
             onClick={() => dispatch({ type: 'SET_PAGE', payload: 'insights' })}
+            whileHover={{ x: 3, transition: { duration: 0.15 } }}
+            whileTap={{ scale: 0.96 }}
           >
             {t('ins_pattern_title')} 🧬 →
-          </button>
+          </motion.button>
         </div>
         <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 12 }}>{story}</p>
         
@@ -223,24 +236,25 @@ export default function Dashboard() {
               }).replace(t('ins_micro_title') + ': ', '')}
             </span>
           </div>
-          <button
+          <motion.button
             className="btn btn-primary btn-sm"
             style={{ fontSize: 12, padding: '6px 12px' }}
             onClick={() => dispatch({ type: 'SET_CHAT_QUERY', payload: language === 'kn' ? '₹500 ಕಡಿಮೆ ಖರ್ಚು ಮಾಡಿದರೆ?' : language === 'hi' ? 'अगर ₹500 कम खर्च करूं?' : 'Agar ₹500 kam spend karu?' })}
+            {...buttonClickProps}
           >
             {t('nav_ai_chat')} 💬
-          </button>
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Stat Cards */}
-      <div className="stat-grid">
-        <div className="stat-card">
+      <motion.div className="stat-grid" variants={staggerContainer(0.04, 0.05)}>
+        <motion.div className="stat-card" variants={fadeInUp} {...cardHoverProps}>
           <div className="stat-icon apricot">💰</div>
           <div className="stat-label">{t('dash_income')}</div>
           <div className="stat-value">₹{user.monthlyIncome.toLocaleString('en-IN')}</div>
-        </div>
-        <div className="stat-card">
+        </motion.div>
+        <motion.div className="stat-card" variants={fadeInUp} {...cardHoverProps}>
           <div className="stat-icon purple">📊</div>
           <div className="stat-label">{t('dash_expenses')}</div>
           <div className="stat-value">₹{overview.currentTotal.toLocaleString('en-IN')}</div>
@@ -248,8 +262,8 @@ export default function Dashboard() {
             {spendingChange > 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
             {Math.abs(spendingChange)}% {t('dash_vs_last_month')}
           </div>
-        </div>
-        <div className="stat-card">
+        </motion.div>
+        <motion.div className="stat-card" variants={fadeInUp} {...cardHoverProps}>
           <div className="stat-icon green">💵</div>
           <div className="stat-label">{t('dash_savings')}</div>
           <div className="stat-value" style={{ color: overview.savings >= 0 ? 'var(--success)' : 'var(--danger)' }}>
@@ -258,8 +272,8 @@ export default function Dashboard() {
           <div className="stat-change" style={{ color: 'var(--text-muted)' }}>
             {overview.savingsRate}% {t('dash_savings_rate')}
           </div>
-        </div>
-        <div className="stat-card">
+        </motion.div>
+        <motion.div className="stat-card" variants={fadeInUp} {...cardHoverProps}>
           <div className="stat-icon red">🏷️</div>
           <div className="stat-label">{t('dash_spending_category')}</div>
           <div className="stat-value" style={{ fontSize: 18 }}>
@@ -268,12 +282,12 @@ export default function Dashboard() {
           <div className="stat-change" style={{ color: 'var(--text-muted)' }}>
             ₹{overview.topAmount.toLocaleString('en-IN')}
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Charts Row */}
-      <div className="chart-row">
-        <div className="card">
+      <motion.div className="chart-row" variants={fadeInUp}>
+        <motion.div className="card" {...cardHoverProps}>
           <div className="card-header">
             <div className="card-title"><span className="card-icon">🍩</span> {t('dash_spending_breakdown')}</div>
           </div>
@@ -282,21 +296,21 @@ export default function Dashboard() {
               <Doughnut data={doughnutData} options={doughnutOptions} />
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="card">
+        <motion.div className="card" {...cardHoverProps}>
           <div className="card-header">
             <div className="card-title"><span className="card-icon">📊</span> {t('dash_monthly_comparison')}</div>
           </div>
           <div className="chart-container" style={{ height: 280 }}>
             <Bar data={barData} options={barOptions} />
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Budget Status + AI Insights Row */}
-      <div className="grid-2">
-        <div className="card">
+      <motion.div className="grid-2" variants={fadeInUp}>
+        <motion.div className="card" {...cardHoverProps}>
           <div className="card-header">
             <div className="card-title"><span className="card-icon">📋</span> {t('dash_budget_status')}</div>
           </div>
@@ -309,39 +323,51 @@ export default function Dashboard() {
                 </span>
               </div>
               <div className="progress-bar">
-                <div
+                <motion.div
                   className={`progress-fill ${b.percentage >= 100 ? 'danger' : b.percentage >= 80 ? 'apricot' : ''}`}
-                  style={{ width: `${Math.min(100, b.percentage)}%` }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(100, b.percentage)}%` }}
+                  transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
                 />
               </div>
             </div>
           ))}
-        </div>
+        </motion.div>
 
-        <div className="card">
+        <motion.div className="card" {...cardHoverProps}>
           <div className="card-header">
             <div className="card-title"><span className="card-icon">✨</span> {t('dash_ai_alerts')}</div>
             <span className="ai-badge"><Sparkles size={10} /> AI</span>
           </div>
           {insights.slice(0, 4).map((insight, i) => (
-            <div key={i} className={`insight-card ${insight.type}`} style={{ padding: 12, marginBottom: 8 }}>
+            <motion.div
+              key={i}
+              className={`insight-card ${insight.type}`}
+              style={{ padding: 12, marginBottom: 8 }}
+              whileHover={{ x: 2, transition: { duration: 0.15 } }}
+            >
               <span className="insight-icon" style={{ fontSize: 18 }}>{insight.icon}</span>
               <div className="insight-content">
                 <p style={{ fontSize: 13 }}>{insight.text}</p>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Goals + Recent Transactions Row */}
-      <div className="grid-2 mt-3">
-        <div className="card">
+      <motion.div className="grid-2 mt-3" variants={fadeInUp}>
+        <motion.div className="card" {...cardHoverProps}>
           <div className="card-header">
             <div className="card-title"><Target size={16} /> {t('dash_goals_progress')}</div>
-            <button className="btn btn-ghost btn-sm" onClick={() => dispatch({ type: 'SET_PAGE', payload: 'goals' })}>
+            <motion.button
+              className="btn btn-ghost btn-sm"
+              onClick={() => dispatch({ type: 'SET_PAGE', payload: 'goals' })}
+              whileHover={{ x: 3, transition: { duration: 0.15 } }}
+              whileTap={{ scale: 0.96 }}
+            >
               {t('dash_view_all')} <ArrowRight size={14} />
-            </button>
+            </motion.button>
           </div>
           {goals.slice(0, 3).map(goal => {
             const progress = ((goal.currentAmount / goal.targetAmount) * 100).toFixed(0);
@@ -357,19 +383,29 @@ export default function Dashboard() {
                   </span>
                 </div>
                 <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${Math.min(100, progress)}%` }} />
+                  <motion.div
+                    className="progress-fill"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(100, progress)}%` }}
+                    transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                  />
                 </div>
               </div>
             );
           })}
-        </div>
+        </motion.div>
 
-        <div className="card">
+        <motion.div className="card" {...cardHoverProps}>
           <div className="card-header">
             <div className="card-title"><span className="card-icon">📝</span> {t('dash_recent_transactions')}</div>
-            <button className="btn btn-ghost btn-sm" onClick={() => dispatch({ type: 'SET_PAGE', payload: 'add-expense' })}>
+            <motion.button
+              className="btn btn-ghost btn-sm"
+              onClick={() => dispatch({ type: 'SET_PAGE', payload: 'add-expense' })}
+              whileHover={{ x: 3, transition: { duration: 0.15 } }}
+              whileTap={{ scale: 0.96 }}
+            >
               {t('dash_view_all')} <ArrowRight size={14} />
-            </button>
+            </motion.button>
           </div>
           <ul className="expense-list">
             {recentExpenses.map(exp => {
@@ -379,7 +415,12 @@ export default function Dashboard() {
               const id = exp._id || exp.id;
               const name = exp.name || exp.merchant || 'Expense';
               return (
-                <li key={id} className="expense-item" style={{ padding: '10px 0' }}>
+                <motion.li
+                  key={id}
+                  className="expense-item"
+                  style={{ padding: '10px 8px', borderRadius: 6 }}
+                  whileHover={{ x: 3, backgroundColor: 'rgba(252, 108, 38, 0.04)', transition: { duration: 0.15 } }}
+                >
                   <div className="expense-cat-icon" style={{ background: `${cat.color}20`, width: 34, height: 34, fontSize: 15 }}>
                     {cat.icon}
                   </div>
@@ -391,12 +432,12 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="expense-amount">-₹{Number(exp.amount || 0).toLocaleString('en-IN')}</div>
-                </li>
+                </motion.li>
               );
             })}
           </ul>
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 }

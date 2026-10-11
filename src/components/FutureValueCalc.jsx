@@ -7,6 +7,8 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { Calculator } from 'lucide-react';
+import { motion } from 'motion/react';
+import { fadeInUp, buttonClickProps, cardHoverProps, staggerContainer } from '../utils/motionVariants';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
@@ -96,48 +98,42 @@ export default function FutureValueCalc() {
   const compoundingLabel = compounding === 'annually' ? t('common_annual') : t('common_monthly');
 
   return (
-    <div>
-      <div className="page-header">
+    <motion.div
+      variants={staggerContainer(0.05, 0.02)}
+      initial="initial"
+      animate="animate"
+    >
+      <motion.div className="page-header" variants={fadeInUp}>
         <h2>{t('calc_title')}</h2>
         <p className="subtitle">{t('calc_subtitle')}</p>
-      </div>
+      </motion.div>
 
       {/* Benchmark Scenarios Bar */}
-      <div className="card mb-3">
+      <motion.div className="card mb-3" variants={fadeInUp} {...cardHoverProps}>
         <div className="card-title mb-2">🎯 {t('calc_benchmarks_title')}</div>
         <div className="flex gap-1" style={{ flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            className="btn btn-outline btn-sm"
-            onClick={() => applyPreset({ initial: 5000, monthly: 0, rate: 10, years: 10, compounding: 'annually' })}
-          >
-            {t('calc_preset_1')}
-          </button>
-          <button
-            type="button"
-            className="btn btn-outline btn-sm"
-            onClick={() => applyPreset({ initial: 5000, monthly: 0, rate: 10, years: 5, compounding: 'annually' })}
-          >
-            {t('calc_preset_2')}
-          </button>
-          <button
-            type="button"
-            className="btn btn-outline btn-sm"
-            onClick={() => applyPreset({ initial: 5000, monthly: 0, rate: 10, years: 20, compounding: 'annually' })}
-          >
-            {t('calc_preset_3')}
-          </button>
-          <button
-            type="button"
-            className="btn btn-outline btn-sm"
-            onClick={() => applyPreset({ initial: 10000, monthly: 2000, rate: 12, years: 10, compounding: 'annually' })}
-          >
-            {t('calc_preset_4')}
-          </button>
+          {[
+            { preset: { initial: 5000, monthly: 0, rate: 10, years: 10, compounding: 'annually' }, key: 'calc_preset_1' },
+            { preset: { initial: 5000, monthly: 0, rate: 10, years: 5, compounding: 'annually' }, key: 'calc_preset_2' },
+            { preset: { initial: 5000, monthly: 0, rate: 10, years: 20, compounding: 'annually' }, key: 'calc_preset_3' },
+            { preset: { initial: 10000, monthly: 2000, rate: 12, years: 10, compounding: 'annually' }, key: 'calc_preset_4' },
+          ].map((item, i) => (
+            <motion.button
+              key={i}
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={() => applyPreset(item.preset)}
+              whileHover={{ scale: 1.03, y: -1 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ duration: 0.12 }}
+            >
+              {t(item.key)}
+            </motion.button>
+          ))}
         </div>
-      </div>
+      </motion.div>
 
-      <div className="simulator-grid">
+      <motion.div className="simulator-grid" variants={fadeInUp}>
         {/* Inputs */}
         <div className="simulator-panel">
           <div className="card-title mb-2"><Calculator size={16} /> {t('calc_inputs_title')}</div>
@@ -158,9 +154,15 @@ export default function FutureValueCalc() {
             <div className="flex items-center gap-1 mt-1">
               <input className="form-input" type="number" value={monthlyContribution} onChange={e => setMonthlyContribution(Math.max(0, parseInt(e.target.value) || 0))} min="0" style={{ flex: 1 }} />
               {monthlyContribution > 0 && (
-                <button type="button" className="btn btn-ghost btn-sm" onClick={() => setMonthlyContribution(0)} title="Set to 0 for pure one-time calculation">
+                <motion.button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => setMonthlyContribution(0)}
+                  title="Set to 0 for pure one-time calculation"
+                  whileTap={{ scale: 0.95 }}
+                >
                   {t('calc_clear_zero')}
-                </button>
+                </motion.button>
               )}
             </div>
           </div>
@@ -192,22 +194,26 @@ export default function FutureValueCalc() {
           <div className="form-group" style={{ paddingTop: 8, borderTop: '1px solid var(--border)' }}>
             <label className="form-label" style={{ marginBottom: 6 }}>{t('calc_freq_label')}</label>
             <div className="btn-group" style={{ width: '100%', display: 'flex' }}>
-              <button
+              <motion.button
                 type="button"
                 className={`btn btn-sm ${compounding === 'annually' ? 'btn-primary' : 'btn-outline'}`}
                 onClick={() => setCompounding('annually')}
                 style={{ flex: 1 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
               >
                 {t('calc_freq_annual')}
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 type="button"
                 className={`btn btn-sm ${compounding === 'monthly' ? 'btn-primary' : 'btn-outline'}`}
                 onClick={() => setCompounding('monthly')}
                 style={{ flex: 1 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
               >
                 {t('calc_freq_monthly')}
-              </button>
+              </motion.button>
             </div>
           </div>
         </div>
@@ -217,34 +223,37 @@ export default function FutureValueCalc() {
           <div className="card-title mb-2">📊 {t('calc_results_title')}</div>
 
           <div className="scenario-result">
-            <div className="scenario-box">
+            <motion.div className="scenario-box" whileHover={{ y: -2, transition: { duration: 0.15 } }}>
               <div className="scenario-label">{t('calc_initial_box')}</div>
               <div className="scenario-value" style={{ fontSize: 18, color: 'var(--text-primary)' }}>₹{initialAmount.toLocaleString('en-IN')}</div>
               <div className="scenario-note">{compoundingLabel}</div>
-            </div>
-            <div className="scenario-box">
+            </motion.div>
+            <motion.div className="scenario-box" whileHover={{ y: -2, transition: { duration: 0.15 } }}>
               <div className="scenario-label">{t('calc_monthly_added')}</div>
               <div className="scenario-value" style={{ fontSize: 18, color: 'var(--primary)' }}>₹{(monthlyContribution * years * 12).toLocaleString('en-IN')}</div>
               <div className="scenario-note">{monthlyContribution > 0 ? `₹${monthlyContribution.toLocaleString('en-IN')}/${t('common_month')} × ${years * 12}m` : 'None'}</div>
-            </div>
-            <div className="scenario-box">
+            </motion.div>
+            <motion.div className="scenario-box" whileHover={{ y: -2, transition: { duration: 0.15 } }}>
               <div className="scenario-label">{t('calc_total_invested')}</div>
               <div className="scenario-value" style={{ fontSize: 18 }}>₹{result.totalInvested.toLocaleString('en-IN')}</div>
               <div className="scenario-note">{t('calc_principal_note')}</div>
-            </div>
-            <div className="scenario-box" style={{ background: 'rgba(5, 150, 105, 0.06)', borderColor: 'rgba(5, 150, 105, 0.2)' }}>
+            </motion.div>
+            <motion.div className="scenario-box" style={{ background: 'rgba(5, 150, 105, 0.06)', borderColor: 'rgba(5, 150, 105, 0.2)' }} whileHover={{ y: -2, transition: { duration: 0.15 } }}>
               <div className="scenario-label">{t('calc_est_growth')}</div>
               <div className="scenario-value" style={{ color: 'var(--success)' }}>₹{result.estimatedGrowth.toLocaleString('en-IN')}</div>
               <div className="scenario-note">{t('calc_gain_note')}</div>
-            </div>
+            </motion.div>
           </div>
 
           {/* Final value highlight */}
-          <div style={{
-            marginTop: 20, padding: '24px', textAlign: 'center',
-            background: 'linear-gradient(135deg, #FFF7F0 0%, #FFF1E3 100%)',
-            borderRadius: 'var(--radius-lg)', border: '1px solid rgba(252, 108, 38, 0.25)',
-          }}>
+          <motion.div
+            style={{
+              marginTop: 20, padding: '24px', textAlign: 'center',
+              background: 'linear-gradient(135deg, #FFF7F0 0%, #FFF1E3 100%)',
+              borderRadius: 'var(--radius-lg)', border: '1px solid rgba(252, 108, 38, 0.25)',
+            }}
+            whileHover={{ scale: 1.01, boxShadow: '0 8px 24px rgba(252, 108, 38, 0.15)', transition: { duration: 0.2 } }}
+          >
             <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>{t('calc_est_fv')}</div>
             <div style={{ fontFamily: "'Space Grotesk'", fontSize: 36, fontWeight: 800, color: 'var(--primary)' }}>
               ₹{result.totalValue.toLocaleString('en-IN')}
@@ -257,24 +266,24 @@ export default function FutureValueCalc() {
                 compounding: compoundingLabel
               })}
             </div>
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Chart */}
-      <div className="card mt-3">
+      <motion.div className="card mt-3" variants={fadeInUp} {...cardHoverProps}>
         <div className="card-header">
           <div className="card-title">📈 {t('calc_chart_title')}</div>
         </div>
         <div className="chart-container" style={{ height: 340 }}>
           <Line data={chartData} options={chartOptions} />
         </div>
-      </div>
+      </motion.div>
 
       <div className="disclaimer mt-3">
         {t('calc_disclaimer', { rate: annualReturn, compounding: compoundingLabel })}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

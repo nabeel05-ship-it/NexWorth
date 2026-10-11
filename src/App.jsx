@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { AppProvider, useApp } from './context/AppContext';
+import { pageVariants, pageVariantsReduced } from './utils/motionVariants';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import ExpenseForm from './components/ExpenseForm';
@@ -16,6 +18,7 @@ import Privacy from './components/Privacy';
 function AppContent() {
   const { state } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   const renderPage = () => {
     switch (state.currentPage) {
@@ -39,7 +42,18 @@ function AppContent() {
     <div className="app-layout">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(!sidebarOpen)} />
       <main className="main-content">
-        {renderPage()}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={state.currentPage}
+            variants={shouldReduceMotion ? pageVariantsReduced : pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            style={{ width: '100%' }}
+          >
+            {renderPage()}
+          </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   );

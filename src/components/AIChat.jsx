@@ -3,6 +3,8 @@ import { useApp } from '../context/AppContext';
 import { processAIChat, getMonthlyOverview, analyzeSpendingPatterns } from '../utils/aiEngine';
 import { sendAIChatQuery } from '../utils/api';
 import { MessageCircle, Send, Sparkles, Bot, User, ArrowRight, Target, Zap } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { buttonClickProps, iconButtonProps, fadeInUp, scaleIn, staggerContainer } from '../utils/motionVariants';
 
 export default function AIChat() {
   const { state, dispatch, t, language } = useApp();
@@ -202,9 +204,16 @@ export default function AIChat() {
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>{t('chat_suggested')}</div>
               <div className="flex gap-1" style={{ flexWrap: 'wrap' }}>
                 {SUGGESTIONS.map((s, i) => (
-                  <button key={i} className="btn btn-outline btn-sm" onClick={() => handleSend(s)} style={{ fontSize: 12 }}>
+                  <motion.button
+                    key={i}
+                    className="btn btn-outline btn-sm"
+                    onClick={() => handleSend(s)}
+                    style={{ fontSize: 12 }}
+                    whileHover={{ scale: 1.03, y: -1 }}
+                    whileTap={{ scale: 0.96 }}
+                  >
                     {s}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
@@ -213,7 +222,14 @@ export default function AIChat() {
           {/* Messages */}
           <div className="chat-messages" style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 16 }}>
             {messages.map((msg, i) => (
-              <div key={i} className={`chat-message ${msg.type}`} style={{ display: 'flex', gap: 12, flexDirection: msg.type === 'user' ? 'row-reverse' : 'row' }}>
+              <motion.div
+                key={i}
+                className={`chat-message ${msg.type}`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                style={{ display: 'flex', gap: 12, flexDirection: msg.type === 'user' ? 'row-reverse' : 'row' }}
+              >
                 <div className="chat-avatar" style={{ 
                   background: msg.type === 'ai' ? 'rgba(252, 108, 38, 0.1)' : 'var(--bg-secondary)',
                   color: msg.type === 'ai' ? 'var(--primary)' : 'var(--text)',
@@ -241,10 +257,13 @@ export default function AIChat() {
                   
                   {/* Structured Scenario Card */}
                   {msg.scenario && (
-                    <div style={{ 
-                      background: '#FFFFFF', border: '1px solid rgba(252, 108, 38, 0.3)', borderRadius: 12, 
-                      padding: 16, boxShadow: '0 4px 16px rgba(252, 108, 38, 0.08)'
-                    }}>
+                    <motion.div
+                      style={{ 
+                        background: '#FFFFFF', border: '1px solid rgba(252, 108, 38, 0.3)', borderRadius: 12, 
+                        padding: 16, boxShadow: '0 4px 16px rgba(252, 108, 38, 0.08)'
+                      }}
+                      whileHover={{ boxShadow: '0 6px 20px rgba(252, 108, 38, 0.12)' }}
+                    >
                       <div className="flex justify-between items-center mb-2">
                         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', letterSpacing: 0.5 }}>
                           WHAT-IF SCENARIO
@@ -294,50 +313,67 @@ export default function AIChat() {
                       
                       <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
                         {msg.scenario.goalImpact && (
-                          <button
+                          <motion.button
                             className="btn btn-primary btn-sm flex items-center gap-1"
                             onClick={() => handleApplyToGoal(msg.scenario)}
+                            {...buttonClickProps}
                           >
                             <Target size={14} /> {t('chat_apply_to_goal')} ({msg.scenario.targetGoalName || 'Laptop'})
-                          </button>
+                          </motion.button>
                         )}
-                        <button
+                        <motion.button
                           className="btn btn-outline btn-sm flex items-center gap-1"
                           onClick={() => handleSend(`What if I invest ₹${msg.scenario.monthly} per month?`)}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.96 }}
                         >
                           {t('chat_invest_instead')}
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
                           className="btn btn-ghost btn-sm flex items-center gap-1"
                           onClick={() => setInput(language === 'kn' ? 'ಖರ್ಚು ಕಡಿಮೆ ಮಾಡಿದರೆ ' : language === 'hi' ? 'अगर खर्च कम करूँ ' : 'What if I reduce ')}
+                          whileHover={{ x: 2 }}
+                          whileTap={{ scale: 0.96 }}
                         >
                           {t('chat_try_another')} <ArrowRight size={14} />
-                        </button>
+                        </motion.button>
                       </div>
                       {msg.scenario.investedValue && (
                         <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 10 }}>
                           {language === 'kn' ? '* ಅಂದಾಜು ವಿವರಣೆ — ನಿಜವಾದ ಮಾರುಕಟ್ಟೆ ಆದಾಯಗಳು ಬದಲಾಗಬಹುದು.' : language === 'hi' ? '* सांकेतिक अनुमान — वास्तविक बाजार रिटर्न भिन्न हो सकते हैं।' : '* Illustrative estimate — actual market returns may vary.'}
                         </div>
                       )}
-                    </div>
+                    </motion.div>
                   )}
 
                   {/* Follow-up suggestions */}
                   {msg.followUps && msg.followUps.length > 0 && (
                     <div className="flex gap-2" style={{ flexWrap: 'wrap', marginTop: 4 }}>
                       {msg.followUps.map((f, idx) => (
-                        <button key={idx} className="btn btn-outline btn-sm" onClick={() => handleSend(f)} style={{ fontSize: 12, background: '#FFFFFF' }}>
+                        <motion.button
+                          key={idx}
+                          className="btn btn-outline btn-sm"
+                          onClick={() => handleSend(f)}
+                          style={{ fontSize: 12, background: '#FFFFFF' }}
+                          whileHover={{ scale: 1.03, y: -1 }}
+                          whileTap={{ scale: 0.96 }}
+                        >
                           {f}
-                        </button>
+                        </motion.button>
                       ))}
                     </div>
                   )}
                 </div>
-              </div>
+              </motion.div>
             ))}
 
             {isTyping && (
-              <div className="chat-message ai" style={{ display: 'flex', gap: 12 }}>
+              <motion.div
+                className="chat-message ai"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{ display: 'flex', gap: 12 }}
+              >
                 <div className="chat-avatar" style={{ background: 'rgba(252, 108, 38, 0.1)', color: 'var(--primary)', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Bot size={18} />
                 </div>
@@ -346,7 +382,7 @@ export default function AIChat() {
                   <span className="typing-dot" style={{ animationDelay: '0.2s' }}>●</span>
                   <span className="typing-dot" style={{ animationDelay: '0.4s' }}>●</span>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             <div ref={messagesEndRef} />
@@ -362,9 +398,9 @@ export default function AIChat() {
               onKeyDown={handleKeyDown}
               disabled={isTyping}
             />
-            <button className="btn btn-primary btn-icon" onClick={() => handleSend()} disabled={isTyping || !input.trim()}>
+            <motion.button className="btn btn-primary btn-icon" onClick={() => handleSend()} disabled={isTyping || !input.trim()} {...iconButtonProps}>
               <Send size={18} />
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>

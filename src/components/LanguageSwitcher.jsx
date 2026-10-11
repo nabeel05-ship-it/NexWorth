@@ -1,9 +1,12 @@
 import React from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import { useTranslation } from '../context/AppContext';
 import { Globe } from 'lucide-react';
+import { EASE_FINTECH } from '../utils/motionVariants';
 
 export default function LanguageSwitcher({ compact = false, style = {} }) {
   const { language, setLanguage, languages } = useTranslation();
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <div
@@ -16,6 +19,7 @@ export default function LanguageSwitcher({ compact = false, style = {} }) {
         borderRadius: 24,
         padding: '3px 4px',
         gap: 3,
+        position: 'relative',
         ...style,
       }}
     >
@@ -26,29 +30,50 @@ export default function LanguageSwitcher({ compact = false, style = {} }) {
       {languages.map(lang => {
         const isActive = language === lang.code;
         return (
-          <button
+          <motion.button
             key={lang.code}
             type="button"
             onClick={() => setLanguage(lang.code)}
+            whileHover={shouldReduceMotion ? undefined : { scale: 1.03 }}
+            whileTap={shouldReduceMotion ? undefined : { scale: 0.96 }}
             style={{
+              position: 'relative',
               border: 'none',
               borderRadius: 18,
               padding: compact ? '4px 8px' : '5px 12px',
               fontSize: compact ? 11.5 : 12.5,
               fontWeight: isActive ? 700 : 500,
-              background: isActive ? 'var(--primary)' : 'transparent',
+              background: 'transparent',
               color: isActive ? '#FFFFFF' : 'var(--text)',
               cursor: 'pointer',
-              transition: 'all 0.15s ease',
               display: 'flex',
               alignItems: 'center',
               gap: 4,
-              boxShadow: isActive ? '0 2px 6px rgba(252, 108, 38, 0.3)' : 'none',
+              zIndex: 1,
             }}
             title={`Switch to ${lang.label} (${lang.native})`}
           >
+            {isActive && (
+              <motion.div
+                layoutId="activeLangPill"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: 18,
+                  background: 'var(--primary)',
+                  boxShadow: '0 2px 8px rgba(252, 108, 38, 0.35)',
+                  zIndex: -1,
+                }}
+                transition={{
+                  type: 'spring',
+                  stiffness: 450,
+                  damping: 32,
+                  ease: EASE_FINTECH,
+                }}
+              />
+            )}
             <span>{lang.native}</span>
-          </button>
+          </motion.button>
         );
       })}
     </div>

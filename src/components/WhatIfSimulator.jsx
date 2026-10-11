@@ -7,6 +7,8 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { GitCompareArrows, Zap, TrendingUp, Calculator } from 'lucide-react';
+import { motion } from 'motion/react';
+import { fadeInUp, buttonClickProps, cardHoverProps, staggerContainer } from '../utils/motionVariants';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
@@ -130,8 +132,16 @@ export default function WhatIfSimulator() {
   };
 
   return (
-    <div>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+    <motion.div
+      variants={staggerContainer(0.05, 0.02)}
+      initial="initial"
+      animate="animate"
+    >
+      <motion.div
+        className="page-header"
+        variants={fadeInUp}
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}
+      >
         <div>
           <div className="flex items-center gap-1">
             <h2>{t('whatif_title')}</h2>
@@ -139,25 +149,28 @@ export default function WhatIfSimulator() {
           </div>
           <p className="subtitle">{t('whatif_subtitle')}</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Preset Scenarios */}
-      <div className="card mb-3">
+      <motion.div className="card mb-3" variants={fadeInUp} {...cardHoverProps}>
         <div className="card-title mb-2">⚡ {t('whatif_presets_title')}</div>
         <div className="flex gap-1" style={{ flexWrap: 'wrap' }}>
           {presets.map((preset, i) => (
-            <button
+            <motion.button
               key={i}
               className={`btn ${activePreset === i ? 'btn-primary' : 'btn-outline'} btn-sm`}
               onClick={() => handlePreset(preset, i)}
+              whileHover={{ scale: 1.03, y: -1 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ duration: 0.12 }}
             >
               {preset.icon} {preset.label}
-            </button>
+            </motion.button>
           ))}
         </div>
-      </div>
+      </motion.div>
 
-      <div className="simulator-grid">
+      <motion.div className="simulator-grid" variants={fadeInUp}>
         {/* Input Panel */}
         <div className="simulator-panel">
           <div className="card-title mb-2"><Calculator size={16} /> {t('whatif_configure_title')}</div>
@@ -229,33 +242,37 @@ export default function WhatIfSimulator() {
           <div className="card-title mb-2"><TrendingUp size={16} /> {t('whatif_results_title')}</div>
 
           <div className="scenario-result">
-            <div className="scenario-box">
+            <motion.div className="scenario-box" whileHover={{ y: -2, transition: { duration: 0.15 } }}>
               <div className="scenario-label">{t('whatif_monthly_label')}</div>
               <div className="scenario-value">₹{amount.toLocaleString('en-IN')}</div>
               <div className="scenario-note">/{t('common_month')}</div>
-            </div>
-            <div className="scenario-box">
+            </motion.div>
+            <motion.div className="scenario-box" whileHover={{ y: -2, transition: { duration: 0.15 } }}>
               <div className="scenario-label">{t('whatif_total_saved')}</div>
               <div className="scenario-value">₹{result.totalSaved.toLocaleString('en-IN')}</div>
               <div className="scenario-note">{months} {t('common_months')}</div>
-            </div>
-            <div className="scenario-box" style={{ background: '#FFFDF9', borderColor: 'rgba(217, 119, 6, 0.25)' }}>
+            </motion.div>
+            <motion.div className="scenario-box" style={{ background: '#FFFDF9', borderColor: 'rgba(217, 119, 6, 0.25)' }} whileHover={{ y: -2, transition: { duration: 0.15 } }}>
               <div className="scenario-label">{t('whatif_fd_est')}</div>
               <div className="scenario-value" style={{ color: 'var(--accent-dark)' }}>₹{result.fdValue.toLocaleString('en-IN')}</div>
               <div className="scenario-note">@7% p.a.</div>
-            </div>
-            <div className="scenario-box" style={{ background: 'rgba(5, 150, 105, 0.06)', borderColor: 'rgba(5, 150, 105, 0.2)' }}>
+            </motion.div>
+            <motion.div className="scenario-box" style={{ background: 'rgba(5, 150, 105, 0.06)', borderColor: 'rgba(5, 150, 105, 0.2)' }} whileHover={{ y: -2, transition: { duration: 0.15 } }}>
               <div className="scenario-label">{t('whatif_invest_est')}</div>
               <div className="scenario-value" style={{ color: 'var(--success)' }}>₹{result.investedValue.toLocaleString('en-IN')}</div>
               <div className="scenario-note">@{annualReturn}% p.a.</div>
-            </div>
+            </motion.div>
           </div>
 
           {result.estimatedGrowth > 0 && (
-            <div style={{
-              marginTop: 16, padding: '14px 18px', background: '#FFF7F0',
-              borderRadius: 'var(--radius-md)', border: '1px solid rgba(252,108,38,0.2)'
-            }}>
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{
+                marginTop: 16, padding: '14px 18px', background: '#FFF7F0',
+                borderRadius: 'var(--radius-md)', border: '1px solid rgba(252,108,38,0.2)'
+              }}
+            >
               <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
                 {t('whatif_gain_note', {
                   amount: amount.toLocaleString('en-IN'),
@@ -266,20 +283,20 @@ export default function WhatIfSimulator() {
                   rate: annualReturn
                 })}
               </p>
-            </div>
+            </motion.div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Chart */}
-      <div className="card mt-3">
+      <motion.div className="card mt-3" variants={fadeInUp} {...cardHoverProps}>
         <div className="card-header">
           <div className="card-title">📈 {t('whatif_chart_growth')}</div>
         </div>
         <div className="chart-container" style={{ height: 300 }}>
           <Bar data={chartData} options={chartOptions} />
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

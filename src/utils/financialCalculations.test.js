@@ -6,6 +6,7 @@ import {
   compareBuyNowVsInvest,
   calculateWhatIfSavings,
 } from './financialCalculations';
+import { compareSpendSaveInvest } from './aiEngine';
 
 describe('Financial Calculations - Lump Sum Compound Growth', () => {
   it('matches prompt benchmark: ₹5,000 at 10% for 5 years ≈ ₹8,053', () => {
@@ -202,5 +203,18 @@ describe('Financial Calculations - Combined Future Value Calculator', () => {
     expect(res.totalInvested).toBe(5000);
     expect(res.totalValue).toBe(12969); // Exact match with prompt requirement
     expect(res.estimatedGrowth).toBe(7969);
+  });
+
+  it('verifies compareSpendSaveInvest outputs valid defined numbers for all metrics', () => {
+    const results = compareSpendSaveInvest(5000, [1, 3, 5], false);
+    expect(results).toHaveLength(3);
+    results.forEach(r => {
+      expect(typeof r.spend).toBe('number');
+      expect(typeof r.savings).toBe('number');
+      expect(typeof r.fd).toBe('number');
+      expect(typeof r.sip).toBe('number');
+      expect(r.spend).toBeGreaterThan(0);
+      expect(r.sip).toBeGreaterThan(r.fd);
+    });
   });
 });
