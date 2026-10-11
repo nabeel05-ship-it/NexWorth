@@ -52,7 +52,7 @@ export default function GoalPlanner() {
   };
 
   const handleDelete = (id) => {
-    if (confirm(language === 'kn' ? 'ಈ ಗುರಿಯನ್ನು ಅಳಿಸಲು ನೀವು ಖಚಿತವಾಗಿದ್ದೀರಾ?' : language === 'hi' ? 'क्या आप इस लक्ष्य को हटाना चाहते हैं?' : 'Delete this goal?')) {
+    if (confirm(t('goal_delete_confirm'))) {
       dispatch({ type: 'DELETE_GOAL', payload: id });
     }
   };
@@ -222,18 +222,17 @@ export default function GoalPlanner() {
 
                 {!isComplete && (
                   <div style={{ marginTop: 14, padding: '10px 14px', background: '#FFF7EE', border: '1px solid rgba(252, 108, 38, 0.15)', borderRadius: 'var(--radius-sm)', fontSize: 13, color: 'var(--text-secondary)' }}>
-                    {language === 'kn'
-                      ? `${monthsLeft} ತಿಂಗಳುಗಳಿಗೆ ತಿಂಗಳಿಗೆ ~₹${monthlyNeeded.toLocaleString('en-IN')} ಅಗತ್ಯವಿದೆ`
-                      : language === 'hi'
-                      ? `${monthsLeft} महीनों के लिए प्रति माह ~₹${monthlyNeeded.toLocaleString('en-IN')} की आवश्यकता है`
-                      : `Need ~₹${monthlyNeeded.toLocaleString('en-IN')}/month for ${monthsLeft} months`}
+                    {t('goal_need_monthly', {
+                      amount: monthlyNeeded.toLocaleString('en-IN'),
+                      months: monthsLeft
+                    })}
                   </div>
                 )}
 
                 <div className="goal-meta">
                   <span className="flex items-center gap-1">
                     <Calendar size={12} />
-                    {targetDate.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                    {targetDate.toLocaleDateString(language === 'kn' ? 'kn-IN' : language === 'hi' ? 'hi-IN' : 'en-IN', { month: 'short', year: 'numeric' })}
                   </span>
                   <span>₹{remaining.toLocaleString('en-IN')} {t('goal_remaining')}</span>
                 </div>
@@ -250,7 +249,7 @@ export default function GoalPlanner() {
                         onClick={() => dispatch({ type: 'SET_CHAT_QUERY', payload: `How can I reach my ${goal.name} goal faster?` })}
                         title="Simulate savings in Ask Your Money"
                       >
-                        Ask AI 💬
+                        {t('goal_ask_ai')}
                       </button>
                     </>
                   )}

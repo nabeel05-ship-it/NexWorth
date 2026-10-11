@@ -4,12 +4,12 @@ import { CATEGORIES } from '../utils/demoData';
 import { parseTransactionMessage, SAMPLE_TRANSACTION_MESSAGES } from '../utils/aiTransactionParser';
 import {
   Sparkles, CheckCircle2, XCircle, Edit3, MessageSquare,
-  BellRing, Smartphone, ArrowRight, ShieldCheck,
-  Lock, AlertCircle, RefreshCw, Send, Check, Wallet, Banknote
+  Smartphone, ShieldCheck,
+  RefreshCw, Banknote
 } from 'lucide-react';
 
 export default function AITransactionCapture() {
-  const { state, dispatch, t } = useApp();
+  const { dispatch, t, formatDate } = useApp();
   const [inputText, setInputText] = useState('');
   const [selectedSource, setSelectedSource] = useState('SMS');
   const [detectedTxn, setDetectedTxn] = useState(null);
@@ -59,7 +59,7 @@ export default function AITransactionCapture() {
       });
       setIsEditing(false);
     } else {
-      triggerToast('⚠️ Could not extract transaction amount. Please check the message format.');
+      triggerToast(t('cap_toast_parse_err'));
     }
   };
 
@@ -113,7 +113,7 @@ export default function AITransactionCapture() {
       ...prev
     ]);
 
-    triggerToast(`✓ Confirmed: ₹${expensePayload.amount} at ${expensePayload.name} saved to Expense Database! Dashboard & AI insights updated.`);
+    triggerToast(t('cap_toast_confirmed', { amount: expensePayload.amount.toLocaleString('en-IN'), name: expensePayload.name }));
     setDetectedTxn(null);
     setIsEditing(false);
     setInputText('');
@@ -121,7 +121,7 @@ export default function AITransactionCapture() {
 
   // User ignores the detected transaction
   const handleIgnore = () => {
-    triggerToast('Transaction ignored and discarded.');
+    triggerToast(t('cap_toast_ignored'));
     setDetectedTxn(null);
     setIsEditing(false);
   };
@@ -158,9 +158,9 @@ export default function AITransactionCapture() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <h2>{t('cap_title')}</h2>
-              <span className="ai-badge"><Sparkles size={12} /> AI Powered</span>
+              <span className="ai-badge"><Sparkles size={12} /> {t('cap_badge_ai')}</span>
               <span className="badge" style={{ background: '#FFF4D6', color: '#D97706', border: '1px solid rgba(217, 119, 6, 0.25)' }}>
-                Demo Mode Sandbox
+                {t('cap_badge_demo')}
               </span>
             </div>
             <p className="subtitle">
@@ -196,10 +196,10 @@ export default function AITransactionCapture() {
         </div>
         <div>
           <h4 style={{ fontSize: 14, fontWeight: 600, color: '#1A1714', marginBottom: 4 }}>
-            Zero Credential Policy & User-Authorized Access Only
+            {t('cap_shield_title')}
           </h4>
           <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-            NexWorth <strong>never</strong> asks for your UPI PIN, OTP, bank login passwords, or card CVVs. We do not access Google Pay, PhonePe, or bank accounts directly. In this browser prototype, test the complete pipeline using the simulation tools below.
+            {t('cap_shield_desc')}
           </p>
         </div>
       </div>
@@ -211,15 +211,15 @@ export default function AITransactionCapture() {
           <div className="card-header" style={{ marginBottom: 16 }}>
             <div className="card-title">
               <Smartphone size={18} color="var(--primary)" />
-              <span>Simulate Transaction Message</span>
+              <span>{t('cap_sim_title')}</span>
             </div>
             <button className="btn btn-outline btn-sm" onClick={handleSimulateRandom}>
-              <RefreshCw size={13} /> Random SMS
+              <RefreshCw size={13} /> {t('cap_sim_random')}
             </button>
           </div>
 
           <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 14 }}>
-            Click any sample message below to simulate an incoming bank SMS or push notification:
+            {t('cap_sim_desc')}
           </p>
 
           {/* Quick Simulation Templates */}
@@ -263,7 +263,7 @@ export default function AITransactionCapture() {
           {/* Manual Input / Custom SMS */}
           <div>
             <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Or Paste Custom Transaction Text</span>
+              <span>{t('cap_paste_label')}</span>
               <div style={{ display: 'flex', gap: 6 }}>
                 {['SMS', 'Notification', 'Email'].map(s => (
                   <button
@@ -288,7 +288,7 @@ export default function AITransactionCapture() {
             </label>
             <textarea
               className="form-textarea"
-              placeholder="e.g., INR 450 debited from your account at SWIGGY via UPI on 30-Sep"
+              placeholder={t('cap_paste_placeholder')}
               value={inputText}
               onChange={e => setInputText(e.target.value)}
               style={{ minHeight: 70, marginBottom: 12 }}
@@ -299,12 +299,12 @@ export default function AITransactionCapture() {
               onClick={() => handleParse(inputText)}
               disabled={!inputText.trim()}
             >
-              <Sparkles size={16} /> Parse with AI
+              <Sparkles size={16} /> {t('cap_parse_btn')}
             </button>
           </div>
         </div>
 
-        {/* Right Column: AI Transaction Detected (The Requested Confirmation Card) */}
+        {/* Right Column: AI Transaction Detected */}
         <div>
           {detectedTxn ? (
             <div
@@ -332,7 +332,7 @@ export default function AITransactionCapture() {
                 textTransform: 'uppercase',
                 marginBottom: 18,
               }}>
-                <Sparkles size={14} /> AI TRANSACTION DETECTED
+                <Sparkles size={14} /> {t('cap_detected_title')}
               </div>
 
               {!isEditing ? (
@@ -359,7 +359,7 @@ export default function AITransactionCapture() {
                     </div>
                   </div>
 
-                  {/* Metadata Tags (Food • UPI • Source) */}
+                  {/* Metadata Tags */}
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -378,7 +378,7 @@ export default function AITransactionCapture() {
                       fontWeight: 600,
                       color: '#1A1714',
                     }}>
-                      {CATEGORIES.find(c => c.id === detectedTxn.category)?.icon || '📌'} {CATEGORIES.find(c => c.id === detectedTxn.category)?.name || detectedTxn.category}
+                      {CATEGORIES.find(c => c.id === detectedTxn.category)?.icon || '📌'} {t(`cat_${detectedTxn.category}`) || CATEGORIES.find(c => c.id === detectedTxn.category)?.name || detectedTxn.category}
                     </span>
                     <span style={{
                       padding: '6px 14px',
@@ -398,7 +398,7 @@ export default function AITransactionCapture() {
                       fontWeight: 500,
                       color: 'var(--text-secondary)',
                     }}>
-                      Source: {detectedTxn.source}
+                      {detectedTxn.source}
                     </span>
                     {detectedTxn.account && (
                       <span style={{
@@ -456,9 +456,9 @@ export default function AITransactionCapture() {
               ) : (
                 /* Inline Edit State */
                 <div>
-                  <h4 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Edit Detected Transaction</h4>
+                  <h4 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>{t('cap_edit_btn')}</h4>
                   <div className="form-group">
-                    <label className="form-label">Merchant Name</label>
+                    <label className="form-label">{t('exp_name_label')}</label>
                     <input
                       className="form-input"
                       value={editData.merchant}
@@ -467,7 +467,7 @@ export default function AITransactionCapture() {
                   </div>
                   <div className="form-row">
                     <div className="form-group">
-                      <label className="form-label">Amount (₹)</label>
+                      <label className="form-label">{t('exp_amount_label')}</label>
                       <input
                         className="form-input"
                         type="number"
@@ -476,20 +476,20 @@ export default function AITransactionCapture() {
                       />
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Category</label>
+                      <label className="form-label">{t('exp_category_label')}</label>
                       <select
                         className="form-select"
                         value={editData.category}
                         onChange={e => setEditData({ ...editData, category: e.target.value })}
                       >
                         {CATEGORIES.map(c => (
-                          <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                          <option key={c.id} value={c.id}>{c.icon} {t(`cat_${c.id}`) || c.name}</option>
                         ))}
                       </select>
                     </div>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Payment Method</label>
+                    <label className="form-label">{t('exp_payment_label')}</label>
                     <select
                       className="form-select"
                       value={editData.paymentMethod}
@@ -506,10 +506,10 @@ export default function AITransactionCapture() {
                   </div>
                   <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
                     <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleConfirm}>
-                      Save & Confirm
+                      {t('cap_confirm_btn')}
                     </button>
                     <button className="btn btn-outline" onClick={() => setIsEditing(false)}>
-                      Cancel
+                      {t('exp_cancel_btn')}
                     </button>
                   </div>
                 </div>
@@ -540,12 +540,12 @@ export default function AITransactionCapture() {
               }}>
                 <MessageSquare size={28} color="var(--primary)" />
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Ready to Capture</h3>
+              <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{t('cap_ready_title')}</h3>
               <p style={{ fontSize: 14, color: 'var(--text-secondary)', maxWidth: 360, lineHeight: 1.6, marginBottom: 20 }}>
-                Select one of the sample SMS alerts on the left or paste your own transaction notification to see AI extraction in action.
+                {t('cap_ready_desc')}
               </p>
               <button className="btn btn-outline btn-sm" onClick={handleSimulateRandom}>
-                ⚡ Try Demo Simulation
+                {t('cap_demo_sim_btn')}
               </button>
             </div>
           )}
@@ -582,10 +582,10 @@ export default function AITransactionCapture() {
           </div>
           <div>
             <h4 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>
-              Have Cash Expenses?
+              {t('cap_cash_prompt_title')}
             </h4>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-              Cash transactions cannot be automatically captured from SMS. Use manual 1-click cash entry.
+              {t('cap_cash_prompt_desc')}
             </p>
           </div>
         </div>
@@ -593,58 +593,52 @@ export default function AITransactionCapture() {
           className="btn btn-outline"
           onClick={() => dispatch({ type: 'SET_PAGE', payload: 'add-expense' })}
         >
-          <Banknote size={16} /> + Cash Expense
+          <Banknote size={16} /> {t('cap_cash_btn')}
         </button>
       </div>
 
-      {/* Core Flow Architecture Pipeline */}
-      <div className="card mb-3">
-        <div className="card-header">
-          <div className="card-title">🔄 Core AI Capture Pipeline</div>
-          <span className="badge badge-primary">How It Works</span>
+      {/* History table */}
+      {captureHistory.length > 0 && (
+        <div className="card mb-3">
+          <div className="card-header">
+            <div className="card-title">📝 {t('cap_history_title')}</div>
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', textAlign: 'left' }}>
+                  <th style={{ padding: '10px 12px' }}>{t('cap_col_time')}</th>
+                  <th style={{ padding: '10px 12px' }}>{t('cap_col_merchant')}</th>
+                  <th style={{ padding: '10px 12px' }}>{t('cap_col_category')}</th>
+                  <th style={{ padding: '10px 12px' }}>{t('cap_col_payment')}</th>
+                  <th style={{ padding: '10px 12px' }}>{t('cap_col_amount')}</th>
+                  <th style={{ padding: '10px 12px' }}>{t('cap_col_status')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {captureHistory.map(item => (
+                  <tr key={item.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>
+                      {formatDate(item.date, { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
+                    </td>
+                    <td style={{ padding: '10px 12px', fontWeight: 600 }}>{item.name}</td>
+                    <td style={{ padding: '10px 12px' }}>{t(`cat_${item.category}`) || item.category}</td>
+                    <td style={{ padding: '10px 12px' }}>{item.paymentMethod}</td>
+                    <td style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--danger)' }}>
+                      -₹{item.amount.toLocaleString('en-IN')}
+                    </td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 10, background: '#DCFCE7', color: '#16A34A', fontWeight: 600 }}>
+                        {t('cap_status_confirmed')}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-          gap: 12,
-          textAlign: 'center',
-          alignItems: 'center',
-          padding: '16px 0',
-        }}>
-          {[
-            { step: '1', title: 'Notification / SMS', icon: '📱', desc: 'User-Authorized Alert' },
-            { step: '2', title: 'AI Parser', icon: '🧠', desc: 'Regex & NLP Model' },
-            { step: '3', title: 'Structured Txn', icon: '📊', desc: 'Merchant & Category' },
-            { step: '4', title: 'User Confirmation', icon: '✅', desc: 'One-Click Verify' },
-            { step: '5', title: 'Expense Database', icon: '💾', desc: 'Stored Locally' },
-            { step: '6', title: 'Money Insights', icon: '💡', desc: 'Real-Time Intelligence' },
-            { step: '7', title: 'Ask Your Money', icon: '💬', desc: 'AI Financial Query' },
-          ].map((s, idx, arr) => (
-            <div key={s.step} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{
-                width: 48,
-                height: 48,
-                borderRadius: '50%',
-                background: idx === 3 ? 'var(--primary)' : '#FFF7F0',
-                color: idx === 3 ? '#FFFFFF' : 'var(--primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 20,
-                marginBottom: 8,
-                boxShadow: idx === 3 ? '0 4px 12px rgba(252, 108, 38, 0.3)' : 'none',
-                border: '1px solid rgba(252, 108, 38, 0.2)',
-              }}>
-                {s.icon}
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{s.title}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{s.desc}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-
+      )}
     </div>
   );
 }

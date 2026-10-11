@@ -76,7 +76,7 @@ export default function Sidebar({ isOpen, onClose }) {
         {/* Language Switcher Bar */}
         <div style={{ padding: '0 12px 14px', borderBottom: '1px solid var(--border)' }}>
           <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 6, letterSpacing: 0.5 }}>
-            {t('lang_select')} / Language
+            {t('lang_select')}
           </div>
           <LanguageSwitcher compact={false} style={{ width: '100%', justifyContent: 'space-between' }} />
         </div>
@@ -126,7 +126,7 @@ export default function Sidebar({ isOpen, onClose }) {
               color: mongoStatus?.connected ? '#16A34A' : (mongoStatus?.backendReachable ? '#D97706' : '#D95000')
             }}>
               <Database size={13} />
-              <span>MongoDB Cloud</span>
+              <span>{t('mongo_cloud')}</span>
               <span style={{
                 marginLeft: 'auto',
                 width: 7,
@@ -137,12 +137,12 @@ export default function Sidebar({ isOpen, onClose }) {
             </div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
               {mongoStatus?.checking
-                ? 'Checking Connection...'
+                ? t('mongo_checking')
                 : mongoStatus?.connected
-                ? `Cloud Active: ${mongoStatus.cluster}`
+                ? t('mongo_active', { cluster: mongoStatus.cluster })
                 : mongoStatus?.backendReachable
-                ? 'Cloud Standby (In-Memory Fallback)'
-                : 'Local Sandbox Mode (Offline)'}
+                ? t('mongo_standby')
+                : t('mongo_offline')}
             </div>
           </div>
 

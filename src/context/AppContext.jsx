@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useState, useCallback } from 'react';
 import { DEMO_EXPENSES, DEMO_GOALS, DEFAULT_USER } from '../utils/demoData';
 import { fetchDbStatus, fetchExpensesFromDb, saveExpenseToDb, deleteExpenseFromDb, syncExpensesToDb } from '../utils/api';
-import { getTranslation, LANGUAGES } from '../utils/translations';
+import { getTranslation, LANGUAGES, formatCurrency as formatCurrencyHelper, formatDate as formatDateHelper, getLocalizedMonthName } from '../utils/translations';
 
 const AppContext = createContext();
 
@@ -362,8 +362,11 @@ export function AppProvider({ children }) {
   };
 
   const currentLanguage = state.language || 'en';
-  const t = useCallback((key) => getTranslation(key, currentLanguage), [currentLanguage]);
+  const t = useCallback((key, params) => getTranslation(key, currentLanguage, params), [currentLanguage]);
   const setLanguage = useCallback((lang) => enhancedDispatch({ type: 'SET_LANGUAGE', payload: lang }), []);
+  const formatCurrency = useCallback((amount) => formatCurrencyHelper(amount, currentLanguage), [currentLanguage]);
+  const formatDate = useCallback((date, opts) => formatDateHelper(date, currentLanguage, opts), [currentLanguage]);
+  const getMonthName = useCallback((idx) => getLocalizedMonthName(idx, currentLanguage), [currentLanguage]);
 
   return (
     <AppContext.Provider value={{
@@ -374,6 +377,9 @@ export function AppProvider({ children }) {
       setLanguage,
       languages: LANGUAGES,
       t,
+      formatCurrency,
+      formatDate,
+      getMonthName,
     }}>
       {children}
     </AppContext.Provider>
@@ -389,6 +395,6 @@ export function useApp() {
 }
 
 export function useTranslation() {
-  const { t, language, setLanguage, languages } = useApp();
-  return { t, language, setLanguage, languages };
+  const { t, language, setLanguage, languages, formatCurrency, formatDate, getMonthName } = useApp();
+  return { t, language, setLanguage, languages, formatCurrency, formatDate, getMonthName };
 }

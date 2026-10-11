@@ -93,10 +93,10 @@ export default function AIChat() {
           ? `🎉 **लक्ष्य सफलतापूर्वक अपडेट हुआ!**\n\nआपके **${targetGoal.name} लक्ष्य** में +₹${amount.toLocaleString('en-IN')} की बचत जोड़ दी गई है!\n\n• कुल लक्ष्य: ₹${targetAmount.toLocaleString('en-IN')}\n• पहले से बचाई गई: ₹${prevAmount.toLocaleString('en-IN')} (${Math.round((prevAmount / targetAmount) * 100)}%)\n• नई प्रगति: ₹${newAmount.toLocaleString('en-IN')} (${newPercent}% पूरा हुआ!)\n• शेष राशि: ₹${remaining.toLocaleString('en-IN')} 🎯`
           : `🎉 **Goal Updated Successfully!**\n\nApplied **+₹${amount.toLocaleString('en-IN')}** simulated savings to your **${targetGoal.name} Goal**!\n\n• Target: ₹${targetAmount.toLocaleString('en-IN')}\n• Previously Saved: ₹${prevAmount.toLocaleString('en-IN')} (${Math.round((prevAmount / targetAmount) * 100)}%)\n• New Progress: ₹${newAmount.toLocaleString('en-IN')} (${newPercent}% reached!)\n• Remaining: ₹${remaining.toLocaleString('en-IN')}\n\nYou're now 68% of the way there and projected to reach your ${targetGoal.name} goal 3 months sooner! 🎯`,
         followUps: [
-          'View Laptop Goal in Planner 🎯',
-          'What if I invest ₹2,000 per month? 📈',
-          'Where are my frequent small expenses? ☕',
-          'Show my AI Spending Pattern 🧬',
+          t('chat_followup_laptop'),
+          t('chat_followup_invest'),
+          t('chat_followup_small'),
+          t('chat_followup_pattern'),
         ],
       },
     ]);
@@ -255,39 +255,39 @@ export default function AIChat() {
                       </div>
                       
                       <div style={{ marginBottom: 14 }}>
-                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Simulated Change:</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{language === 'kn' ? 'ಸಿಮ್ಯುಲೇಟ್ ಮಾಡಿದ ಬದಲಾವಣೆ:' : language === 'hi' ? 'अनुकरण किया गया बदलाव:' : 'Simulated Change:'}</div>
                         <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)' }}>{msg.scenario.changeDesc}</div>
                       </div>
                       
                       <div className="grid-3" style={{ gap: 10, marginBottom: 16 }}>
                         <div style={{ background: 'var(--bg-secondary)', padding: 10, borderRadius: 8 }}>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Monthly:</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('common_monthly')}:</div>
                           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>₹{msg.scenario.monthly.toLocaleString('en-IN')}</div>
                         </div>
                         <div style={{ background: 'var(--bg-secondary)', padding: 10, borderRadius: 8 }}>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>6 Months:</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>6 {t('common_months')}:</div>
                           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>₹{(msg.scenario.monthly * 6).toLocaleString('en-IN')}</div>
                         </div>
                         <div style={{ background: 'var(--bg-secondary)', padding: 10, borderRadius: 8 }}>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>12 Months:</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>12 {t('common_months')}:</div>
                           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>₹{(msg.scenario.annualSavings || msg.scenario.monthly * 12).toLocaleString('en-IN')}</div>
                         </div>
                       </div>
                       
                       {msg.scenario.investedValue && (
                         <div style={{ background: 'rgba(34, 197, 94, 0.08)', padding: 10, borderRadius: 8, marginBottom: 14, border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-                          <div style={{ fontSize: 11, color: '#16A34A', fontWeight: 600 }}>Illustrative SIP Growth (12% return):</div>
+                          <div style={{ fontSize: 11, color: '#16A34A', fontWeight: 600 }}>{language === 'kn' ? 'ಸಂಭಾವ್ಯ SIP ಬೆಳವಣಿಗೆ (12% ಆದಾಯ):' : language === 'hi' ? 'संभावित SIP वृद्धि (12% रिटर्न):' : 'Illustrative SIP Growth (12% return):'}</div>
                           <div style={{ fontSize: 15, fontWeight: 700, color: '#16A34A' }}>
-                            ₹{msg.scenario.investedValue.toLocaleString('en-IN')} in 1 year
+                            ₹{msg.scenario.investedValue.toLocaleString('en-IN')} (1 {t('common_year')})
                           </div>
                         </div>
                       )}
                       
                       {msg.scenario.goalImpact && (
                         <div style={{ borderTop: '1px dashed var(--border)', paddingTop: 12, marginBottom: 14 }}>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Goal Impact ({msg.scenario.targetGoalName || 'Laptop Goal'}):</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{language === 'kn' ? `ಗುರಿಯ ಮೇಲಿನ ಪ್ರಭಾವ (${msg.scenario.targetGoalName || 'ಲ್ಯಾಪ್‌ಟಾಪ್ ಗುರಿ'}):` : language === 'hi' ? `लक्ष्य पर प्रभाव (${msg.scenario.targetGoalName || 'लैपटॉप लक्ष्य'}):` : `Goal Impact (${msg.scenario.targetGoalName || 'Laptop Goal'}):`}</div>
                           <div style={{ fontSize: 13.5, fontWeight: 600, color: '#16A34A' }}>
-                            +₹{(msg.scenario.annualSavings || msg.scenario.monthly * 12).toLocaleString('en-IN')} potential contribution (brings goal to ~68%!)
+                            +₹{(msg.scenario.annualSavings || msg.scenario.monthly * 12).toLocaleString('en-IN')} {language === 'kn' ? 'ಸಂಭಾವ್ಯ ಕೊಡುಗೆ' : language === 'hi' ? 'संभावित योगदान' : 'potential contribution'}
                           </div>
                         </div>
                       )}
@@ -316,7 +316,7 @@ export default function AIChat() {
                       </div>
                       {msg.scenario.investedValue && (
                         <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 10 }}>
-                          * Illustrative estimate — actual market returns may vary.
+                          {language === 'kn' ? '* ಅಂದಾಜು ವಿವರಣೆ — ನಿಜವಾದ ಮಾರುಕಟ್ಟೆ ಆದಾಯಗಳು ಬದಲಾಗಬಹುದು.' : language === 'hi' ? '* सांकेतिक अनुमान — वास्तविक बाजार रिटर्न भिन्न हो सकते हैं।' : '* Illustrative estimate — actual market returns may vary.'}
                         </div>
                       )}
                     </div>

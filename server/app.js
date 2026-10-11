@@ -416,12 +416,39 @@ router.post('/ai/chat', async (req, res) => {
   }
 
   let categoryMentioned = 'Food';
-  if (q.includes('shopping') || q.includes('kharidari')) categoryMentioned = 'Shopping';
-  else if (q.includes('travel') || q.includes('auto') || q.includes('cab')) categoryMentioned = 'Travel';
-  else if (q.includes('entertainment') || q.includes('movie')) categoryMentioned = 'Entertainment';
+  if (q.includes('shopping') || q.includes('kharidari') || q.includes('ಶಾಪಿಂಗ್')) categoryMentioned = 'Shopping';
+  else if (q.includes('travel') || q.includes('auto') || q.includes('cab') || q.includes('ಪ್ರಯಾಣ')) categoryMentioned = 'Travel';
+  else if (q.includes('entertainment') || q.includes('movie') || q.includes('ಮನರಂಜನೆ')) categoryMentioned = 'Entertainment';
+
+  const localizedCat = language === 'kn' ? (categoryMentioned === 'Food' ? 'ಆಹಾರ' : categoryMentioned === 'Shopping' ? 'ಶಾಪಿಂಗ್' : categoryMentioned === 'Travel' ? 'ಪ್ರಯಾಣ' : 'ಮನರಂಜನೆ')
+    : language === 'hi' ? (categoryMentioned === 'Food' ? 'भोजन' : categoryMentioned === 'Shopping' ? 'खरीदारी' : categoryMentioned === 'Travel' ? 'यात्रा' : 'मनोरंजन')
+    : categoryMentioned;
+
+  const changeDesc = language === 'kn'
+    ? `${localizedCat} ಖರ್ಚನ್ನು ₹${monthly.toLocaleString('en-IN')}/ತಿಂಗಳು ಕಡಿಮೆ ಮಾಡಿ`
+    : language === 'hi'
+    ? `${localizedCat} खर्च में ₹${monthly.toLocaleString('en-IN')}/माह कटौती करें`
+    : `Reduce ${categoryMentioned} spending by ₹${monthly.toLocaleString('en-IN')}/month`;
+
+  const followUps = language === 'kn' ? [
+    `ಈ ₹${monthly} ಅನ್ನು ${laptopGoal.name} ಗುರಿಗೆ ಸೇರಿಸಿ 💻`,
+    'ಆ ಮೊತ್ತವನ್ನು ಹೂಡಿಕೆ ಮಾಡಿದರೆ? 📈',
+    'ನನ್ನ ಸಣ್ಣ ಖರ್ಚುಗಳು ಎಲ್ಲಿವೆ? ☕',
+    'ನನ್ನ ಎಐ ಖರ್ಚಿನ ಮಾದರಿ ತೋರಿಸಿ 🧬',
+  ] : language === 'hi' ? [
+    `इस ₹${monthly} को ${laptopGoal.name} लक्ष्य में जोड़ें 💻`,
+    'अगर उस राशि को निवेश करूँ तो? 📈',
+    'मेरे बार-बार होने वाले छोटे खर्चे कहाँ हैं? ☕',
+    'मेरा एआई खर्च पैटर्न दिखाओ 🧬',
+  ] : [
+    `Apply this ₹${monthly} to ${laptopGoal.name} Goal 💻`,
+    'What if I invest that amount? 📈',
+    'Where are my frequent small expenses? ☕',
+    'Show my AI Spending Pattern 🧬',
+  ];
 
   const deterministicScenario = {
-    changeDesc: `Reduce ${categoryMentioned} spending by ₹${monthly.toLocaleString('en-IN')}/month`,
+    changeDesc,
     monthly,
     months: 12,
     annualSavings: twelveMonths,
@@ -491,12 +518,7 @@ User Question: "${query}"`;
             text: geminiText,
             scenario: deterministicScenario,
             model: 'gemini-2.5-flash',
-            followUps: [
-              `Is ₹${monthly} ko ${laptopGoal.name} Goal mein add karo 💻`,
-              'What if I invest that amount? 📈',
-              'Where are my frequent small expenses? ☕',
-              'Show my AI Spending Pattern 🧬',
-            ],
+            followUps,
           });
         }
       }
@@ -506,16 +528,18 @@ User Question: "${query}"`;
   }
 
   // Fallback to local deterministic AI response
+  let fallbackText = `Reducing your ${categoryMentioned} spending by ₹${monthly.toLocaleString('en-IN')} per month would create a **₹${twelveMonths.toLocaleString('en-IN')} difference over 12 months** (₹${sixMonths.toLocaleString('en-IN')} in 6 months), assuming the reduction remains consistent.\n\nThis saved amount could directly boost your **${laptopGoal.name} Goal** from ${Math.round(((laptopGoal.currentAmount || 35000) / laptopGoal.targetAmount) * 100)}% to ${Math.round((projectedGoalAmount / laptopGoal.targetAmount) * 100)}%!`;
+  if (language === 'hi') {
+    fallbackText = `${localizedCat} खर्च में प्रति माह ₹${monthly.toLocaleString('en-IN')} की कटौती करने पर **12 महीनों में ₹${twelveMonths.toLocaleString('en-IN')} की बचत** होगी (6 महीनों में ₹${sixMonths.toLocaleString('en-IN')})।\n\nयह बचाई गई राशि सीधे आपके **${laptopGoal.name} लक्ष्य** को ${Math.round(((laptopGoal.currentAmount || 35000) / laptopGoal.targetAmount) * 100)}% से बढ़ाकर ${Math.round((projectedGoalAmount / laptopGoal.targetAmount) * 100)}% कर सकती है!`;
+  } else if (language === 'kn') {
+    fallbackText = `${localizedCat} ಖರ್ಚನ್ನು ತಿಂಗಳಿಗೆ ₹${monthly.toLocaleString('en-IN')} ಕಡಿಮೆ ಮಾಡುವುದರಿಂದ **12 ತಿಂಗಳುಗಳಲ್ಲಿ ₹${twelveMonths.toLocaleString('en-IN')} ಉಳಿತಾಯವಾಗುತ್ತದೆ** (6 ತಿಂಗಳಲ್ಲಿ ₹${sixMonths.toLocaleString('en-IN')}).\n\nಈ ಉಳಿಸಿದ ಮೊತ್ತವು ನಿಮ್ಮ **${laptopGoal.name} ಗುರಿ**ಯನ್ನು ${Math.round(((laptopGoal.currentAmount || 35000) / laptopGoal.targetAmount) * 100)}% ರಿಂದ ${Math.round((projectedGoalAmount / laptopGoal.targetAmount) * 100)}% ಗೆ ಹೆಚ್ಚಿಸಬಹುದು!`;
+  }
+
   return res.json({
-    text: `Reducing your ${categoryMentioned} spending by ₹${monthly.toLocaleString('en-IN')} per month would create a **₹${twelveMonths.toLocaleString('en-IN')} difference over 12 months** (₹${sixMonths.toLocaleString('en-IN')} in 6 months), assuming the reduction remains consistent.\n\nThis saved amount could directly boost your **${laptopGoal.name} Goal** from ${Math.round(((laptopGoal.currentAmount || 35000) / laptopGoal.targetAmount) * 100)}% to ${Math.round((projectedGoalAmount / laptopGoal.targetAmount) * 100)}%!`,
+    text: fallbackText,
     scenario: deterministicScenario,
     model: 'deterministic-engine',
-    followUps: [
-      `Is ₹${monthly} ko ${laptopGoal.name} Goal mein add karo 💻`,
-      'What if I invest that amount? 📈',
-      'Try ₹1,000 instead 🔄',
-      'Compare 6 vs 12 months 📊',
-    ],
+    followUps,
   });
 });
 

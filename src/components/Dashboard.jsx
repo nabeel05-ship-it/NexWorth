@@ -1,26 +1,26 @@
 import React, { useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import { CATEGORIES, MONTH_NAMES } from '../utils/demoData';
+import { CATEGORIES } from '../utils/demoData';
 import { getMonthlyOverview, generateInsights, generateExpenseStory } from '../utils/aiEngine';
 import {
   Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale,
   LinearScale, BarElement, PointElement, LineElement, Filler
 } from 'chart.js';
-import { Doughnut, Bar, Line } from 'react-chartjs-2';
+import { Doughnut, Bar } from 'react-chartjs-2';
 import { TrendingUp, TrendingDown, ArrowRight, Sparkles, Target } from 'lucide-react';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Filler);
 
 export default function Dashboard() {
-  const { state, dispatch, t } = useApp();
+  const { state, dispatch, t, language, formatDate, getMonthName } = useApp();
   const { expenses, user, goals } = state;
 
   const overview = useMemo(() => getMonthlyOverview(expenses, user.monthlyIncome), [expenses, user.monthlyIncome]);
-  const insights = useMemo(() => generateInsights(expenses, user.monthlyIncome, user.budgets), [expenses, user.monthlyIncome, user.budgets]);
-  const story = useMemo(() => generateExpenseStory(expenses, user.monthlyIncome, user.budgets), [expenses, user.monthlyIncome, user.budgets]);
+  const insights = useMemo(() => generateInsights(expenses, user.monthlyIncome, user.budgets, language), [expenses, user.monthlyIncome, user.budgets, language]);
+  const story = useMemo(() => generateExpenseStory(expenses, user.monthlyIncome, user.budgets, language), [expenses, user.monthlyIncome, user.budgets, language]);
 
   const now = new Date();
-  const monthName = MONTH_NAMES[now.getMonth()];
+  const monthName = getMonthName(now.getMonth());
 
   // Recent expenses (this month)
   const recentExpenses = useMemo(() => {
@@ -39,7 +39,7 @@ export default function Dashboard() {
   const doughnutData = useMemo(() => {
     const cats = Object.entries(overview.currentCategories).sort((a, b) => b[1] - a[1]);
     return {
-      labels: cats.map(([id]) => CATEGORIES.find(c => c.id === id)?.name || id),
+      labels: cats.map(([id]) => t(`cat_${id}`) || CATEGORIES.find(c => c.id === id)?.name || id),
       datasets: [{
         data: cats.map(([, v]) => v),
         backgroundColor: cats.map(([id]) => CATEGORIES.find(c => c.id === id)?.color || '#A0A0B0'),
@@ -47,16 +47,17 @@ export default function Dashboard() {
         hoverOffset: 8,
       }],
     };
-  }, [overview.currentCategories]);
+  }, [overview.currentCategories, language, t]);
 
   // Monthly comparison bar chart
   const barData = useMemo(() => {
     const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+    const prevMonthName = getMonthName(prevMonth);
     return {
-      labels: CATEGORIES.slice(0, 7).map(c => c.name),
+      labels: CATEGORIES.slice(0, 7).map(c => t(`cat_${c.id}`) || c.name),
       datasets: [
         {
-          label: MONTH_NAMES[prevMonth],
+          label: prevMonthName,
           data: CATEGORIES.slice(0, 7).map(c => overview.previousCategories[c.id] || 0),
           backgroundColor: 'rgba(215, 206, 195, 0.65)',
           borderRadius: 6,
@@ -71,7 +72,7 @@ export default function Dashboard() {
         },
       ],
     };
-  }, [overview]);
+  }, [overview, language, monthName, getMonthName, t]);
 
   const chartOptions = {
     responsive: true,
@@ -155,10 +156,21 @@ export default function Dashboard() {
         const spent = overview.currentCategories[catId] || 0;
         const percentage = budget > 0 ? Math.min(100, (spent / budget) * 100) : 0;
         const cat = CATEGORIES.find(c => c.id === catId);
-        return { catId, name: cat?.name || catId, icon: cat?.icon || '📌', budget, spent, percentage, remaining: budget - spent };
+        return {
+          catId,
+          name: t(`cat_${catId}`) || cat?.name || catId,
+          icon: cat?.icon || '📌',
+          budget,
+          spent,
+          percentage,
+          remaining: budget - spent,
+        };
       })
       .sort((a, b) => b.percentage - a.percentage);
-  }, [user.budgets, overview.currentCategories]);
+  }, [user.budgets, overview.currentCategories, language, t]);
+
+  const topCategoryObj = CATEGORIES.find(c => c.id === overview.topCategory);
+  const topCategoryName = overview.topCategory ? (t(`cat_${overview.topCategory}`) || topCategoryObj?.name) : '';
 
   return (
     <div>
@@ -201,12 +213,20 @@ export default function Dashboard() {
         }}>
           <div style={{ fontSize: 13, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
             <span>💡</span>
-            <span><strong>{t('ins_micro_title')}:</strong> ₹2,100 spent in frequent micro-transactions. Reducing just ₹500/mo saves <strong>₹6,000/yr</strong> for your Laptop Goal.</span>
+            <span>
+              <strong>{t('ins_micro_title')}:</strong>{' '}
+              {t('dash_micro_opportunity_text', {
+                title: t('ins_micro_title'),
+                amount: '2,100',
+                reduction: '500',
+                savings: '6,000'
+              }).replace(t('ins_micro_title') + ': ', '')}
+            </span>
           </div>
           <button
             className="btn btn-primary btn-sm"
             style={{ fontSize: 12, padding: '6px 12px' }}
-            onClick={() => dispatch({ type: 'SET_CHAT_QUERY', payload: 'Agar ₹500 kam spend karu?' })}
+            onClick={() => dispatch({ type: 'SET_CHAT_QUERY', payload: language === 'kn' ? '₹500 ಕಡಿಮೆ ಖರ್ಚು ಮಾಡಿದರೆ?' : language === 'hi' ? 'अगर ₹500 कम खर्च करूं?' : 'Agar ₹500 kam spend karu?' })}
           >
             {t('nav_ai_chat')} 💬
           </button>
@@ -226,7 +246,7 @@ export default function Dashboard() {
           <div className="stat-value">₹{overview.currentTotal.toLocaleString('en-IN')}</div>
           <div className={`stat-change ${spendingChange > 0 ? 'negative' : 'positive'}`}>
             {spendingChange > 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-            {Math.abs(spendingChange)}% vs last month
+            {Math.abs(spendingChange)}% {t('dash_vs_last_month')}
           </div>
         </div>
         <div className="stat-card">
@@ -242,8 +262,8 @@ export default function Dashboard() {
         <div className="stat-card">
           <div className="stat-icon red">🏷️</div>
           <div className="stat-label">{t('dash_spending_category')}</div>
-          <div className="stat-value" style={{ fontSize: 20 }}>
-            {CATEGORIES.find(c => c.id === overview.topCategory)?.icon} {CATEGORIES.find(c => c.id === overview.topCategory)?.name}
+          <div className="stat-value" style={{ fontSize: 18 }}>
+            {topCategoryObj?.icon} {topCategoryName}
           </div>
           <div className="stat-change" style={{ color: 'var(--text-muted)' }}>
             ₹{overview.topAmount.toLocaleString('en-IN')}
@@ -255,7 +275,7 @@ export default function Dashboard() {
       <div className="chart-row">
         <div className="card">
           <div className="card-header">
-            <div className="card-title"><span className="card-icon">🍩</span> Spending Breakdown</div>
+            <div className="card-title"><span className="card-icon">🍩</span> {t('dash_spending_breakdown')}</div>
           </div>
           <div className="chart-container" style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ width: '80%', maxWidth: 280 }}>
@@ -266,7 +286,7 @@ export default function Dashboard() {
 
         <div className="card">
           <div className="card-header">
-            <div className="card-title"><span className="card-icon">📊</span> Monthly Comparison</div>
+            <div className="card-title"><span className="card-icon">📊</span> {t('dash_monthly_comparison')}</div>
           </div>
           <div className="chart-container" style={{ height: 280 }}>
             <Bar data={barData} options={barOptions} />
@@ -278,7 +298,7 @@ export default function Dashboard() {
       <div className="grid-2">
         <div className="card">
           <div className="card-header">
-            <div className="card-title"><span className="card-icon">📋</span> Budget Status</div>
+            <div className="card-title"><span className="card-icon">📋</span> {t('dash_budget_status')}</div>
           </div>
           {budgetUsage.slice(0, 5).map(b => (
             <div key={b.catId} style={{ marginBottom: 14 }}>
@@ -300,7 +320,7 @@ export default function Dashboard() {
 
         <div className="card">
           <div className="card-header">
-            <div className="card-title"><span className="card-icon">✨</span> AI Alerts</div>
+            <div className="card-title"><span className="card-icon">✨</span> {t('dash_ai_alerts')}</div>
             <span className="ai-badge"><Sparkles size={10} /> AI</span>
           </div>
           {insights.slice(0, 4).map((insight, i) => (
@@ -318,9 +338,9 @@ export default function Dashboard() {
       <div className="grid-2 mt-3">
         <div className="card">
           <div className="card-header">
-            <div className="card-title"><Target size={16} /> Goals Progress</div>
+            <div className="card-title"><Target size={16} /> {t('dash_goals_progress')}</div>
             <button className="btn btn-ghost btn-sm" onClick={() => dispatch({ type: 'SET_PAGE', payload: 'goals' })}>
-              View All <ArrowRight size={14} />
+              {t('dash_view_all')} <ArrowRight size={14} />
             </button>
           </div>
           {goals.slice(0, 3).map(goal => {
@@ -355,6 +375,7 @@ export default function Dashboard() {
             {recentExpenses.map(exp => {
               const catId = (exp.category || 'other').toLowerCase();
               const cat = CATEGORIES.find(c => c.id.toLowerCase() === catId) || { name: 'Other', icon: '📌', color: '#A0A0B0' };
+              const localizedCatName = t(`cat_${catId}`) || cat.name;
               const id = exp._id || exp.id;
               const name = exp.name || exp.merchant || 'Expense';
               return (
@@ -365,8 +386,8 @@ export default function Dashboard() {
                   <div className="expense-info">
                     <div className="expense-name">{name}</div>
                     <div className="expense-meta">
-                      <span>{cat.name}</span>
-                      <span>• {new Date(exp.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                      <span>{localizedCatName}</span>
+                      <span>• {formatDate(exp.date, { day: 'numeric', month: 'short' })}</span>
                     </div>
                   </div>
                   <div className="expense-amount">-₹{Number(exp.amount || 0).toLocaleString('en-IN')}</div>

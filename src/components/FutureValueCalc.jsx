@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useApp } from '../context/AppContext';
 import { calculateFutureValue } from '../utils/aiEngine';
 import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement,
@@ -10,6 +11,7 @@ import { Calculator } from 'lucide-react';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
 export default function FutureValueCalc() {
+  const { t, language } = useApp();
   const [initialAmount, setInitialAmount] = useState(10000);
   const [monthlyContribution, setMonthlyContribution] = useState(2000);
   const [annualReturn, setAnnualReturn] = useState(12);
@@ -33,10 +35,10 @@ export default function FutureValueCalc() {
   };
 
   const chartData = useMemo(() => ({
-    labels: result.yearlyData.map(d => `Year ${d.year}`),
+    labels: result.yearlyData.map(d => `${t('common_year')} ${d.year}`),
     datasets: [
       {
-        label: 'Total Invested',
+        label: t('calc_total_invested'),
         data: result.yearlyData.map(d => d.invested),
         borderColor: '#D97706',
         backgroundColor: 'rgba(217, 119, 6, 0.08)',
@@ -46,7 +48,7 @@ export default function FutureValueCalc() {
         pointHoverRadius: 6,
       },
       {
-        label: 'Illustrative Value',
+        label: t('calc_est_fv'),
         data: result.yearlyData.map(d => d.value),
         borderColor: '#FC6C26',
         backgroundColor: 'rgba(252, 108, 38, 0.12)',
@@ -56,7 +58,7 @@ export default function FutureValueCalc() {
         pointHoverRadius: 6,
       },
     ],
-  }), [result]);
+  }), [result, language, t]);
 
   const chartOptions = {
     responsive: true,
@@ -91,44 +93,46 @@ export default function FutureValueCalc() {
     },
   };
 
+  const compoundingLabel = compounding === 'annually' ? t('common_annual') : t('common_monthly');
+
   return (
     <div>
       <div className="page-header">
-        <h2>Future Value Calculator</h2>
-        <p className="subtitle">Estimate how money grows over time with compound growth</p>
+        <h2>{t('calc_title')}</h2>
+        <p className="subtitle">{t('calc_subtitle')}</p>
       </div>
 
       {/* Benchmark Scenarios Bar */}
       <div className="card mb-3">
-        <div className="card-title mb-2">🎯 Quick Problem Benchmark Presets</div>
+        <div className="card-title mb-2">🎯 {t('calc_benchmarks_title')}</div>
         <div className="flex gap-1" style={{ flexWrap: 'wrap' }}>
           <button
             type="button"
             className="btn btn-outline btn-sm"
             onClick={() => applyPreset({ initial: 5000, monthly: 0, rate: 10, years: 10, compounding: 'annually' })}
           >
-            ⭐ Benchmark: ₹5,000 @ 10% for 10 yrs (₹12,969)
+            {t('calc_preset_1')}
           </button>
           <button
             type="button"
             className="btn btn-outline btn-sm"
             onClick={() => applyPreset({ initial: 5000, monthly: 0, rate: 10, years: 5, compounding: 'annually' })}
           >
-            ⏱️ 5 Years: ₹5,000 @ 10% (₹8,053)
+            {t('calc_preset_2')}
           </button>
           <button
             type="button"
             className="btn btn-outline btn-sm"
             onClick={() => applyPreset({ initial: 5000, monthly: 0, rate: 10, years: 20, compounding: 'annually' })}
           >
-            🚀 20 Years: ₹5,000 @ 10% (₹33,637)
+            {t('calc_preset_3')}
           </button>
           <button
             type="button"
             className="btn btn-outline btn-sm"
             onClick={() => applyPreset({ initial: 10000, monthly: 2000, rate: 12, years: 10, compounding: 'annually' })}
           >
-            💼 Combined: ₹10k + ₹2k/mo @ 12%
+            {t('calc_preset_4')}
           </button>
         </div>
       </div>
@@ -136,36 +140,36 @@ export default function FutureValueCalc() {
       <div className="simulator-grid">
         {/* Inputs */}
         <div className="simulator-panel">
-          <div className="card-title mb-2"><Calculator size={16} /> Calculator Inputs</div>
+          <div className="card-title mb-2"><Calculator size={16} /> {t('calc_inputs_title')}</div>
 
           <div className="form-group">
-            <label className="form-label">Initial Amount (₹)</label>
+            <label className="form-label">{t('calc_initial_amount')}</label>
             <input className="form-input" type="number" value={initialAmount} onChange={e => setInitialAmount(Math.max(0, parseInt(e.target.value) || 0))} min="0" step="500" />
             <div className="flex justify-between" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-              <span>₹0 (Pure SIP)</span>
-              <span>₹5,000 (Benchmark)</span>
+              <span>₹0 (SIP)</span>
+              <span>₹5,000</span>
               <span>₹50,000</span>
             </div>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Monthly Contribution (₹): ₹{monthlyContribution.toLocaleString('en-IN')}</label>
+            <label className="form-label">{t('calc_monthly_contrib', { amount: monthlyContribution.toLocaleString('en-IN') })}</label>
             <input type="range" min="0" max="50000" step="500" value={monthlyContribution} onChange={e => setMonthlyContribution(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#FC6C26' }} />
             <div className="flex items-center gap-1 mt-1">
               <input className="form-input" type="number" value={monthlyContribution} onChange={e => setMonthlyContribution(Math.max(0, parseInt(e.target.value) || 0))} min="0" style={{ flex: 1 }} />
               {monthlyContribution > 0 && (
                 <button type="button" className="btn btn-ghost btn-sm" onClick={() => setMonthlyContribution(0)} title="Set to 0 for pure one-time calculation">
-                  Clear to 0
+                  {t('calc_clear_zero')}
                 </button>
               )}
             </div>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Expected Annual Return (%): {annualReturn}%</label>
+            <label className="form-label">{t('calc_return_rate', { rate: annualReturn })}</label>
             <input type="range" min="0" max="25" step="0.5" value={annualReturn} onChange={e => setAnnualReturn(parseFloat(e.target.value))} style={{ width: '100%', accentColor: '#FFF4D6' }} />
             <div className="flex justify-between" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-              <span>0% (Cash)</span>
+              <span>0%</span>
               <span>FD ~7%</span>
               <span>Equity ~10-12%</span>
               <span>25%</span>
@@ -173,20 +177,20 @@ export default function FutureValueCalc() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Time Period: {years} {years === 1 ? 'Year' : 'Years'}</label>
+            <label className="form-label">{t('calc_time_period', { years, unit: years === 1 ? t('common_year') : t('common_years') })}</label>
             <input type="range" min="1" max="30" value={years} onChange={e => setYears(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#FC6C26' }} />
             <div className="flex justify-between" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-              <span>1 year</span>
-              <span>5 yrs</span>
-              <span>10 yrs</span>
-              <span>20 yrs</span>
-              <span>30 yrs</span>
+              <span>1 {t('common_year')}</span>
+              <span>5 {t('common_years')}</span>
+              <span>10 {t('common_years')}</span>
+              <span>20 {t('common_years')}</span>
+              <span>30 {t('common_years')}</span>
             </div>
           </div>
 
           {/* Explicit Compounding Frequency */}
           <div className="form-group" style={{ paddingTop: 8, borderTop: '1px solid var(--border)' }}>
-            <label className="form-label" style={{ marginBottom: 6 }}>Compounding Frequency (Lump-Sum)</label>
+            <label className="form-label" style={{ marginBottom: 6 }}>{t('calc_freq_label')}</label>
             <div className="btn-group" style={{ width: '100%', display: 'flex' }}>
               <button
                 type="button"
@@ -194,7 +198,7 @@ export default function FutureValueCalc() {
                 onClick={() => setCompounding('annually')}
                 style={{ flex: 1 }}
               >
-                Annual: FV = P × (1+r)ⁿ
+                {t('calc_freq_annual')}
               </button>
               <button
                 type="button"
@@ -202,7 +206,7 @@ export default function FutureValueCalc() {
                 onClick={() => setCompounding('monthly')}
                 style={{ flex: 1 }}
               >
-                Monthly: (1 + r/12)¹²ⁿ
+                {t('calc_freq_monthly')}
               </button>
             </div>
           </div>
@@ -210,28 +214,28 @@ export default function FutureValueCalc() {
 
         {/* Results */}
         <div className="simulator-panel">
-          <div className="card-title mb-2">📊 Illustrative Results</div>
+          <div className="card-title mb-2">📊 {t('calc_results_title')}</div>
 
           <div className="scenario-result">
             <div className="scenario-box">
-              <div className="scenario-label">Initial One-Time</div>
+              <div className="scenario-label">{t('calc_initial_box')}</div>
               <div className="scenario-value" style={{ fontSize: 18, color: 'var(--text-primary)' }}>₹{initialAmount.toLocaleString('en-IN')}</div>
-              <div className="scenario-note">{compounding === 'annually' ? 'Annual compounding' : 'Monthly compounding'}</div>
+              <div className="scenario-note">{compoundingLabel}</div>
             </div>
             <div className="scenario-box">
-              <div className="scenario-label">Total Monthly Added</div>
+              <div className="scenario-label">{t('calc_monthly_added')}</div>
               <div className="scenario-value" style={{ fontSize: 18, color: 'var(--primary)' }}>₹{(monthlyContribution * years * 12).toLocaleString('en-IN')}</div>
-              <div className="scenario-note">{monthlyContribution > 0 ? `₹${monthlyContribution.toLocaleString('en-IN')}/mo × ${years * 12}m` : 'None (Pure Lump Sum)'}</div>
+              <div className="scenario-note">{monthlyContribution > 0 ? `₹${monthlyContribution.toLocaleString('en-IN')}/${t('common_month')} × ${years * 12}m` : 'None'}</div>
             </div>
             <div className="scenario-box">
-              <div className="scenario-label">Total Invested</div>
+              <div className="scenario-label">{t('calc_total_invested')}</div>
               <div className="scenario-value" style={{ fontSize: 18 }}>₹{result.totalInvested.toLocaleString('en-IN')}</div>
-              <div className="scenario-note">Principal + Contributions</div>
+              <div className="scenario-note">{t('calc_principal_note')}</div>
             </div>
             <div className="scenario-box" style={{ background: 'rgba(5, 150, 105, 0.06)', borderColor: 'rgba(5, 150, 105, 0.2)' }}>
-              <div className="scenario-label">Est. Growth</div>
+              <div className="scenario-label">{t('calc_est_growth')}</div>
               <div className="scenario-value" style={{ color: 'var(--success)' }}>₹{result.estimatedGrowth.toLocaleString('en-IN')}</div>
-              <div className="scenario-note">Illustrative gain</div>
+              <div className="scenario-note">{t('calc_gain_note')}</div>
             </div>
           </div>
 
@@ -241,12 +245,17 @@ export default function FutureValueCalc() {
             background: 'linear-gradient(135deg, #FFF7F0 0%, #FFF1E3 100%)',
             borderRadius: 'var(--radius-lg)', border: '1px solid rgba(252, 108, 38, 0.25)',
           }}>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>Estimated Future Value</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>{t('calc_est_fv')}</div>
             <div style={{ fontFamily: "'Space Grotesk'", fontSize: 36, fontWeight: 800, color: 'var(--primary)' }}>
               ₹{result.totalValue.toLocaleString('en-IN')}
             </div>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 8, fontWeight: 500 }}>
-              After {years} {years === 1 ? 'year' : 'years'} @ {annualReturn}% p.a. ({compounding === 'annually' ? 'Annual Compounding' : 'Monthly Compounding'})
+              {t('calc_summary_line', {
+                years,
+                unit: years === 1 ? t('common_year') : t('common_years'),
+                rate: annualReturn,
+                compounding: compoundingLabel
+              })}
             </div>
           </div>
         </div>
@@ -255,7 +264,7 @@ export default function FutureValueCalc() {
       {/* Chart */}
       <div className="card mt-3">
         <div className="card-header">
-          <div className="card-title">📈 Growth Visualization Over Time</div>
+          <div className="card-title">📈 {t('calc_chart_title')}</div>
         </div>
         <div className="chart-container" style={{ height: 340 }}>
           <Line data={chartData} options={chartOptions} />
@@ -263,8 +272,9 @@ export default function FutureValueCalc() {
       </div>
 
       <div className="disclaimer mt-3">
-        ⚠️ <strong>Important Financial Disclaimer:</strong> This calculator provides illustrative scenarios based on an assumed constant annual return of {annualReturn}% with {compounding === 'annually' ? 'annual' : 'monthly'} compounding. Actual investment returns are not guaranteed, vary with market fluctuations, and may be positive or negative. Past performance does not indicate future results. This tool is designed strictly for financial awareness and opportunity cost education.
+        {t('calc_disclaimer', { rate: annualReturn, compounding: compoundingLabel })}
       </div>
     </div>
   );
 }
+

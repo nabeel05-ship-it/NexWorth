@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { getSpendingForecast } from '../utils/aiEngine';
-import { MONTH_NAMES } from '../utils/demoData';
 import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement,
   Filler, Tooltip, Legend
@@ -12,31 +11,31 @@ import { Brain, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
 export default function SpendingForecast() {
-  const { state } = useApp();
+  const { state, t, language, getMonthName } = useApp();
   const { expenses } = state;
 
   const now = new Date();
   const forecast = useMemo(() => getSpendingForecast(expenses), [expenses]);
 
-  // Month labels
+  // Month labels localized
   const labels = useMemo(() => {
     const result = [];
     for (let i = 2; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      result.push(MONTH_NAMES[d.getMonth()]);
+      result.push(getMonthName(d.getMonth()));
     }
     for (let i = 1; i <= 3; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-      result.push(`${MONTH_NAMES[d.getMonth()]} (est.)`);
+      result.push(`${getMonthName(d.getMonth())} (${t('fore_estimated')})`);
     }
     return result;
-  }, []);
+  }, [language, t, getMonthName]);
 
   const chartData = useMemo(() => ({
     labels,
     datasets: [
       {
-        label: 'Actual Spending',
+        label: t('fore_actual_spending'),
         data: [...forecast.historical, null, null, null],
         borderColor: '#FC6C26',
         backgroundColor: 'rgba(252, 108, 38, 0.15)',
@@ -49,7 +48,7 @@ export default function SpendingForecast() {
         pointHoverRadius: 8,
       },
       {
-        label: 'Estimated Spending',
+        label: t('fore_est_spending'),
         data: [null, null, forecast.historical[2], ...forecast.forecasted],
         borderColor: '#D97706',
         backgroundColor: 'rgba(217, 119, 6, 0.08)',
@@ -63,7 +62,7 @@ export default function SpendingForecast() {
         pointHoverRadius: 8,
       },
     ],
-  }), [forecast, labels]);
+  }), [forecast, labels, language, t]);
 
   const chartOptions = {
     responsive: true,
@@ -97,49 +96,50 @@ export default function SpendingForecast() {
 
   const TrendIcon = forecast.trend === 'increasing' ? TrendingUp : forecast.trend === 'decreasing' ? TrendingDown : Minus;
   const trendColor = forecast.trend === 'increasing' ? 'var(--danger)' : forecast.trend === 'decreasing' ? 'var(--success)' : 'var(--text-muted)';
+  const trendLabel = forecast.trend === 'increasing' ? t('fore_trend_increasing') : forecast.trend === 'decreasing' ? t('fore_trend_decreasing') : t('fore_trend_stable');
 
   return (
     <div>
       <div className="page-header">
         <div className="flex items-center gap-1">
-          <h2>Spending Forecast</h2>
-          <span className="ai-badge"><Brain size={12} /> AI Powered</span>
+          <h2>{t('fore_title')}</h2>
+          <span className="ai-badge"><Brain size={12} /> {t('fore_badge_ai')}</span>
         </div>
-        <p className="subtitle">Estimated future spending based on your current patterns</p>
+        <p className="subtitle">{t('fore_subtitle')}</p>
       </div>
 
       {/* Trend Summary */}
       <div className="stat-grid">
         <div className="stat-card">
-          <div className="stat-label">Current Month</div>
+          <div className="stat-label">{t('fore_current_month')}</div>
           <div className="stat-value">₹{forecast.historical[2]?.toLocaleString('en-IN') || '0'}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Next Month (est.)</div>
+          <div className="stat-label">{t('fore_next_month_est')}</div>
           <div className="stat-value" style={{ color: 'var(--primary)' }}>₹{forecast.forecasted[0]?.toLocaleString('en-IN') || '0'}</div>
-          <div className="stat-change" style={{ color: 'var(--text-muted)' }}>Estimated</div>
+          <div className="stat-change" style={{ color: 'var(--text-muted)' }}>{t('fore_estimated')}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Spending Trend</div>
+          <div className="stat-label">{t('fore_trend')}</div>
           <div className="stat-value flex items-center gap-1" style={{ color: trendColor }}>
             <TrendIcon size={20} />
-            {forecast.trend.charAt(0).toUpperCase() + forecast.trend.slice(1)}
+            {trendLabel}
           </div>
           <div className="stat-change" style={{ color: trendColor }}>
-            ~₹{forecast.trendAmount.toLocaleString('en-IN')}/month {forecast.trend === 'increasing' ? '↑' : forecast.trend === 'decreasing' ? '↓' : '→'}
+            ~₹{forecast.trendAmount.toLocaleString('en-IN')}/{t('common_month')} {forecast.trend === 'increasing' ? '↑' : forecast.trend === 'decreasing' ? '↓' : '→'}
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">3-Month Est. Total</div>
+          <div className="stat-label">{t('fore_three_month_est')}</div>
           <div className="stat-value">₹{forecast.forecasted.reduce((s, v) => s + v, 0).toLocaleString('en-IN')}</div>
-          <div className="stat-change" style={{ color: 'var(--text-muted)' }}>Next 3 months</div>
+          <div className="stat-change" style={{ color: 'var(--text-muted)' }}>{t('fore_next_3_months')}</div>
         </div>
       </div>
 
       {/* Chart */}
       <div className="card mt-3">
         <div className="card-header">
-          <div className="card-title">📈 Spending Trajectory</div>
+          <div className="card-title">📈 {t('fore_chart_title')}</div>
         </div>
         <div className="chart-container" style={{ height: 360 }}>
           <Line data={chartData} options={chartOptions} />
@@ -148,16 +148,16 @@ export default function SpendingForecast() {
 
       {/* Historical Data */}
       <div className="card mt-3">
-        <div className="card-title mb-2">📋 Monthly Breakdown</div>
+        <div className="card-title mb-2">📋 {t('fore_breakdown_title')}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
           {forecast.historical.map((amount, i) => {
             const d = new Date(now.getFullYear(), now.getMonth() - (2 - i), 1);
             const isCurrentMonth = i === 2;
             return (
               <div key={i} className="scenario-box" style={isCurrentMonth ? { background: '#FFF5EC', borderColor: 'rgba(252,108,38,0.3)' } : { background: '#FFFFFF', borderColor: 'rgba(0,0,0,0.06)' }}>
-                <div className="scenario-label">{MONTH_NAMES[d.getMonth()]}</div>
+                <div className="scenario-label">{getMonthName(d.getMonth())}</div>
                 <div className="scenario-value" style={{ fontSize: 20 }}>₹{amount.toLocaleString('en-IN')}</div>
-                <div className="scenario-note">{isCurrentMonth ? 'Current' : 'Actual'}</div>
+                <div className="scenario-note">{isCurrentMonth ? t('fore_current_note') : t('fore_actual_note')}</div>
               </div>
             );
           })}
@@ -165,9 +165,9 @@ export default function SpendingForecast() {
             const d = new Date(now.getFullYear(), now.getMonth() + i + 1, 1);
             return (
               <div key={`f${i}`} className="scenario-box" style={{ background: '#FFFDF9', borderColor: 'rgba(217,119,6,0.2)' }}>
-                <div className="scenario-label">{MONTH_NAMES[d.getMonth()]}</div>
+                <div className="scenario-label">{getMonthName(d.getMonth())}</div>
                 <div className="scenario-value" style={{ fontSize: 20, color: '#D97706' }}>₹{amount.toLocaleString('en-IN')}</div>
-                <div className="scenario-note">Estimated</div>
+                <div className="scenario-note">{t('fore_estimated')}</div>
               </div>
             );
           })}
@@ -175,8 +175,9 @@ export default function SpendingForecast() {
       </div>
 
       <div className="disclaimer mt-3">
-        ⚠️ These forecasts are estimates based on your recent spending patterns using trend analysis. Actual spending will vary based on your choices and circumstances. These projections are not guaranteed predictions.
+        {t('fore_disclaimer')}
       </div>
     </div>
   );
 }
+

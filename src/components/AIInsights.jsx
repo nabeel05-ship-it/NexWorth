@@ -1,9 +1,9 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { CATEGORIES, MONTH_NAMES } from '../utils/demoData';
+import { CATEGORIES } from '../utils/demoData';
 import { generateInsights, generateExpenseStory, getMonthlyOverview, analyzeSpendingPatterns } from '../utils/aiEngine';
 import { fetchEmailStatus, sendTestEmail, checkOverbudgetAlert } from '../utils/api';
-import { Sparkles, TrendingUp, TrendingDown, Clock, Coffee, Target, ArrowRight, Zap, RefreshCw, Mail, Send, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Sparkles, TrendingUp, TrendingDown, Clock, Coffee, Target, ArrowRight, Zap, Mail, Send, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 import {
   Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale,
@@ -14,23 +14,22 @@ import { Bar } from 'react-chartjs-2';
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Filler);
 
 export default function AIInsights() {
-  const { state, dispatch, t } = useApp();
+  const { state, dispatch, t, language, getMonthName } = useApp();
   const { expenses, user, goals } = state;
 
   const overview = useMemo(() => getMonthlyOverview(expenses, user.monthlyIncome), [expenses, user.monthlyIncome]);
-  const insights = useMemo(() => generateInsights(expenses, user.monthlyIncome, user.budgets), [expenses, user.monthlyIncome, user.budgets]);
-  const story = useMemo(() => generateExpenseStory(expenses, user.monthlyIncome, user.budgets), [expenses, user.monthlyIncome, user.budgets]);
-  const patterns = useMemo(() => analyzeSpendingPatterns(expenses, user.monthlyIncome, goals), [expenses, user.monthlyIncome, goals]);
+  const insights = useMemo(() => generateInsights(expenses, user.monthlyIncome, user.budgets, language), [expenses, user.monthlyIncome, user.budgets, language]);
+  const story = useMemo(() => generateExpenseStory(expenses, user.monthlyIncome, user.budgets, language), [expenses, user.monthlyIncome, user.budgets, language]);
+  const patterns = useMemo(() => analyzeSpendingPatterns(expenses, user.monthlyIncome, goals, language), [expenses, user.monthlyIncome, goals, language]);
 
   const now = new Date();
-  const monthName = MONTH_NAMES[now.getMonth()];
+  const monthName = getMonthName(now.getMonth());
 
   // Email Notification State
   const [emailStatus, setEmailStatus] = useState({ configured: false, emailUser: null, defaultRecipient: '' });
   const [testRecipient, setTestRecipient] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailResult, setEmailResult] = useState(null);
-  const [autoAlertStatus, setAutoAlertStatus] = useState(null);
 
   useEffect(() => {
     fetchEmailStatus().then(status => {
@@ -49,11 +48,9 @@ export default function AIInsights() {
         monthlyIncome: user.monthlyIncome,
         recipient: testRecipient || undefined,
         monthName,
-      }).then(res => {
-        setAutoAlertStatus(res);
       });
     }
-  }, [overview.currentTotal, user.monthlyIncome, monthName]);
+  }, [overview.currentTotal, user.monthlyIncome, monthName, testRecipient]);
 
   const handleSendTestEmail = async () => {
     setSendingEmail(true);
@@ -81,18 +78,19 @@ export default function AIInsights() {
   // Category trend data
   const trendData = useMemo(() => {
     const categories = Object.keys(overview.currentCategories);
+    const lastMonthLabel = language === 'kn' ? 'ಕಳೆದ ತಿಂಗಳು' : language === 'hi' ? 'पिछला महीना' : 'Last Month';
     return {
-      labels: categories.map(id => CATEGORIES.find(c => c.id === id)?.name || id),
+      labels: categories.map(id => t(`cat_${id}`) || CATEGORIES.find(c => c.id === id)?.name || id),
       datasets: [
         {
-          label: 'Last Month',
+          label: lastMonthLabel,
           data: categories.map(id => overview.previousCategories[id] || 0),
           backgroundColor: 'rgba(215, 206, 195, 0.65)',
           borderRadius: 6,
           borderSkipped: false,
         },
         {
-          label: 'This Month',
+          label: monthName,
           data: categories.map(id => overview.currentCategories[id] || 0),
           backgroundColor: '#FC6C26',
           borderRadius: 6,
@@ -100,7 +98,7 @@ export default function AIInsights() {
         },
       ],
     };
-  }, [overview]);
+  }, [overview, language, monthName, t]);
 
   const barOptions = {
     responsive: true,
@@ -144,10 +142,17 @@ export default function AIInsights() {
         const prev = overview.previousCategories[catId] || 0;
         const change = prev > 0 ? ((amount - prev) / prev * 100) : (amount > 0 ? 100 : 0);
         const cat = CATEGORIES.find(c => c.id === catId);
-        return { catId, name: cat?.name || catId, icon: cat?.icon || '📌', amount, prev, change: Math.round(change) };
+        return {
+          catId,
+          name: t(`cat_${catId}`) || cat?.name || catId,
+          icon: cat?.icon || '📌',
+          amount,
+          prev,
+          change: Math.round(change)
+        };
       })
       .sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
-  }, [overview]);
+  }, [overview, language, t]);
 
   const handleInsightAction = (query) => {
     dispatch({ type: 'SET_CHAT_QUERY', payload: query });
@@ -160,7 +165,7 @@ export default function AIInsights() {
           <div>
             <div className="flex items-center gap-1">
               <h2>{t('ins_title')}</h2>
-              <span className="ai-badge"><Sparkles size={12} /> Powered by AI</span>
+              <span className="ai-badge"><Sparkles size={12} /> {t('ins_badge_ai')}</span>
             </div>
             <p className="subtitle">{t('ins_subtitle')}</p>
           </div>
@@ -175,12 +180,12 @@ export default function AIInsights() {
             <div>
               <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text)' }}>{t('ins_pattern_title')}</h3>
               <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                Frequency • Category • Amount Size • Time Distribution • Recurring Subscriptions
+                {t('ins_pattern_subtitle')}
               </div>
             </div>
           </div>
           <span className="ai-badge" style={{ background: 'rgba(252, 108, 38, 0.1)', color: 'var(--primary)', borderColor: 'rgba(252, 108, 38, 0.3)' }}>
-            Behavioral Intelligence
+            {t('ins_behavioral_badge')}
           </span>
         </div>
 
@@ -188,7 +193,7 @@ export default function AIInsights() {
         <div style={{ padding: '14px 18px', background: 'linear-gradient(135deg, #FFF7F0 0%, #FFF1E3 100%)', borderRadius: 12, border: '1px solid rgba(252, 108, 38, 0.2)', marginBottom: 20 }}>
           <div className="flex items-center gap-1 mb-1">
             <Sparkles size={16} color="var(--primary)" />
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)', letterSpacing: 0.3 }}>AI EXECUTIVE SUMMARY</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)', letterSpacing: 0.3 }}>{t('ins_summary_header')}</span>
           </div>
           <p style={{ fontSize: 14.5, color: '#2B2620', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
             "{patterns.summaryText}"
@@ -207,7 +212,7 @@ export default function AIInsights() {
               {patterns.activeCategories.slice(0, 3).map(cat => (
                 <div key={cat.catId} style={{ fontSize: 12, background: '#FFFFFF', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)' }}>
                   <div className="flex justify-between items-center mb-1">
-                    <span style={{ fontWeight: 600 }}>{cat.icon} {cat.name}</span>
+                    <span style={{ fontWeight: 600 }}>{cat.icon} {t(`cat_${cat.catId}`) || cat.name}</span>
                     <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: 'rgba(252, 108, 38, 0.1)', color: cat.tagColor, fontWeight: 600 }}>
                       {cat.patternType}
                     </span>
@@ -264,7 +269,7 @@ export default function AIInsights() {
           </div>
         </div>
 
-        {/* Actionable Benefit Card (The "Direct Fayda") */}
+        {/* Actionable Benefit Card */}
         <div style={{
           background: 'linear-gradient(135deg, #1C1917 0%, #292524 100%)',
           color: '#FFFFFF',
@@ -310,32 +315,32 @@ export default function AIInsights() {
       {/* Key Metrics */}
       <div className="stat-grid mb-3">
         <div className="stat-card">
-          <div className="stat-label">Transactions</div>
+          <div className="stat-label">{t('ins_metric_txns')}</div>
           <div className="stat-value">{overview.transactionCount}</div>
-          <div className="stat-change" style={{ color: 'var(--text-muted)' }}>This month</div>
+          <div className="stat-change" style={{ color: 'var(--text-muted)' }}>{t('ins_metric_this_month')}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Avg. Per Transaction</div>
+          <div className="stat-label">{t('ins_metric_avg')}</div>
           <div className="stat-value">₹{overview.transactionCount > 0 ? Math.round(overview.currentTotal / overview.transactionCount).toLocaleString('en-IN') : 0}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Categories Used</div>
+          <div className="stat-label">{t('ins_metric_cats')}</div>
           <div className="stat-value">{overview.categoryCount}</div>
-          <div className="stat-change" style={{ color: 'var(--text-muted)' }}>of {CATEGORIES.length} total</div>
+          <div className="stat-change" style={{ color: 'var(--text-muted)' }}>{t('ins_metric_of_total', { total: CATEGORIES.length })}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Spending Change</div>
+          <div className="stat-label">{t('ins_metric_change')}</div>
           <div className="stat-value" style={{ color: overview.currentTotal > overview.previousTotal ? 'var(--danger)' : 'var(--success)' }}>
             {overview.previousTotal > 0 ? `${((overview.currentTotal - overview.previousTotal) / overview.previousTotal * 100).toFixed(0)}%` : 'N/A'}
           </div>
           <div className={`stat-change ${overview.currentTotal > overview.previousTotal ? 'negative' : 'positive'}`}>
             {overview.currentTotal > overview.previousTotal ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-            vs last month
+            {t('dash_vs_last_month')}
           </div>
         </div>
       </div>
 
-      {/* Automated Email Notifications (Gmail SMTP) */}
+      {/* Automated Email Notifications */}
       <div className="card mb-3" style={{ background: '#FFFFFF', border: '1px solid rgba(252, 108, 38, 0.25)', boxShadow: '0 8px 24px rgba(0, 0, 0, 0.04)' }}>
         <div className="flex justify-between items-center mb-2" style={{ flexWrap: 'wrap', gap: 10 }}>
           <div className="flex items-center gap-2">
@@ -412,7 +417,7 @@ export default function AIInsights() {
               <input
                 type="email"
                 className="form-input"
-                placeholder="Enter recipient email (e.g. your_email@gmail.com)..."
+                placeholder={t('email_placeholder')}
                 value={testRecipient}
                 onChange={e => setTestRecipient(e.target.value)}
                 style={{ background: '#FFFFFF', fontSize: 13 }}
@@ -424,7 +429,7 @@ export default function AIInsights() {
               disabled={sendingEmail}
             >
               <Send size={14} />
-              {sendingEmail ? 'Sending...' : t('email_send_test')}
+              {sendingEmail ? t('email_sending') : t('email_send_test')}
             </button>
             <button
               className="btn btn-outline btn-sm flex items-center gap-1"
@@ -450,7 +455,7 @@ export default function AIInsights() {
             }}>
               {(emailResult.success || emailResult.sent) ? (
                 <div>
-                  <strong>✅ Success:</strong> {emailResult.message}
+                  <strong>✅ {t('email_success_title')}</strong> {emailResult.message}
                   {emailResult.messageId && <div style={{ fontSize: 11, color: '#15803D', marginTop: 2 }}>ID: {emailResult.messageId}</div>}
                   {emailResult.previewUrl && (
                     <div style={{ marginTop: 8 }}>
@@ -472,7 +477,7 @@ export default function AIInsights() {
                           boxShadow: '0 2px 8px rgba(22, 101, 52, 0.25)',
                         }}
                       >
-                        <span>🔗 Open Email Preview in Browser</span>
+                        <span>🔗 {t('email_preview_btn')}</span>
                         <ArrowRight size={14} />
                       </a>
                     </div>
@@ -480,9 +485,9 @@ export default function AIInsights() {
                 </div>
               ) : (
                 <div>
-                  <strong>⚠️ Note:</strong> {emailResult.error || emailResult.warning}
+                  <strong>⚠️ {t('email_note_title')}</strong> {emailResult.error || emailResult.warning}
                   <div style={{ fontSize: 11.5, marginTop: 4, color: '#78350F' }}>
-                    💡 To send real emails via Gmail SMTP, add <code>EMAIL_USER=your_email@gmail.com</code> and <code>EMAIL_PASS=your_16_char_app_password</code> in <code>.env</code>. Credentials are never exposed to the frontend.
+                    💡 {t('email_env_guide')}
                   </div>
                 </div>
               )}
@@ -495,7 +500,7 @@ export default function AIInsights() {
       <div className="grid-2">
         <div className="card">
           <div className="card-header">
-            <div className="card-title"><Sparkles size={16} /> AI Analysis Alerts</div>
+            <div className="card-title"><Sparkles size={16} /> {t('ins_analysis_alerts')}</div>
           </div>
           {insights.map((insight, i) => (
             <div key={i} className={`insight-card ${insight.type}`} style={{ display: 'flex', flexDirection: 'column' }}>
@@ -524,7 +529,7 @@ export default function AIInsights() {
           {/* Category Comparison Chart */}
           <div className="card mb-2">
             <div className="card-header">
-              <div className="card-title">📊 Category Trends</div>
+              <div className="card-title">📊 {t('ins_category_trends')}</div>
             </div>
             <div className="chart-container" style={{ height: 300 }}>
               <Bar data={trendData} options={barOptions} />
@@ -534,7 +539,7 @@ export default function AIInsights() {
           {/* Category Changes */}
           <div className="card">
             <div className="card-header">
-              <div className="card-title">📈 Category Changes</div>
+              <div className="card-title">📈 {t('ins_category_changes')}</div>
             </div>
             {categoryChanges.slice(0, 5).map(cat => (
               <div key={cat.catId} className="flex justify-between items-center" style={{ padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
@@ -560,7 +565,7 @@ export default function AIInsights() {
       </div>
 
       <div className="disclaimer mt-3">
-        ℹ️ These insights are generated by analyzing your expense data patterns. They are for informational purposes only and do not constitute financial advice. The AI helps you understand your spending — how you use this information is entirely your choice.
+        {t('ins_disclaimer')}
       </div>
     </div>
   );
