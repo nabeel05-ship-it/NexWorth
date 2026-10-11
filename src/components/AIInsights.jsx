@@ -1,24 +1,15 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { CATEGORIES } from '../utils/demoData';
-import { generateInsights, generateExpenseStory, getMonthlyOverview, analyzeSpendingPatterns } from '../utils/aiEngine';
+import { generateExpenseStory, getMonthlyOverview, analyzeSpendingPatterns } from '../utils/aiEngine';
 import { fetchEmailStatus, sendTestEmail, checkOverbudgetAlert } from '../utils/api';
 import { Sparkles, TrendingUp, TrendingDown, Clock, Coffee, Target, ArrowRight, Zap, Mail, Send, CheckCircle2, AlertTriangle } from 'lucide-react';
-
-import {
-  Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale,
-  LinearScale, BarElement, PointElement, LineElement, Filler
-} from 'chart.js';
-import { Bar } from 'react-chartjs-2';
-
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Filler);
 
 export default function AIInsights() {
   const { state, dispatch, t, language, getMonthName } = useApp();
   const { expenses, user, goals } = state;
 
   const overview = useMemo(() => getMonthlyOverview(expenses, user.monthlyIncome), [expenses, user.monthlyIncome]);
-  const insights = useMemo(() => generateInsights(expenses, user.monthlyIncome, user.budgets, language), [expenses, user.monthlyIncome, user.budgets, language]);
   const story = useMemo(() => generateExpenseStory(expenses, user.monthlyIncome, user.budgets, language), [expenses, user.monthlyIncome, user.budgets, language]);
   const patterns = useMemo(() => analyzeSpendingPatterns(expenses, user.monthlyIncome, goals, language), [expenses, user.monthlyIncome, goals, language]);
 
@@ -74,85 +65,6 @@ export default function AIInsights() {
     setEmailResult(res);
     setSendingEmail(false);
   };
-
-  // Category trend data
-  const trendData = useMemo(() => {
-    const categories = Object.keys(overview.currentCategories);
-    const lastMonthLabel = language === 'kn' ? 'ಕಳೆದ ತಿಂಗಳು' : language === 'hi' ? 'पिछला महीना' : 'Last Month';
-    return {
-      labels: categories.map(id => t(`cat_${id}`) || CATEGORIES.find(c => c.id === id)?.name || id),
-      datasets: [
-        {
-          label: lastMonthLabel,
-          data: categories.map(id => overview.previousCategories[id] || 0),
-          backgroundColor: 'rgba(215, 206, 195, 0.65)',
-          borderRadius: 6,
-          borderSkipped: false,
-        },
-        {
-          label: monthName,
-          data: categories.map(id => overview.currentCategories[id] || 0),
-          backgroundColor: '#FC6C26',
-          borderRadius: 6,
-          borderSkipped: false,
-        },
-      ],
-    };
-  }, [overview, language, monthName, t]);
-
-  const barOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    indexAxis: 'y',
-    scales: {
-      x: {
-        grid: { color: 'rgba(0, 0, 0, 0.04)' },
-        ticks: { color: '#8E877F', font: { size: 11 }, callback: v => `₹${(v/1000).toFixed(1)}k` },
-      },
-      y: {
-        grid: { display: false },
-        ticks: { color: '#1A1714', font: { size: 12, weight: '500' } },
-      },
-    },
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: { color: '#655E57', font: { size: 11, weight: '500' }, usePointStyle: true, pointStyleWidth: 8 },
-      },
-      tooltip: {
-        backgroundColor: '#FFFFFF',
-        borderColor: 'rgba(252, 108, 38, 0.25)',
-        borderWidth: 1,
-        titleColor: '#1A1714',
-        bodyColor: '#655E57',
-        padding: 12,
-        cornerRadius: 10,
-        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
-        callbacks: {
-          label: (ctx) => `${ctx.dataset.label}: ₹${ctx.parsed.x.toLocaleString('en-IN')}`,
-        },
-      },
-    },
-  };
-
-  // Category changes
-  const categoryChanges = useMemo(() => {
-    return Object.entries(overview.currentCategories)
-      .map(([catId, amount]) => {
-        const prev = overview.previousCategories[catId] || 0;
-        const change = prev > 0 ? ((amount - prev) / prev * 100) : (amount > 0 ? 100 : 0);
-        const cat = CATEGORIES.find(c => c.id === catId);
-        return {
-          catId,
-          name: t(`cat_${catId}`) || cat?.name || catId,
-          icon: cat?.icon || '📌',
-          amount,
-          prev,
-          change: Math.round(change)
-        };
-      })
-      .sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
-  }, [overview, language, t]);
 
   const handleInsightAction = (query) => {
     dispatch({ type: 'SET_CHAT_QUERY', payload: query });
@@ -493,74 +405,6 @@ export default function AIInsights() {
               )}
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Insights + Chart */}
-      <div className="grid-2">
-        <div className="card">
-          <div className="card-header">
-            <div className="card-title"><Sparkles size={16} /> {t('ins_analysis_alerts')}</div>
-          </div>
-          {insights.map((insight, i) => (
-            <div key={i} className={`insight-card ${insight.type}`} style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex' }}>
-                <span className="insight-icon">{insight.icon}</span>
-                <div className="insight-content">
-                  <h4>{insight.title}</h4>
-                  <p>{insight.text}</p>
-                  
-                  {insight.action && (
-                    <button 
-                      className="btn btn-outline btn-sm" 
-                      style={{ marginTop: 12, fontSize: 12, display: 'inline-flex', alignSelf: 'flex-start', background: '#FFFFFF' }}
-                      onClick={() => handleInsightAction(insight.actionQuery)}
-                    >
-                      {insight.action}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div>
-          {/* Category Comparison Chart */}
-          <div className="card mb-2">
-            <div className="card-header">
-              <div className="card-title">📊 {t('ins_category_trends')}</div>
-            </div>
-            <div className="chart-container" style={{ height: 300 }}>
-              <Bar data={trendData} options={barOptions} />
-            </div>
-          </div>
-
-          {/* Category Changes */}
-          <div className="card">
-            <div className="card-header">
-              <div className="card-title">📈 {t('ins_category_changes')}</div>
-            </div>
-            {categoryChanges.slice(0, 5).map(cat => (
-              <div key={cat.catId} className="flex justify-between items-center" style={{ padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-                <div className="flex items-center gap-1">
-                  <span style={{ fontSize: 18 }}>{cat.icon}</span>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 500 }}>{cat.name}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                      ₹{cat.prev.toLocaleString('en-IN')} → ₹{cat.amount.toLocaleString('en-IN')}
-                    </div>
-                  </div>
-                </div>
-                <span style={{
-                  fontSize: 14, fontWeight: 600,
-                  color: cat.change > 0 ? 'var(--danger)' : cat.change < 0 ? 'var(--success)' : 'var(--text-muted)',
-                }}>
-                  {cat.change > 0 ? '+' : ''}{cat.change}%
-                </span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
